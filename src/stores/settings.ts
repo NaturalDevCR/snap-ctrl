@@ -10,15 +10,28 @@ export const useSettingsStore = defineStore(
     const showEmptyGroups = ref(true);
     const volumeStep = ref(5);
     const refreshInterval = ref(5000); // milliseconds
+    const hiddenGroups = ref<string[]>([]);
+
+    function setHiddenGroups(groups: string[]) {
+      hiddenGroups.value = groups;
+    }
+
     // Persisted client ordering per group id -> client id array
     // Removed manual client ordering feature per request
 
     function setTheme(newTheme: "light" | "dark") {
       theme.value = newTheme;
+      // Apply theme immediately
+      if (newTheme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
     }
 
     function toggleTheme() {
-      theme.value = theme.value === "light" ? "dark" : "light";
+      const newTheme = theme.value === "light" ? "dark" : "light";
+      setTheme(newTheme);
     }
 
     function setAutoConnect(value: boolean) {
@@ -41,18 +54,21 @@ export const useSettingsStore = defineStore(
       refreshInterval.value = Math.max(1000, Math.min(30000, interval));
     }
 
-    // Watch for theme changes to apply to document
-    watch(
-      theme,
-      (newTheme) => {
-        if (newTheme === "dark") {
-          document.documentElement.classList.add("dark");
-        } else {
-          document.documentElement.classList.remove("dark");
-        }
-      },
-      { immediate: true }
-    );
+    // Watch for theme changes to apply to document (for persistence rehydration)
+    watch(theme, (newTheme) => {
+      if (newTheme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    });
+
+    // Apply initial theme on mount
+    if (theme.value === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
 
     return {
       theme,

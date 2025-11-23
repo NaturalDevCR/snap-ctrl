@@ -195,12 +195,26 @@
                 ></span>
               </button>
             </Tooltip>
+
+            <Tooltip text="Filter Groups">
+              <button
+                class="w-10 h-10 flex items-center justify-center rounded-lg border shadow-sm transition-colors"
+                :class="
+                  showGroupFilter
+                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400'
+                    : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
+                "
+                @click="showGroupFilter = !showGroupFilter"
+              >
+                <span class="mdi mdi-filter-variant text-xl"></span>
+              </button>
+            </Tooltip>
           </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           <div
-            v-for="group in displayGroups"
+            v-for="group in sortedGroups"
             :key="group.id"
             class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col"
           >
@@ -554,10 +568,10 @@
                 class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
                 :class="getGroupColor(group.id)"
               >
-                {{ group.name.charAt(0).toUpperCase() }}
+                {{ getGroupName(group).charAt(0).toUpperCase() }}
               </span>
               <span class="font-medium text-gray-900 dark:text-white">{{
-                group.name || `Group ${group.id}`
+                getGroupName(group)
               }}</span>
             </div>
             <div
@@ -736,8 +750,9 @@
                     type="checkbox"
                     :checked="settings.theme === 'dark'"
                     @change="
-                      settings.theme =
+                      settings.setTheme(
                         settings.theme === 'dark' ? 'light' : 'dark'
+                      )
                     "
                     class="sr-only peer"
                   />

@@ -1,9 +1,18 @@
 <template>
-  <div class="relative flex items-center group">
+  <span
+    ref="triggerRef"
+    class="inline-block"
+    @mouseenter="show"
+    @mouseleave="hide"
+  >
     <slot></slot>
+  </span>
+  <Teleport to="body">
     <div
-      class="absolute z-50 px-2 py-1 text-xs font-medium text-white bg-gray-900 dark:bg-gray-700 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap"
-      :class="positionClasses"
+      v-show="visible"
+      ref="tooltipRef"
+      class="fixed z-[99999] px-2 py-1 text-xs font-medium text-white bg-gray-900 dark:bg-gray-700 rounded shadow-lg pointer-events-none whitespace-nowrap"
+      :style="tooltipStyle"
     >
       {{ text }}
       <div
@@ -11,11 +20,11 @@
         :class="arrowClasses"
       ></div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { ref, computed, nextTick } from "vue";
 
 const props = defineProps({
   text: {
@@ -30,19 +39,55 @@ const props = defineProps({
   },
 });
 
-const positionClasses = computed(() => {
+const triggerRef = ref<HTMLElement | null>(null);
+const tooltipRef = ref<HTMLElement | null>(null);
+const visible = ref(false);
+const tooltipStyle = ref<Record<string, string>>({});
+
+const show = async () => {
+  visible.value = true;
+  await nextTick();
+  updatePosition();
+};
+
+const hide = () => {
+  visible.value = false;
+};
+
+const updatePosition = () => {
+  if (!triggerRef.value || !tooltipRef.value) return;
+
+  const triggerRect = triggerRef.value.getBoundingClientRect();
+  const tooltipRect = tooltipRef.value.getBoundingClientRect();
+  const offset = 8;
+
+  let top = 0;
+  let left = 0;
+
   switch (props.position) {
     case "bottom":
-      return "top-full mt-2 left-1/2 -translate-x-1/2";
-    case "left":
-      return "right-full mr-2 top-1/2 -translate-y-1/2";
-    case "right":
-      return "left-full ml-2 top-1/2 -translate-y-1/2";
+      top = triggerRect.bottom + offset;
+      left = triggerRect.left + triggerRect.width / 2 - tooltipRect.width / 2;
+      break;
     case "top":
-    default:
-      return "bottom-full mb-2 left-1/2 -translate-x-1/2";
+      top = triggerRect.top - offset - tooltipRect.height;
+      left = triggerRect.left + triggerRect.width / 2 - tooltipRect.width / 2;
+      break;
+    case "left":
+      top = triggerRect.top + triggerRect.height / 2 - tooltipRect.height / 2;
+      left = triggerRect.left - offset - tooltipRect.width;
+      break;
+    case "right":
+      top = triggerRect.top + triggerRect.height / 2 - tooltipRect.height / 2;
+      left = triggerRect.right + offset;
+      break;
   }
-});
+
+  tooltipStyle.value = {
+    top: `${top}px`,
+    left: `${left}px`,
+  };
+};
 
 const arrowClasses = computed(() => {
   switch (props.position) {
