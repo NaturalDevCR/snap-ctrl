@@ -105,7 +105,7 @@
         <button
           class="w-10 h-10 md:w-12 md:h-12 rounded-full border-none bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-lg md:text-xl flex items-center justify-center cursor-pointer transition-all shadow-md hover:scale-105 md:hover:scale-110 hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
           :class="{ '!bg-blue-600 dark:!bg-blue-500 !text-white': connected }"
-          @click="connected ? disconnect() : connect()"
+          @click="handleConnect"
           :disabled="connecting"
         >
           <span v-if="connecting" class="mdi mdi-loading mdi-spin"></span>
@@ -125,295 +125,51 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted, watch } from "vue";
+import { watch } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useNotificationStore } from "@/stores/notification";
+import { useSnapStream } from "@/composables/useSnapStream";
 
 const snapcast = useSnapcastStore();
 const notifications = useNotificationStore();
 
-const ws = ref<WebSocket | null>(null);
-const audioCtx = ref<AudioContext | null>(null);
-const gainNode = ref<GainNode | null>(null);
-const codec = ref<string>("");
-const connected = ref(false);
-const connecting = ref(false);
-const error = ref<string>("");
+const {
+  connected,
+  connecting,
+  error,
+  codec,
+  latency,
+  volume,
+  isMuted,
+  bufferLength,
+  bufferDuration,
+  timeDiff,
+  syncSamples,
+  connect,
+  disconnect,
+  toggleMute,
+  setVolume,
+} = useSnapStream();
 
-// Audio buffer management
-const audioSources: AudioBufferSourceNode[] = [];
-const bufferSize = ref(0);
-const maxBufferSize = 10;
-let nextPlayTime = 0;
-
-// Audio settings
-const volume = ref(80);
-const isMuted = ref(false);
-const latency = ref(200);
-
-// WAVE header info
-let sampleRate = 48000;
-let channels = 2;
-let bitsPerSample = 16;
-
+// Watch volume changes
 watch(volume, (newVolume) => {
-  if (gainNode.value) {
-    gainNode.value.gain.value = newVolume / 100;
+  setVolume(newVolume);
+});
+
+// Watch connected state for notifications
+watch(connected, (isConnected) => {
+  if (isConnected) {
+    notifications.success("Browser player connected");
   }
 });
 
-function toggleMute() {
-  isMuted.value = !isMuted.value;
-  if (gainNode.value) {
-    gainNode.value.gain.value = isMuted.value ? 0 : volume.value / 100;
+function handleConnect() {
+  if (connected.value) {
+    disconnect();
+  } else {
+    connect(snapcast.host);
   }
 }
-
-function connect() {
-  if (connected.value || connecting.value) return;
-
-  connecting.value = true;
-  error.value = "";
-
-  try {
-    audioCtx.value = new (window.AudioContext ||
-      (window as any).webkitAudioContext)({
-      latencyHint: "interactive",
-    });
-
-    gainNode.value = audioCtx.value.createGain();
-    gainNode.value.gain.value = volume.value / 100;
-    gainNode.value.connect(audioCtx.value.destination);
-
-    nextPlayTime = audioCtx.value.currentTime;
-  } catch (err) {
-    console.error("Failed to create AudioContext:", err);
-    error.value = "Failed to initialize audio system";
-    connecting.value = false;
-    return;
-  }
-
-  const url = `ws://${snapcast.host}/stream`;
-
-  try {
-    ws.value = new WebSocket(url);
-    ws.value.binaryType = "arraybuffer";
-
-    ws.value.onopen = () => {
-      connected.value = true;
-      connecting.value = false;
-
-      const helloPayload = JSON.stringify({
-        ClientName: "BrowserPlayer",
-        HostName: window.location.hostname,
-        OS: navigator.platform,
-        Version: "web-1.0",
-        ID: `browser-${Date.now()}`,
-        Instance: 1,
-      });
-      const helloFrame = buildMessage(5, strToUint8(helloPayload));
-      ws.value?.send(helloFrame);
-
-      notifications.success("Browser player connected");
-    };
-
-    ws.value.onmessage = (e) => handleMessage(e.data as ArrayBuffer);
-
-    ws.value.onclose = () => {
-      cleanupAudioContext();
-      connected.value = false;
-      connecting.value = false;
-    };
-
-    ws.value.onerror = (err) => {
-      error.value = "Failed to connect to audio stream";
-      cleanupAudioContext();
-      connected.value = false;
-      connecting.value = false;
-    };
-  } catch (err) {
-    error.value = "Failed to create audio stream connection";
-    connecting.value = false;
-  }
-}
-
-function disconnect() {
-  if (ws.value) {
-    ws.value.close();
-    ws.value = null;
-  }
-  cleanupAudioContext();
-  connected.value = false;
-  connecting.value = false;
-  codec.value = "";
-  error.value = "";
-}
-
-function cleanupAudioContext() {
-  audioSources.forEach((source) => {
-    try {
-      source.stop();
-    } catch (e) {}
-  });
-  audioSources.length = 0;
-  bufferSize.value = 0;
-
-  if (audioCtx.value) {
-    audioCtx.value.close();
-    audioCtx.value = null;
-  }
-  gainNode.value = null;
-  nextPlayTime = 0;
-}
-
-function handleMessage(buf: ArrayBuffer) {
-  const dv = new DataView(buf);
-  const type = dv.getUint16(0, true);
-  const size = dv.getUint32(20, true);
-  const payloadOffset = 24;
-  const payload = new Uint8Array(buf, payloadOffset, size);
-
-  if (type === 1) {
-    handleCodecHeader(payload);
-  } else if (type === 2) {
-    handleWireChunk(payload);
-  }
-}
-
-function handleCodecHeader(payload: Uint8Array) {
-  const pdv = new DataView(
-    payload.buffer,
-    payload.byteOffset,
-    payload.byteLength
-  );
-  const codecSize = pdv.getUint32(0, true);
-  const codecStr = new TextDecoder().decode(payload.slice(4, 4 + codecSize));
-  codec.value = codecStr;
-
-  if (codecStr === "PCM") {
-    const waveHeaderOffset = 4 + codecSize;
-    const waveHeader = payload.slice(waveHeaderOffset);
-    if (waveHeader.length >= 44) {
-      const wdv = new DataView(
-        waveHeader.buffer,
-        waveHeader.byteOffset,
-        waveHeader.byteLength
-      );
-      channels = wdv.getUint16(22, true);
-      sampleRate = wdv.getUint32(24, true);
-      bitsPerSample = wdv.getUint16(34, true);
-    }
-  }
-}
-
-function handleWireChunk(payload: Uint8Array) {
-  if (!audioCtx.value || !gainNode.value) return;
-
-  if (codec.value === "PCM") {
-    try {
-      const audioBuffer = decodePCM(payload);
-      if (audioBuffer) {
-        scheduleAudioPlayback(audioBuffer);
-      }
-    } catch (err) {
-      console.error("Error decoding audio chunk:", err);
-    }
-  }
-}
-
-function decodePCM(payload: Uint8Array): AudioBuffer | null {
-  if (!audioCtx.value) return null;
-
-  const view = new DataView(
-    payload.buffer,
-    payload.byteOffset,
-    payload.byteLength
-  );
-  const samplesPerChannel =
-    payload.byteLength / (channels * (bitsPerSample / 8));
-
-  const buffer = audioCtx.value.createBuffer(
-    channels,
-    samplesPerChannel,
-    sampleRate
-  );
-
-  if (bitsPerSample === 16) {
-    for (let ch = 0; ch < channels; ch++) {
-      const channelData = buffer.getChannelData(ch);
-      for (let i = 0; i < samplesPerChannel; i++) {
-        const offset = (i * channels + ch) * 2;
-        const sample = view.getInt16(offset, true);
-        channelData[i] = sample / 32768.0;
-      }
-    }
-  }
-  // Add 24-bit support if needed, omitted for brevity as mostly 16-bit is used
-
-  return buffer;
-}
-
-function scheduleAudioPlayback(audioBuffer: AudioBuffer) {
-  if (!audioCtx.value || !gainNode.value) return;
-
-  const source = audioCtx.value.createBufferSource();
-  source.buffer = audioBuffer;
-  source.connect(gainNode.value);
-
-  const now = audioCtx.value.currentTime;
-  const latencySeconds = latency.value / 1000;
-
-  if (nextPlayTime < now) {
-    nextPlayTime = now + latencySeconds;
-  }
-
-  source.start(nextPlayTime);
-  nextPlayTime += audioBuffer.duration;
-
-  source.onended = () => {
-    const index = audioSources.indexOf(source);
-    if (index > -1) {
-      audioSources.splice(index, 1);
-      bufferSize.value = audioSources.length;
-    }
-  };
-
-  audioSources.push(source);
-  bufferSize.value = audioSources.length;
-
-  if (audioSources.length > maxBufferSize) {
-    const oldSource = audioSources.shift();
-    if (oldSource)
-      try {
-        oldSource.stop();
-      } catch (e) {}
-    bufferSize.value = audioSources.length;
-  }
-}
-
-function buildMessage(type: number, payload: Uint8Array): ArrayBuffer {
-  const baseSize = 24;
-  const buf = new ArrayBuffer(baseSize + payload.byteLength);
-  const dv = new DataView(buf);
-  dv.setUint16(0, type, true);
-  const now = Date.now();
-  const sec = Math.floor(now / 1000);
-  const usec = (now % 1000) * 1000;
-  dv.setUint32(8, sec, true);
-  dv.setUint32(12, usec, true);
-  dv.setUint32(16, sec, true);
-  dv.setUint32(20, payload.byteLength, true);
-  new Uint8Array(buf, baseSize).set(payload);
-  return buf;
-}
-
-function strToUint8(str: string): Uint8Array {
-  return new TextEncoder().encode(str);
-}
-
-onUnmounted(() => {
-  disconnect();
-});
 </script>
 
 <style scoped>

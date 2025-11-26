@@ -1,2 +1,82 @@
-# snap-ctrl
-A Vue JS + Tailwind Ui alternative for Snapweb
+# SnapCtrl
+
+A modern, responsive, and feature-rich web interface for [Snapcast](https://github.com/badaix/snapcast), built with Vue 3 and Tailwind CSS.
+
+![SnapCtrl Screenshot](https://raw.githubusercontent.com/jdavidoa91/snap-ctrl/main/public/screenshot.png)
+
+## Features
+
+- **Modern UI**: Clean, responsive design with dark mode support.
+- **Real-time Control**: Instant updates for volume, mute, and stream assignment.
+- **Group Management**: Create, rename, delete, and manage client groups easily.
+- **Client Management**: Rename clients, adjust latency, and control volume.
+- **Stream Selection**: Assign streams to groups with a user-friendly interface.
+- **Browser Player**: Listen to your Snapcast streams directly in the browser (supports WASM decoders).
+- **PWA Support**: Install as a Progressive Web App for a native-like experience.
+- **Security**: Optional passcode protection and granular permission controls.
+- **Portable Build**: Can be served from any web server or directory.
+
+## Getting Started
+
+### Prerequisites
+
+- A running [Snapcast server](https://github.com/badaix/snapcast).
+- Node.js (v20+) and pnpm (for development).
+
+### Installation
+
+1.  Clone the repository:
+
+    ```bash
+    git clone https://github.com/jdavidoa91/snap-ctrl.git
+    cd snap-ctrl
+    ```
+
+2.  Install dependencies:
+
+    ```bash
+    pnpm install
+    ```
+
+3.  Run development server:
+    ```bash
+    pnpm run dev
+    ```
+
+### Building for Production
+
+To create a static build that can be served by any web server (including Snapcast's built-in server):
+
+```bash
+pnpm run build
+```
+
+The output will be in the `dist` folder. You can copy the contents of this folder to your web server's root or Snapcast's `doc_root`.
+
+## Usage with Snapcast
+
+Snapcast server can serve this web interface directly.
+
+1.  Build the project: `pnpm run build`
+2.  Locate your Snapcast server's `doc_root` (usually `/usr/share/snapserver/snapweb` or defined in `snapserver.conf`).
+3.  Backup the existing `index.html` and assets.
+4.  Copy the contents of the `dist` folder to the `doc_root`.
+5.  Access the interface via `http://<snapserver-ip>:1780`.
+
+## GitHub Release Workflow
+
+This project includes a GitHub Actions workflow to automatically build and release the application.
+
+To create a new release:
+
+1.  Push your changes to the `main` branch.
+2.  Create and push a tag starting with `v` (e.g., `v1.0.0`):
+    ```bash
+    git tag v1.0.0
+    git push origin v1.0.0
+    ```
+3.  GitHub Actions will automatically build the project and create a release with a `dist.zip` file attached.
+
+## License
+
+MIT

@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
+import { useAuthStore } from "./auth";
 
 export interface Client {
   id: string;
@@ -67,6 +68,22 @@ export const useSnapcastStore = defineStore(
     const websocket = ref<WebSocket | null>(null);
     const requestId = ref(1);
 
+    // Get auth store for permission checks
+    const auth = useAuthStore();
+
+    // Filtered entities based on permissions
+    const filteredGroups = computed(() => {
+      return auth.filterAllowedEntities("group", groups.value);
+    });
+
+    const filteredStreams = computed(() => {
+      return auth.filterAllowedEntities("source", streams.value);
+    });
+
+    const filteredClients = computed(() => {
+      return auth.filterAllowedEntities("client", clients.value);
+    });
+
     // Reconnection state
     const reconnectAttempts = ref(0);
     const maxReconnectAttempts = 10;
@@ -85,7 +102,11 @@ export const useSnapcastStore = defineStore(
     });
 
     function setHost(newHost: string) {
-      host.value = newHost;
+      // Strip protocol if present to avoid double protocol in connection URL
+      const cleanHost = newHost
+        .replace(/^https?:\/\//, "")
+        .replace(/^wss?:\/\//, "");
+      host.value = cleanHost;
     }
 
     function getReconnectDelay(): number {
@@ -134,7 +155,8 @@ export const useSnapcastStore = defineStore(
       isConnecting.value = true;
       connectionError.value = null;
 
-      const wsUrl = `ws://${host.value}/jsonrpc`;
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${protocol}//${host.value}/jsonrpc`;
       console.log(`Connecting to ${wsUrl}...`);
 
       try {
@@ -311,6 +333,16 @@ export const useSnapcastStore = defineStore(
       volume: number,
       mute = false
     ) {
+      // Check permission
+      if (!auth.hasFeaturePermission("canAdjustVolumes")) {
+        console.warn("Permission denied: Cannot adjust volumes");
+        return;
+      }
+      if (!auth.isEntityAllowed("client", clientId)) {
+        console.warn("Permission denied: Client not allowed");
+        return;
+      }
+
       // Optimistic update to remove UI lag
       const cl = findClientById(clientId);
       const previous = cl ? { ...cl.config.volume } : null;
@@ -336,6 +368,16 @@ export const useSnapcastStore = defineStore(
     }
 
     async function setClientName(clientId: string, name: string) {
+      // Check permission
+      if (!auth.hasFeaturePermission("canRenameClients")) {
+        console.warn("Permission denied: Cannot rename clients");
+        return;
+      }
+      if (!auth.isEntityAllowed("client", clientId)) {
+        console.warn("Permission denied: Client not allowed");
+        return;
+      }
+
       // Optimistic update
       const cl = findClientById(clientId);
       const prev = cl ? cl.config.name : null;
@@ -370,6 +412,16 @@ export const useSnapcastStore = defineStore(
     }
 
     async function setGroupMute(groupId: string, mute: boolean) {
+      // Check permission
+      if (!auth.hasFeaturePermission("canAdjustVolumes")) {
+        console.warn("Permission denied: Cannot adjust volumes");
+        return;
+      }
+      if (!auth.isEntityAllowed("group", groupId)) {
+        console.warn("Permission denied: Group not allowed");
+        return;
+      }
+
       const g = groups.value.find((g) => g.id === groupId);
       const prev = g ? g.muted : null;
       if (g) g.muted = mute;
@@ -425,6 +477,16 @@ export const useSnapcastStore = defineStore(
     }
 
     async function setGroupName(groupId: string, name: string) {
+      // Check permission
+      if (!auth.hasFeaturePermission("canRenameGroups")) {
+        console.warn("Permission denied: Cannot rename groups");
+        return;
+      }
+      if (!auth.isEntityAllowed("group", groupId)) {
+        console.warn("Permission denied: Group not allowed");
+        return;
+      }
+
       const g = groups.value.find((g) => g.id === groupId);
       const prev = g ? g.name : null;
       if (g) g.name = name;
@@ -459,6 +521,9 @@ export const useSnapcastStore = defineStore(
       clients,
       groups,
       streams,
+      filteredGroups,
+      filteredStreams,
+      filteredClients,
       allClients,
       connectedClients,
       setHost,

@@ -1,16 +1,17 @@
-import './assets/main.css'
-import '@mdi/font/css/materialdesignicons.css'
+import "./polyfills";
+import "./assets/main.css";
+import "@mdi/font/css/materialdesignicons.css";
 
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import { createApp } from "vue";
+import { createPinia } from "pinia";
+import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
 
-import App from './App.vue'
-const app = createApp(App)
+import App from "./App.vue";
+const app = createApp(App);
 
-const pinia = createPinia()
-pinia.use(piniaPluginPersistedstate)
+const pinia = createPinia();
+pinia.use(piniaPluginPersistedstate);
 
-app.use(pinia)
+app.use(pinia);
 
-app.mount('#app')
+app.mount("#app");
