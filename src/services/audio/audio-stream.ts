@@ -15,10 +15,10 @@ interface AudioChunk {
 
 export class AudioStream {
   private chunks: AudioChunk[] = [];
-  private readonly maxChunks = 50;
+  private readonly maxChunks = 1000; // Support up to ~20s buffer (assuming 20ms chunks)
   private playedFrames = 0;
-  private readonly hardSyncThreshold = 5; // ms
-  private readonly softSyncThreshold = 0.1; // ms
+  private readonly hardSyncThreshold = 500; // ms - increased to allow playbackRate sync
+  private readonly softSyncThreshold = 500; // ms - increased to allow playbackRate sync
   private readonly softSyncFrames = 10; // frames to adjust per sync
 
   constructor(private timeProvider: TimeProvider, private sampleRate: number) {}
@@ -50,20 +50,23 @@ export class AudioStream {
   /**
    * Get the next audio buffer for playback, applying synchronization
    */
-  getNextBuffer(latencyMs: number): DecodedAudio | null {
+  getNextBuffer(clientTime: number, latencyMs: number): DecodedAudio | null {
     if (this.chunks.length === 0) {
       return null;
     }
 
-    const now = this.timeProvider.now();
-    const playbackTime = now + latencyMs;
+    // Convert to server time for comparison with chunk timestamps
+    // Chunks have server absolute timestamps, so we need to convert our playback time
+    const serverPlaybackTime = this.timeProvider.serverTime(
+      clientTime + latencyMs
+    );
 
     // Find the chunk that should be playing now
     let chunkIndex = -1;
 
     for (let i = 0; i < this.chunks.length; i++) {
       const chunk = this.chunks[i];
-      if (chunk && chunk.playTime <= playbackTime) {
+      if (chunk && chunk.playTime <= serverPlaybackTime) {
         chunkIndex = i;
       } else {
         break;
@@ -81,7 +84,7 @@ export class AudioStream {
       return null;
     }
 
-    const timeDiff = playbackTime - chunk.playTime;
+    const timeDiff = serverPlaybackTime - chunk.playTime;
 
     // Remove chunks up to and including this one
     this.chunks.splice(0, chunkIndex + 1);
@@ -141,7 +144,9 @@ export class AudioStream {
       console.log(
         `Hard sync: discarding ${framesToDiscard} frames (${timeDiff.toFixed(
           2
-        )}ms ahead)`
+        )}ms ahead, now=${this.timeProvider.now().toFixed(0)}, chunk=${
+          audio.timestamp?.sec
+        }.${audio.timestamp?.usec})`
       );
 
       return {

@@ -3,7 +3,7 @@
  */
 
 import { OpusDecoder as OpusDecoderLib } from "opus-decoder";
-import { type Timestamp } from "../message-protocol";
+import { type Timestamp, type SampleFormat } from "../message-protocol";
 import { type AudioDecoder, type DecodedAudio } from "./types";
 
 export class OpusDecoder implements AudioDecoder {
@@ -121,6 +121,14 @@ export class OpusDecoder implements AudioDecoder {
 
   getSampleRate(): number {
     return this.sampleRate;
+  }
+
+  getSampleFormat(): SampleFormat {
+    return {
+      rate: this.sampleRate,
+      channels: this.channels,
+      bits: 16, // Opus decodes to 16-bit PCM (or float32 which is effectively high precision)
+    };
   }
 
   getChannels(): number {

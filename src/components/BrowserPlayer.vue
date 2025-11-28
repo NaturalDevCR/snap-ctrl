@@ -62,6 +62,23 @@
               >{{ latency }}ms latency</span
             >
           </div>
+
+          <!-- Stream Selector -->
+          <div v-if="connected && currentGroup" class="mt-2">
+            <select
+              v-model="currentStreamId"
+              class="text-xs bg-gray-100 dark:bg-slate-700 border-none rounded px-2 py-1 text-gray-700 dark:text-gray-200 focus:ring-1 focus:ring-blue-500 outline-none cursor-pointer max-w-[150px] truncate"
+              @click.stop
+            >
+              <option
+                v-for="stream in availableStreams"
+                :key="stream.id"
+                :value="stream.id"
+              >
+                {{ stream.id }}
+              </option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -125,7 +142,7 @@
 </template>
 
 <script setup lang="ts">
-import { watch } from "vue";
+import { watch, computed } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useNotificationStore } from "@/stores/notification";
 import { useSnapStream } from "@/composables/useSnapStream";
@@ -149,7 +166,28 @@ const {
   disconnect,
   toggleMute,
   setVolume,
+  clientId,
 } = useSnapStream();
+
+// Stream Selection Logic
+const currentGroup = computed(() => {
+  if (!clientId.value) return null;
+  // Find the group that contains this client
+  return snapcast.groups.find((g) =>
+    g.clients.some((c) => c.id === clientId.value)
+  );
+});
+
+const currentStreamId = computed({
+  get: () => currentGroup.value?.stream_id || "",
+  set: (newStreamId: string) => {
+    if (currentGroup.value && newStreamId) {
+      snapcast.setGroupStream(currentGroup.value.id, newStreamId);
+    }
+  },
+});
+
+const availableStreams = computed(() => snapcast.streams);
 
 // Watch volume changes
 watch(volume, (newVolume) => {

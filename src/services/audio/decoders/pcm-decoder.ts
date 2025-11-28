@@ -3,7 +3,7 @@
  * Handles raw PCM data (16-bit and 24-bit)
  */
 
-import { type Timestamp } from "../message-protocol";
+import { type Timestamp, type SampleFormat } from "../message-protocol";
 import { type AudioDecoder, type DecodedAudio } from "./types";
 
 export class PcmDecoder implements AudioDecoder {
@@ -117,6 +117,14 @@ export class PcmDecoder implements AudioDecoder {
 
   getSampleRate(): number {
     return this.sampleRate;
+  }
+
+  getSampleFormat(): SampleFormat {
+    return {
+      rate: this.sampleRate,
+      channels: this.channels,
+      bits: this.bitsPerSample,
+    };
   }
 
   getChannels(): number {

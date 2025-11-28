@@ -32,12 +32,27 @@ export const useAuthStore = defineStore(
     const requiresSetup = computed(() => passcodeHash.value === null);
 
     // Hash passcode using SHA-256
+    // Hash passcode using SHA-256 (or fallback for insecure contexts)
     async function hashPasscode(passcode: string): Promise<string> {
-      const encoder = new TextEncoder();
-      const data = encoder.encode(passcode);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+      if (window.crypto && window.crypto.subtle) {
+        try {
+          const encoder = new TextEncoder();
+          const data = encoder.encode(passcode);
+          const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+        } catch (e) {
+          console.warn("Crypto API failed, using fallback:", e);
+        }
+      }
+
+      // Fallback for insecure contexts (HTTP) where crypto.subtle is undefined
+      // Simple DJB2-like hash for basic obfuscation (not secure, but functional for this use case)
+      let hash = 5381;
+      for (let i = 0; i < passcode.length; i++) {
+        hash = (hash * 33) ^ passcode.charCodeAt(i);
+      }
+      return (hash >>> 0).toString(16);
     }
 
     // Set new passcode (for initial setup or change)
