@@ -1,6 +1,7 @@
 import "./polyfills";
 import "./assets/main.css";
 import "@mdi/font/css/materialdesignicons.css";
+import "./assets/mdi-custom.css";
 
 import { createApp } from "vue";
 import { createPinia } from "pinia";
