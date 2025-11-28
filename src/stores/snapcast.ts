@@ -57,7 +57,12 @@ export interface ServerStatus {
 export const useSnapcastStore = defineStore(
   "snapcast",
   () => {
-    const host = ref("localhost:1780");
+    // Default to current hostname if not localhost, otherwise localhost
+    const defaultHost =
+      window.location.hostname === "localhost"
+        ? "localhost:1780"
+        : `${window.location.hostname}:1780`;
+    const host = ref(defaultHost);
     const isConnected = ref(false);
     const isConnecting = ref(false);
     const connectionError = ref<string | null>(null);
