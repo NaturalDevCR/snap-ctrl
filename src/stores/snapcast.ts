@@ -61,7 +61,7 @@ export const useSnapcastStore = defineStore(
     const defaultHost =
       window.location.hostname === "localhost"
         ? "localhost:1780"
-        : `${window.location.hostname}:1780`;
+        : window.location.host;
     const host = ref(defaultHost);
     const isConnected = ref(false);
     const isConnecting = ref(false);
