@@ -50,15 +50,18 @@ export class AudioStream {
   /**
    * Get the next audio buffer for playback, applying synchronization
    */
-  getNextBuffer(clientTime: number, latencyMs: number): DecodedAudio | null {
+  getNextBuffer(latencyMs: number): DecodedAudio | null {
     if (this.chunks.length === 0) {
       return null;
     }
 
+    // Get current client time (AudioContext time)
+    const clientNow = this.timeProvider.now();
+
     // Convert to server time for comparison with chunk timestamps
     // Chunks have server absolute timestamps, so we need to convert our playback time
     const serverPlaybackTime = this.timeProvider.serverTime(
-      clientTime + latencyMs
+      clientNow + latencyMs
     );
 
     // Find the chunk that should be playing now
