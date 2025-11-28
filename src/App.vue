@@ -470,6 +470,34 @@
         </div>
       </main>
 
+      <!-- Footer -->
+      <footer
+        v-if="snapcast.isConnected"
+        class="mt-8 py-6 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800"
+      >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p>
+            Made with <span class="text-red-500">♥</span> by
+            <a
+              href="https://github.com/jdavidoa91"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >Josue O.A</a
+            >
+            /
+            <a
+              href="https://github.com/NaturalDevCR"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >NaturalDevCR</a
+            >
+            <span class="opacity-50 ml-2">v{{ appVersion }}</span>
+          </p>
+        </div>
+      </footer>
+
       <!-- Group Settings Modal -->
       <Transition
         enter-active-class="transition duration-200 ease-out"
@@ -879,6 +907,24 @@
                 </label>
               </div>
 
+              <!-- Support Section -->
+              <div class="pt-4 border-t border-gray-100 dark:border-gray-800">
+                <a
+                  href="https://paypal.me/NaturalCloud"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="w-full flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg shadow-sm transition-all font-medium"
+                >
+                  <span class="mdi mdi-heart"></span>
+                  <span>Support Development</span>
+                </a>
+                <p
+                  class="mt-2 text-xs text-center text-gray-500 dark:text-gray-400"
+                >
+                  Help keep this project alive with a donation
+                </p>
+              </div>
+
               <!-- Permissions Section -->
               <div class="pt-4 border-t border-gray-100 dark:border-gray-800">
                 <button
@@ -1057,6 +1103,7 @@ import VolumeControl from "@/components/VolumeControl.vue";
 import SetupPasscode from "@/components/SetupPasscode.vue";
 import PermissionsConfig from "@/components/PermissionsConfig.vue";
 import UnlockPrompt from "@/components/UnlockPrompt.vue";
+import pkg from "../package.json";
 
 const snapcast = useSnapcastStore();
 const settings = useSettingsStore();
@@ -1086,6 +1133,8 @@ const sortedGroups = computed(() => {
   }
   return groups.sort((a, b) => a.name.localeCompare(b.name));
 });
+
+const appVersion = computed(() => pkg.version || "0.0.0");
 
 const toggleGroupVisibility = (groupId: string) => {
   const index = settings.hiddenGroups.indexOf(groupId);
