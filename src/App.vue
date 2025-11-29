@@ -1777,8 +1777,7 @@ async function createNewGroup() {
 
   try {
     // Create group by setting clients
-    // Snapcast automatically creates a new group when you assign clients that aren't in a group
-    // We'll use the first client's current group or create implicitly
+
     const firstClientId = createGroupModal.value.clientIds[0];
 
     // Find an empty group or the system will create one
@@ -1836,7 +1835,6 @@ async function handlePasscodeSetup(passcode: string) {
   await auth.setPasscode(passcode);
   // Set flag to show permissions config after connecting to server
   showingPermissionsSetup.value = true;
-  // Don't show permissions modal yet - wait for user to connect to server first
 }
 
 function handleInitialPermissionsSetup(permissions: AuthPermissions) {

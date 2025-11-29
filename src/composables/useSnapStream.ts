@@ -336,7 +336,7 @@ export function useSnapStream() {
     }
 
     // Get next buffer from stream
-    // We want to play audio that is bufferMs old, so we look for chunks with timestamp = now - (bufferMs + latency)
+    // Buffer playback: chunks with timestamp = now - (bufferMs + latency)
     const decodedAudio = audioStream.getNextBuffer(
       -(bufferMs.value + latency.value)
     );
@@ -378,7 +378,7 @@ export function useSnapStream() {
 
         // Soft sync: adjust playback rate to match server time
         if (timeProvider && decodedAudio.timestamp) {
-          // When we plan to play this chunk (client time) -> converted to server time
+          // When we plan to play this chunk
           const serverPlayTime = timeProvider.serverTime(nextPlayTime * 1000);
 
           // When the chunk SHOULD be played (server time)
@@ -393,7 +393,7 @@ export function useSnapStream() {
 
           let rate = 1.0;
 
-          // Deadband: ignore drift < 50ms to prevent constant resampling artifacts
+          // Ignore drift < 50ms to prevent resampling artifacts
           if (Math.abs(drift) > 50) {
             // Correction: correct over 2 seconds (gentler)
             rate = 1.0 + drift / 2000;

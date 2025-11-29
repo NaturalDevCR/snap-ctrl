@@ -235,12 +235,7 @@ export function buildMessage(
   dv.setUint16(2, id, true);
   dv.setUint16(4, refersTo, true);
 
-  // No padding in packed struct
-  // 6-10: received.sec (Note: Snapweb source has received first!)
-  // 10-14: received.usec
-  // 14-18: sent.sec
-  // 18-22: sent.usec
-  // 22-26: size (TOTAL size)
+  // Timestamps and size
 
   // Set timestamps
   let sec = 0;
@@ -255,15 +250,11 @@ export function buildMessage(
     usec = (now % 1000) * 1000;
   }
 
-  // Snapweb source: received is at 6, sent is at 14
-  // BUT snapweb serialize puts sent at 6 and received at 14!
-  // Server expects Client Sent Time at 6.
-  dv.setInt32(6, sec, true); // sent.sec
-  dv.setInt32(10, usec, true); // sent.usec
+  dv.setInt32(6, sec, true);
+  dv.setInt32(10, usec, true);
   dv.setInt32(14, 0, true); // received.sec
   dv.setInt32(18, 0, true); // received.usec
 
-  // Set TOTAL size
   dv.setUint32(22, totalSize, true);
 
   // Copy payload

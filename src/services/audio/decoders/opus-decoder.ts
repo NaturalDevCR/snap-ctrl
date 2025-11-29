@@ -127,7 +127,7 @@ export class OpusDecoder implements AudioDecoder {
     return {
       rate: this.sampleRate,
       channels: this.channels,
-      bits: 16, // Opus decodes to 16-bit PCM (or float32 which is effectively high precision)
+      bits: 16,
     };
   }
 

@@ -46,8 +46,7 @@ export const useAuthStore = defineStore(
         }
       }
 
-      // Fallback for insecure contexts (HTTP) where crypto.subtle is undefined
-      // Simple DJB2-like hash for basic obfuscation (not secure, but functional for this use case)
+      // Fallback hash for insecure contexts (HTTP)
       let hash = 5381;
       for (let i = 0; i < passcode.length; i++) {
         hash = (hash * 33) ^ passcode.charCodeAt(i);
