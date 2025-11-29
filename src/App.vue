@@ -353,6 +353,91 @@
                     <span class="mdi mdi-chevron-down"></span>
                   </span>
                 </div>
+
+                <!-- Group Volume Control -->
+                <div
+                  v-if="getLinkedClients(group.id).length > 0"
+                  class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800"
+                >
+                  <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                      <span
+                        class="mdi mdi-link-variant text-blue-600 dark:text-blue-400"
+                      ></span>
+                      <label
+                        class="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide"
+                      >
+                        Group Volume
+                      </label>
+                    </div>
+                    <span
+                      class="text-base font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded"
+                    >
+                      {{ getGroupVolume(group.id) }}%
+                    </span>
+                  </div>
+
+                  <div class="flex items-center gap-3">
+                    <button
+                      @click="adjustGroupVolume(group.id, -5)"
+                      class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-gray-200 dark:border-gray-700"
+                      :disabled="getGroupVolume(group.id) <= 0"
+                    >
+                      <span class="mdi mdi-minus text-lg"></span>
+                    </button>
+
+                    <div class="flex-1 relative py-2">
+                      <!-- Background track -->
+                      <div
+                        class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full"
+                      ></div>
+
+                      <!-- Active track (filled portion) -->
+                      <div
+                        class="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-400 dark:to-blue-500 rounded-full transition-all duration-150"
+                        :style="{ width: `${getGroupVolume(group.id)}%` }"
+                      ></div>
+
+                      <!-- Slider input -->
+                      <input
+                        type="range"
+                        :value="getGroupVolume(group.id)"
+                        @input="
+                          setGroupVolume(
+                            group.id,
+                            ($event.target as HTMLInputElement).valueAsNumber
+                          )
+                        "
+                        min="0"
+                        max="100"
+                        class="relative w-full appearance-none bg-transparent cursor-pointer z-10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-600 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125 [&::-webkit-slider-thumb]:active:scale-110"
+                      />
+                    </div>
+
+                    <button
+                      @click="adjustGroupVolume(group.id, 5)"
+                      class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-gray-200 dark:border-gray-700"
+                      :disabled="getGroupVolume(group.id) >= 100"
+                    >
+                      <span class="mdi mdi-plus text-lg"></span>
+                    </button>
+                  </div>
+
+                  <p
+                    class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center flex items-center justify-center gap-1"
+                  >
+                    <span
+                      class="inline-block w-2 h-2 bg-green-500 rounded-full"
+                    ></span>
+                    {{ getLinkedClients(group.id).length }}
+                    {{
+                      getLinkedClients(group.id).length === 1
+                        ? "client"
+                        : "clients"
+                    }}
+                    linked
+                  </p>
+                </div>
               </div>
 
               <div class="p-5 flex-1 flex flex-col gap-4">
@@ -370,6 +455,19 @@
                   <div class="flex items-start justify-between mb-4 gap-3">
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center gap-2 mb-1">
+                        <!-- Online/Offline Indicator -->
+                        <Tooltip
+                          :text="client.connected ? 'Online' : 'Offline'"
+                        >
+                          <span
+                            class="w-2 h-2 rounded-full"
+                            :class="
+                              client.connected
+                                ? 'bg-green-500'
+                                : 'bg-gray-400 dark:bg-gray-600'
+                            "
+                          ></span>
+                        </Tooltip>
                         <span
                           class="mdi"
                           :class="
@@ -570,34 +668,120 @@
               </div>
 
               <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >Clients</label
-                >
-                <div class="max-h-48 overflow-y-auto space-y-2 p-1">
+                <div class="flex items-center justify-between mb-4">
                   <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >Clients</label
+                  >
+                  <!-- Clean Offline Button (in header) -->
+                  <button
+                    v-if="
+                      getOfflineClientsInGroup(groupModal.groupId).length > 0
+                    "
+                    @click="removeOfflineClients"
+                    class="px-3 py-1.5 text-xs font-medium text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors flex items-center gap-1.5 border border-orange-200 dark:border-orange-800"
+                  >
+                    <span class="mdi mdi-trash-can-outline text-sm"></span>
+                    Clean Offline ({{
+                      getOfflineClientsInGroup(groupModal.groupId).length
+                    }})
+                  </button>
+                </div>
+
+                <!-- Table Header -->
+                <div
+                  class="flex items-center gap-3 px-3 pb-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700"
+                >
+                  <div class="flex-1">Client</div>
+                  <div class="w-24 text-center">In Group</div>
+                  <div
+                    class="w-24 text-center flex items-center justify-center gap-1"
+                  >
+                    <Tooltip text="Link to group volume control">
+                      <span class="inline-flex items-center gap-1 cursor-help">
+                        Linked
+                        <span
+                          class="mdi mdi-information-outline text-xs"
+                        ></span>
+                      </span>
+                    </Tooltip>
+                  </div>
+                </div>
+
+                <!-- Clients List -->
+                <div class="max-h-64 overflow-y-auto">
+                  <div
                     v-for="c in snapcast.filteredClients"
                     :key="c.id"
-                    class="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                    class="flex items-center gap-3 p-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors"
                   >
-                    <span
-                      class="font-medium text-gray-700 dark:text-gray-200"
-                      >{{ c.config.name || c.host.name }}</span
-                    >
-                    <div
-                      class="relative inline-flex items-center cursor-pointer"
-                    >
+                    <!-- Client name and volume -->
+                    <div class="flex-1 min-w-0">
+                      <div
+                        class="font-medium text-gray-900 dark:text-white truncate flex items-center gap-2"
+                      >
+                        <!-- Online/Offline Indicator -->
+                        <span
+                          class="w-2 h-2 rounded-full flex-shrink-0"
+                          :class="
+                            c.connected
+                              ? 'bg-green-500'
+                              : 'bg-gray-400 dark:bg-gray-600'
+                          "
+                        ></span>
+                        <span class="truncate">
+                          {{ c.config.name || c.host.name }}
+                        </span>
+                        <span
+                          v-if="!c.connected"
+                          class="ml-auto px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded flex-shrink-0"
+                        >
+                          Offline
+                        </span>
+                      </div>
+                      <div
+                        class="text-xs text-gray-500 dark:text-gray-400 truncate"
+                      >
+                        {{ c.config.volume.percent }}%
+                      </div>
+                    </div>
+
+                    <!-- In Group checkbox -->
+                    <div class="w-24 flex justify-center">
                       <input
                         type="checkbox"
                         :value="c.id"
                         v-model="groupModal.clientIds"
-                        class="sr-only peer"
+                        class="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 cursor-pointer"
                       />
-                      <div
-                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
-                      ></div>
                     </div>
-                  </label>
+
+                    <!-- Linked checkbox (only enabled if in group) -->
+                    <div class="w-24 flex justify-center">
+                      <input
+                        type="checkbox"
+                        :value="c.id"
+                        v-model="groupModal.linkedClientIds"
+                        :disabled="!groupModal.clientIds.includes(c.id)"
+                        class="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Info message -->
+                <div
+                  v-if="groupModal.linkedClientIds.length > 0"
+                  class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg"
+                >
+                  <p class="text-xs text-blue-700 dark:text-blue-300">
+                    <span class="mdi mdi-information text-sm"></span>
+                    {{ groupModal.linkedClientIds.length }} client{{
+                      groupModal.linkedClientIds.length === 1 ? "" : "s"
+                    }}
+                    linked. Their volumes will adjust proportionally with the
+                    group volume control.
+                  </p>
                 </div>
               </div>
             </div>
@@ -758,6 +942,27 @@
                   v-model.number="clientModal.latency"
                 />
               </div>
+            </div>
+
+            <!-- Delete Section (only for offline clients) -->
+            <div
+              v-if="
+                clientModal.clientId && !isClientConnected(clientModal.clientId)
+              "
+              class="px-6 py-4 bg-red-50 dark:bg-red-900/20 border-t border-red-100 dark:border-red-800"
+            >
+              <button
+                @click="deleteClientFromModal"
+                class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
+                <span class="mdi mdi-delete"></span>
+                Delete Offline Client
+              </button>
+              <p
+                class="mt-2 text-xs text-red-600 dark:text-red-400 text-center"
+              >
+                ⚠️ This action cannot be undone
+              </p>
             </div>
 
             <div
@@ -1035,10 +1240,27 @@
                     :key="c.id"
                     class="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer transition-colors"
                   >
-                    <span
-                      class="font-medium text-gray-700 dark:text-gray-200"
-                      >{{ c.config.name || c.host.name }}</span
-                    >
+                    <div class="flex items-center gap-2 flex-1">
+                      <!-- Online/Offline Indicator -->
+                      <span
+                        class="w-2 h-2 rounded-full flex-shrink-0"
+                        :class="
+                          c.connected
+                            ? 'bg-green-500'
+                            : 'bg-gray-400 dark:bg-gray-600'
+                        "
+                      ></span>
+                      <span
+                        class="font-medium text-gray-700 dark:text-gray-200 truncate"
+                        >{{ c.config.name || c.host.name }}</span
+                      >
+                      <span
+                        v-if="!c.connected"
+                        class="px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded flex-shrink-0"
+                      >
+                        Offline
+                      </span>
+                    </div>
                     <div
                       class="relative inline-flex items-center cursor-pointer"
                     >
@@ -1257,6 +1479,69 @@ function adjustVolume(client: Client, delta: number) {
   snapcast.setClientVolume(client.id, newVolume, client.config.volume.muted);
 }
 
+/**
+ * Get current group volume (average of linked clients).
+ * IMPORTANT: Always calculated dynamically, never restored from store.
+ */
+function getGroupVolume(groupId: string): number {
+  const linkedIds = settings.groupVolumeLinks[groupId]?.linkedClientIds || [];
+  const group = snapcast.groups.find((g) => g.id === groupId);
+
+  if (!group || linkedIds.length === 0) return 100;
+
+  const linkedClients = group.clients.filter((c) => linkedIds.includes(c.id));
+
+  if (linkedClients.length === 0) return 100;
+
+  // Calculate average volume of linked clients
+  const avg =
+    linkedClients.reduce((sum, c) => sum + c.config.volume.percent, 0) /
+    linkedClients.length;
+
+  return Math.round(avg);
+}
+
+/**
+ * Get list of linked clients for a group
+ */
+function getLinkedClients(groupId: string): Client[] {
+  const linkedIds = settings.groupVolumeLinks[groupId]?.linkedClientIds || [];
+  const group = snapcast.groups.find((g) => g.id === groupId);
+
+  if (!group) return [];
+
+  return group.clients.filter((c) => linkedIds.includes(c.id));
+}
+
+/**
+ * Set group volume (adjusts all linked clients proportionally)
+ */
+async function setGroupVolume(groupId: string, groupVolume: number) {
+  const linkConfig = settings.groupVolumeLinks[groupId];
+  const linkedIds = linkConfig?.linkedClientIds || [];
+
+  if (linkedIds.length === 0) return;
+
+  // Get reference volumes from settings (or current volumes as fallback)
+  const referenceVolumes = linkConfig?.referenceVolumes || {};
+
+  await snapcast.setGroupVolumeProportional(
+    groupId,
+    groupVolume,
+    linkedIds,
+    referenceVolumes
+  );
+}
+
+/**
+ * Adjust group volume by delta
+ */
+async function adjustGroupVolume(groupId: string, delta: number) {
+  const currentVolume = getGroupVolume(groupId);
+  const newVolume = Math.max(0, Math.min(100, currentVolume + delta));
+  await setGroupVolume(groupId, newVolume);
+}
+
 function updateClientName(client: Client) {
   snapcast.setClientName(client.id, client.config.name);
 }
@@ -1266,21 +1551,26 @@ const groupModal = ref<{
   open: boolean;
   groupId: string | null;
   clientIds: string[];
+  linkedClientIds: string[];
   streamId: string | null;
   name: string;
 }>({
   open: false,
   groupId: null,
   clientIds: [],
+  linkedClientIds: [],
   streamId: null,
   name: "",
 });
 
 function openGroupSettings(group: Group) {
+  const linkedIds = settings.groupVolumeLinks[group.id]?.linkedClientIds || [];
+
   groupModal.value = {
     open: true,
     groupId: group.id,
     clientIds: group.clients.map((c) => c.id),
+    linkedClientIds: [...linkedIds],
     streamId: group.stream_id,
     name: group.name || "",
   };
@@ -1308,13 +1598,113 @@ async function applyGroupSettings() {
   // Save custom name
   await snapcast.setGroupName(groupModal.value.groupId, groupModal.value.name);
 
+  // Calculate reference volumes for linked clients
+  // Use current volume as the 100% baseline for each client
+  const group = snapcast.groups.find((g) => g.id === groupModal.value.groupId);
+  const referenceVolumes: Record<string, number> = {};
+
+  if (group) {
+    for (const clientId of groupModal.value.linkedClientIds) {
+      const client = group.clients.find((c) => c.id === clientId);
+      if (client) {
+        // Save current volume as the reference (100% baseline)
+        referenceVolumes[clientId] = client.config.volume.percent;
+      }
+    }
+  }
+
+  // Save linked clients configuration with reference volumes
+  settings.setGroupVolumeLinks(
+    groupModal.value.groupId,
+    groupModal.value.linkedClientIds,
+    referenceVolumes
+  );
+
   closeGroupSettings();
 }
 
 async function deleteCurrentGroup() {
   if (!groupModal.value.groupId) return;
+
+  const group = snapcast.groups.find((g) => g.id === groupModal.value.groupId);
+  if (!group) return;
+
+  // Find all disconnected clients in this group
+  const disconnectedClients = group.clients.filter((c) => !c.connected);
+
+  // Delete disconnected clients first
+  for (const client of disconnectedClients) {
+    try {
+      await snapcast.deleteClient(client.id);
+    } catch (error) {
+      console.error(`Failed to delete client ${client.id}:`, error);
+    }
+  }
+
+  // Empty the group of remaining clients
   await snapcast.setGroupClients(groupModal.value.groupId, []);
+
   closeGroupSettings();
+}
+
+// Helper function to check if a client is connected
+function isClientConnected(clientId: string): boolean {
+  const client = snapcast.findClientById(clientId);
+  return client ? client.connected : false;
+}
+
+// Helper function to get offline clients in a group
+function getOfflineClientsInGroup(groupId: string | null): Client[] {
+  if (!groupId) return [];
+  const group = snapcast.groups.find((g) => g.id === groupId);
+  if (!group) return [];
+  return group.clients.filter((c) => !c.connected);
+}
+
+// Remove all offline clients from current group
+async function removeOfflineClients() {
+  if (!groupModal.value.groupId) return;
+
+  const offlineClients = getOfflineClientsInGroup(groupModal.value.groupId);
+
+  for (const client of offlineClients) {
+    try {
+      await snapcast.deleteClient(client.id);
+    } catch (error) {
+      console.error(`Failed to delete client ${client.id}:`, error);
+    }
+  }
+
+  // Refresh the modal data
+  const group = snapcast.groups.find((g) => g.id === groupModal.value.groupId);
+  if (group) {
+    groupModal.value.clientIds = group.clients.map((c) => c.id);
+    groupModal.value.linkedClientIds = groupModal.value.linkedClientIds.filter(
+      (id) => group.clients.some((c) => c.id === id)
+    );
+  }
+}
+
+// Delete client from client modal
+async function deleteClientFromModal() {
+  if (!clientModal.value.clientId) return;
+
+  const clientId = clientModal.value.clientId;
+  const clientName = clientModal.value.name || clientId;
+
+  if (
+    confirm(
+      `Are you sure you want to delete "${clientName}"? This action cannot be undone.`
+    )
+  ) {
+    try {
+      await snapcast.deleteClient(clientId);
+      closeClientSettings();
+    } catch (error) {
+      console.error(`Failed to delete client ${clientId}:`, error);
+      alert(`Failed to delete client: ${error}`);
+    }
+  }
 }
 
 // Client modal state
@@ -1501,5 +1891,11 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* Scoped styles removed in favor of Tailwind CSS */
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
 </style>

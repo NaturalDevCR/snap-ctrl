@@ -1,6 +1,13 @@
 import { defineStore } from "pinia";
 import { ref, watch } from "vue";
 
+export interface GroupVolumeLink {
+  linkedClientIds: string[];
+  // Reference volumes (100% baseline) for each linked client
+  // Key: clientId, Value: reference volume percentage
+  referenceVolumes: Record<string, number>;
+}
+
 export const useSettingsStore = defineStore(
   "settings",
   () => {
@@ -11,9 +18,19 @@ export const useSettingsStore = defineStore(
     const volumeStep = ref(5);
     const refreshInterval = ref(5000); // milliseconds
     const hiddenGroups = ref<string[]>([]);
+    // Group volume control links: which clients are linked to group volume
+    const groupVolumeLinks = ref<Record<string, GroupVolumeLink>>({});
 
     function setHiddenGroups(groups: string[]) {
       hiddenGroups.value = groups;
+    }
+
+    function setGroupVolumeLinks(
+      groupId: string,
+      linkedClientIds: string[],
+      referenceVolumes: Record<string, number>
+    ) {
+      groupVolumeLinks.value[groupId] = { linkedClientIds, referenceVolumes };
     }
 
     // Persisted client ordering per group id -> client id array
@@ -78,6 +95,7 @@ export const useSettingsStore = defineStore(
       volumeStep,
       refreshInterval,
       hiddenGroups,
+      groupVolumeLinks,
       setTheme,
       toggleTheme,
       setAutoConnect,
@@ -86,6 +104,7 @@ export const useSettingsStore = defineStore(
       setVolumeStep,
       setRefreshInterval,
       setHiddenGroups,
+      setGroupVolumeLinks,
     };
   },
   {
@@ -99,6 +118,7 @@ export const useSettingsStore = defineStore(
         "volumeStep",
         "refreshInterval",
         "hiddenGroups",
+        "groupVolumeLinks",
       ],
     },
   }

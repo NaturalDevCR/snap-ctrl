@@ -201,9 +201,9 @@ watch(connected, (isConnected) => {
   }
 });
 
-function handleConnect() {
+async function handleConnect() {
   if (connected.value) {
-    disconnect();
+    await disconnect();
   } else {
     connect(snapcast.host);
   }

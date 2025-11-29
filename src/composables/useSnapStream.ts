@@ -153,7 +153,10 @@ export function useSnapStream() {
   /**
    * Disconnect from stream
    */
-  function disconnect(): void {
+  async function disconnect(): Promise<void> {
+    // Store clientId before cleanup
+    const clientToDelete = clientId.value;
+
     if (ws.value) {
       ws.value.close();
       ws.value = null;
@@ -163,6 +166,25 @@ export function useSnapStream() {
     connecting.value = false;
     codec.value = "";
     error.value = "";
+
+    // Clean up the browser player client from the server
+    // This will automatically remove the orphaned group if it becomes empty
+    if (clientToDelete) {
+      try {
+        // Import snapcast store dynamically to avoid circular dependency
+        const { useSnapcastStore } = await import("@/stores/snapcast");
+        const snapcast = useSnapcastStore();
+
+        console.log(`Cleaning up browser player client: ${clientToDelete}`);
+        await snapcast.deleteClient(clientToDelete);
+      } catch (error) {
+        console.warn("Failed to cleanup browser player client:", error);
+        // Don't throw - cleanup failure shouldn't prevent disconnection
+      }
+    }
+
+    // Clear clientId after cleanup attempt
+    clientId.value = "";
   }
 
   /**

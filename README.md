@@ -9,7 +9,12 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
 - **Modern UI**: Clean, responsive design with dark mode support.
 - **Real-time Control**: Instant updates for volume, mute, and stream assignment.
 - **Group Management**: Create, rename, delete, and manage client groups easily.
-- **Client Management**: Rename clients, adjust latency, and control volume.
+- **Advanced Client Management**:
+  - Visual online/offline status indicators for all clients
+  - Delete offline/orphaned clients to keep your setup clean
+  - Bulk cleanup of offline clients from groups
+  - Improved group deletion that prevents orphaned clients from reappearing
+- **Client Control**: Rename clients, adjust latency, and control volume.
 - **Stream Selection**: Assign streams to groups with a user-friendly interface.
 - **Browser Player**: Listen to your Snapcast streams directly in the browser (supports WASM decoders).
 - **PWA Support**: Install as a Progressive Web App for a native-like experience.

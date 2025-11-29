@@ -507,6 +507,89 @@ export const useSnapcastStore = defineStore(
     }
 
     /**
+     * Delete a client from the server.
+     * This will automatically clean up any empty groups.
+     * Used primarily for cleaning up browser player orphaned groups.
+     */
+    async function deleteClient(clientId: string) {
+      try {
+        await sendRequest("Server.DeleteClient", {
+          id: clientId,
+        });
+        console.log(`Client ${clientId} deleted successfully`);
+        // Refresh server status after deletion
+        await getServerStatus();
+      } catch (error) {
+        console.error("Failed to delete client:", error);
+        throw error;
+      }
+    }
+
+    /**
+     * Set group volume additively for linked clients.
+     * Adjusts all linked clients by the same delta from their reference volumes.
+     * Example: If group volume changes -1%, each client volume changes -1%.
+     * @param groupId - ID of the group
+     * @param groupVolume - Target group volume percentage (0-100)
+     * @param linkedClientIds - IDs of clients to adjust
+     * @param referenceVolumes - Reference volumes (baseline) for each client
+     */
+    async function setGroupVolumeProportional(
+      groupId: string,
+      groupVolume: number,
+      linkedClientIds: string[],
+      referenceVolumes: Record<string, number>
+    ) {
+      const group = groups.value.find((g) => g.id === groupId);
+      if (!group) return;
+
+      // Get linked clients
+      const linkedClients = group.clients.filter((c) =>
+        linkedClientIds.includes(c.id)
+      );
+
+      if (linkedClients.length === 0) return;
+
+      // Calculate average reference volume (the "100%" baseline for the group)
+      const refVolumes = linkedClients
+        .map(
+          (client) =>
+            referenceVolumes[client.id] ?? client.config.volume.percent
+        )
+        .filter((v) => v !== undefined);
+
+      if (refVolumes.length === 0) return;
+
+      const avgRefVolume =
+        refVolumes.reduce((sum, v) => sum + v, 0) / refVolumes.length;
+
+      // Calculate delta from baseline
+      // If avgRefVolume was 70% and groupVolume is now 69%, delta = -1%
+      const delta = groupVolume - avgRefVolume;
+
+      // Apply the same delta to each linked client
+      const promises = linkedClients.map((client) => {
+        const refVolume =
+          referenceVolumes[client.id] ?? client.config.volume.percent;
+
+        // Add delta to reference volume
+        // Example: client ref 80%, delta -1% → newVolume = 79%
+        const newVolume = Math.round(
+          Math.min(100, Math.max(0, refVolume + delta))
+        );
+
+        return setClientVolume(
+          client.id,
+          newVolume,
+          client.config.volume.muted
+        );
+      });
+
+      // Execute all volume changes concurrently
+      await Promise.all(promises);
+    }
+
+    /**
      * Find a client by id across all groups and return a live reference.
      */
     function findClientById(clientId: string): Client | null {
@@ -542,6 +625,9 @@ export const useSnapcastStore = defineStore(
       setGroupStream,
       setGroupClients,
       setGroupName,
+      deleteClient,
+      setGroupVolumeProportional,
+      findClientById,
     };
   },
   {
