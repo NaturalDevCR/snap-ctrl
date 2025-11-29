@@ -4,7 +4,6 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
 
 <img width="2640" height="2078" alt="image" src="https://github.com/user-attachments/assets/3b60a6d0-1218-4e67-89b5-1f9f93ae70f6" />
 
-
 ## Features
 
 - **Modern UI**: Clean, responsive design with dark mode support.
@@ -19,8 +18,9 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
 - **Stream Selection**: Assign streams to groups with a user-friendly interface.
 - **Browser Player**: Listen to your Snapcast streams directly in the browser (supports WASM decoders).
 - **PWA Support**: Install as a Progressive Web App for a native-like experience.
-- **Security**: Optional passcode protection and granular permission controls.
-- **Portable Build**: Can be served from any web server or directory.
+- **Mobile Optimized**: Audio player automatically hides on mobile devices to save screen space.
+- **Granular Permissions**: Fine-grained control over UI visibility (hide settings, filters, etc.).
+- **HTTPS Support**: Optional HTTPS mode for local development.
 
 ## Getting Started
 
@@ -45,8 +45,13 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
     ```
 
 3.  Run development server:
+
     ```bash
+    # HTTP (Default)
     pnpm run dev
+
+    # HTTPS (Optional, for PWA testing)
+    pnpm run dev:https
     ```
 
 ### Building for Production

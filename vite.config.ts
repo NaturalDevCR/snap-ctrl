@@ -4,6 +4,7 @@ import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import vueDevTools from "vite-plugin-vue-devtools";
 import { VitePWA } from "vite-plugin-pwa";
+import basicSsl from "@vitejs/plugin-basic-ssl";
 
 import tailwindcss from "@tailwindcss/vite";
 
@@ -11,6 +12,7 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   base: "./",
   plugins: [
+    process.env.HTTPS ? basicSsl() : undefined,
     vue(),
     vueDevTools(),
     tailwindcss(),
@@ -28,14 +30,14 @@ export default defineConfig({
         orientation: "portrait",
         icons: [
           {
-            src: "pwa-192x192.svg",
+            src: "pwa-192x192.png",
             sizes: "192x192",
-            type: "image/svg+xml",
+            type: "image/png",
           },
           {
-            src: "pwa-512x512.svg",
+            src: "pwa-512x512.png",
             sizes: "512x512",
-            type: "image/svg+xml",
+            type: "image/png",
           },
         ],
       },

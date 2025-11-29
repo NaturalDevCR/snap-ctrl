@@ -7,6 +7,12 @@ export interface AuthPermissions {
   canRenameGroups: boolean;
   canRenameClients: boolean;
 
+  // UI Visibility permissions
+  showGroupSettings: boolean;
+  showClientSettings: boolean;
+  showGroupFilter: boolean;
+  showCreateGroup: boolean;
+
   // Entity permissions (empty arrays = all allowed)
   allowedGroups: string[];
   allowedSources: string[];
@@ -22,6 +28,10 @@ export const useAuthStore = defineStore(
       canAdjustVolumes: true,
       canRenameGroups: true,
       canRenameClients: true,
+      showGroupSettings: true,
+      showClientSettings: true,
+      showGroupFilter: true,
+      showCreateGroup: true,
       allowedGroups: [],
       allowedSources: [],
       allowedClients: [],
@@ -136,6 +146,10 @@ export const useAuthStore = defineStore(
         canAdjustVolumes: true,
         canRenameGroups: true,
         canRenameClients: true,
+        showGroupSettings: true,
+        showClientSettings: true,
+        showGroupFilter: true,
+        showCreateGroup: true,
         allowedGroups: [],
         allowedSources: [],
         allowedClients: [],

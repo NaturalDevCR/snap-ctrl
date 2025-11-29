@@ -114,7 +114,7 @@
 
           <!-- Browser Player in Header when connected -->
           <div
-            v-if="snapcast.isConnected"
+            v-if="snapcast.isConnected && !isMobile"
             class="py-3 border-t border-gray-200 dark:border-gray-800"
           >
             <BrowserPlayer />
@@ -223,6 +223,7 @@
             <div class="flex items-center gap-2">
               <Tooltip text="Create Group">
                 <button
+                  v-if="auth.permissions.showCreateGroup"
                   @click="openCreateGroup"
                   class="w-10 h-10 flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors"
                 >
@@ -268,6 +269,7 @@
 
               <Tooltip text="Filter Groups">
                 <button
+                  v-if="auth.permissions.showGroupFilter"
                   class="w-10 h-10 flex items-center justify-center rounded-lg border shadow-sm transition-colors"
                   :class="
                     showGroupFilter
@@ -318,6 +320,7 @@
                   </Tooltip>
                   <Tooltip text="Group settings">
                     <button
+                      v-if="auth.permissions.showGroupSettings"
                       @click="openGroupSettings(group)"
                       class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-gray-400 transition-colors"
                     >
@@ -518,6 +521,7 @@
                       </Tooltip>
                       <Tooltip text="Client settings">
                         <button
+                          v-if="auth.permissions.showClientSettings"
                           class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                           @click="openClientSettings(client)"
                         >
@@ -1866,7 +1870,21 @@ function handleUnlockForPermissions() {
 // Watch theme changes handled in store
 // Removed local watcher as it is now in the store
 
-onMounted(() => {
+const isMobile = ref(window.innerWidth < 768);
+
+const updateIsMobile = () => {
+  isMobile.value = window.innerWidth < 768;
+};
+
+onMounted(async () => {
+  window.addEventListener("resize", updateIsMobile);
+  // Check if we have a saved host
+  const savedHost = localStorage.getItem("snapcast_host");
+  if (savedHost) {
+    hostInput.value = savedHost;
+    updateHost();
+  }
+
   // Only auto-connect if authenticated
   if (auth.isAuthenticated && !auth.isLocked && settings.autoConnect) {
     snapcast.connect();
@@ -1881,9 +1899,8 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  if (refreshInterval) {
-    clearInterval(refreshInterval);
-  }
+  window.removeEventListener("resize", updateIsMobile);
+  // Close connection when component is destroyed
   snapcast.disconnect();
 });
 </script>

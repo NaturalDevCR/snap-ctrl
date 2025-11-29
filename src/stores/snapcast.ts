@@ -61,7 +61,7 @@ export const useSnapcastStore = defineStore(
     const defaultHost =
       window.location.hostname === "localhost"
         ? "localhost:1780"
-        : window.location.host;
+        : window.location.host + window.location.pathname.replace(/\/$/, "");
     const host = ref(defaultHost);
     const isConnected = ref(false);
     const isConnecting = ref(false);
@@ -108,9 +108,11 @@ export const useSnapcastStore = defineStore(
 
     function setHost(newHost: string) {
       // Strip protocol if present to avoid double protocol in connection URL
+      // Also strip trailing slash to avoid double slashes in path
       const cleanHost = newHost
         .replace(/^https?:\/\//, "")
-        .replace(/^wss?:\/\//, "");
+        .replace(/^wss?:\/\//, "")
+        .replace(/\/$/, "");
       host.value = cleanHost;
     }
 

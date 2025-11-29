@@ -1,6 +1,6 @@
 {
   "name": "snapcast-vue",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": true,
   "type": "module",
   "engines": {
@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:https": "HTTPS=true vite",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
@@ -27,6 +28,7 @@
     "@tailwindcss/vite": "^4.1.17",
     "@tsconfig/node22": "^22.0.2",
     "@types/node": "^22.18.11",
+    "@vitejs/plugin-basic-ssl": "^2.1.0",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/tsconfig": "^0.8.1",
     "autoprefixer": "^10.4.22",

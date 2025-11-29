@@ -87,6 +87,89 @@
           </div>
         </div>
 
+        <!-- UI Visibility Permissions -->
+        <div>
+          <h4
+            class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2"
+          >
+            <span class="mdi mdi-eye-outline"></span>
+            UI Visibility
+          </h4>
+          <div class="space-y-3">
+            <label
+              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+            >
+              <span class="font-medium text-gray-900 dark:text-white"
+                >Show Group Settings</span
+              >
+              <div class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  v-model="localPermissions.showGroupSettings"
+                  class="sr-only peer"
+                />
+                <div
+                  class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
+                ></div>
+              </div>
+            </label>
+
+            <label
+              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+            >
+              <span class="font-medium text-gray-900 dark:text-white"
+                >Show Client Settings</span
+              >
+              <div class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  v-model="localPermissions.showClientSettings"
+                  class="sr-only peer"
+                />
+                <div
+                  class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
+                ></div>
+              </div>
+            </label>
+
+            <label
+              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+            >
+              <span class="font-medium text-gray-900 dark:text-white"
+                >Show Group Filter</span
+              >
+              <div class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  v-model="localPermissions.showGroupFilter"
+                  class="sr-only peer"
+                />
+                <div
+                  class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
+                ></div>
+              </div>
+            </label>
+
+            <label
+              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+            >
+              <span class="font-medium text-gray-900 dark:text-white"
+                >Show Create Group</span
+              >
+              <div class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  v-model="localPermissions.showCreateGroup"
+                  class="sr-only peer"
+                />
+                <div
+                  class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
+                ></div>
+              </div>
+            </label>
+          </div>
+        </div>
+
         <!-- Entity Restrictions -->
         <div>
           <h4
