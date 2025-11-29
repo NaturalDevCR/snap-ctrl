@@ -1587,6 +1587,7 @@ function closeGroupSettings() {
 async function applyGroupSettings() {
   if (!groupModal.value.groupId) return;
 
+  // Update stream
   if (groupModal.value.streamId) {
     await snapcast.setGroupStream(
       groupModal.value.groupId,
@@ -1594,13 +1595,27 @@ async function applyGroupSettings() {
     );
   }
 
-  await snapcast.setGroupClients(
-    groupModal.value.groupId,
-    groupModal.value.clientIds
-  );
+  // Update clients in group
+  try {
+    await snapcast.setGroupClients(
+      groupModal.value.groupId,
+      groupModal.value.clientIds
+    );
+  } catch (error) {
+    // Suppress errors - group might have been auto-deleted if emptied
+    console.log("Group clients update skipped (group may have been deleted)");
+  }
 
   // Save custom name
-  await snapcast.setGroupName(groupModal.value.groupId, groupModal.value.name);
+  try {
+    await snapcast.setGroupName(
+      groupModal.value.groupId,
+      groupModal.value.name
+    );
+  } catch (error) {
+    // Suppress errors - group might have been auto-deleted
+    console.log("Group name update skipped (group may have been deleted)");
+  }
 
   // Calculate reference volumes for linked clients
   // Use current volume as the 100% baseline for each client

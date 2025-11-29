@@ -508,6 +508,16 @@ export function useSnapStream() {
     disconnect();
   });
 
+  // Also cleanup on page unload (tab close, navigation, etc.)
+  // This ensures cleanup even if onUnmounted doesn't complete
+  if (typeof window !== "undefined") {
+    window.addEventListener("beforeunload", () => {
+      // Call disconnect synchronously
+      // Note: The async cleanup in disconnect() will do its best before the page closes
+      disconnect();
+    });
+  }
+
   return {
     // State
     connected,
