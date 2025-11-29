@@ -90,6 +90,10 @@ If you find this project useful and want to support its development, consider bu
 
 Your donations help keep this project maintained and improved. Thank you for your support! ❤️
 
+## Acknowledgments
+
+This project was inspired by and uses concepts from [Snapweb](https://github.com/badaix/snapweb), the official web interface for Snapcast. While SnapCtrl is a complete rewrite with its own design and implementation, we're grateful to the Snapcast team for their excellent work on the reference implementation and for maintaining the amazing Snapcast ecosystem.
+
 ## License
 
 MIT
