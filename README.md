@@ -92,7 +92,7 @@ To create a new release:
 
 If you find this project useful and want to support its development, consider buying me a coffee! ☕
 
-[![Donate via PayPal](https://www.paypayal.com/en_US/i/btn/btn_donateCC_LG.gif)](https://paypal.me/NaturalCloud)
+[![Donate via PayPal](https://www.paypal.com/en_US/i/btn/btn_donateCC_LG.gif)](https://paypal.me/NaturalCloud)
 
 Your donations help keep this project maintained and improved. Thank you for your support! ❤️
 
