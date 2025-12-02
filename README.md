@@ -100,6 +100,9 @@ Your donations help keep this project maintained and improved. Thank you for you
 
 This project was inspired by and uses concepts from [Snapweb](https://github.com/badaix/snapweb), the official web interface for Snapcast. While SnapCtrl is a complete rewrite with its own design and implementation, we're grateful to the Snapcast team for their excellent work on the reference implementation and for maintaining the amazing Snapcast ecosystem.
 
+## Notice
+For anyone concerned, this project was `vibe-coded` (with some personal tweaks) using Gemini 3 Pro and Sonnet 4.5 I did this, just because I needed some features and because I love VueJS.
+
 ## License
 
 MIT
