@@ -34,7 +34,7 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
 1.  Clone the repository:
 
     ```bash
-    git clone https://github.com/jdavidoa91/snap-ctrl.git
+    git clone https://github.com/NaturalDevCR/snap-ctrl.git
     cd snap-ctrl
     ```
 
