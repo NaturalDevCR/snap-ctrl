@@ -101,6 +101,16 @@
             </div>
 
             <div class="flex items-center gap-2">
+              <Tooltip text="Server Info" position="bottom">
+                <button
+                  v-if="snapcast.isConnected"
+                  @click="showServerInfo = true"
+                  class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-gray-400 transition-colors"
+                >
+                  <span class="mdi mdi-information-outline text-xl"></span>
+                </button>
+              </Tooltip>
+
               <Tooltip text="Settings" position="bottom">
                 <button
                   @click="openAppSettings"
@@ -621,6 +631,9 @@
           </p>
         </div>
       </footer>
+
+      <!-- Server Info Modal -->
+      <ServerInfo :is-open="showServerInfo" @close="showServerInfo = false" />
 
       <!-- Group Settings Modal -->
       <Transition
@@ -1550,6 +1563,7 @@ import VolumeControl from "@/components/VolumeControl.vue";
 import SetupPasscode from "@/components/SetupPasscode.vue";
 import PermissionsConfig from "@/components/PermissionsConfig.vue";
 import UnlockPrompt from "@/components/UnlockPrompt.vue";
+import ServerInfo from "@/components/ServerInfo.vue";
 import pkg from "../package.json";
 
 const snapcast = useSnapcastStore();
@@ -1560,6 +1574,9 @@ const { clientId: browserClientId } = useSnapStream();
 const hostInput = ref(snapcast.host);
 const refreshing = ref(false);
 let refreshInterval: number | null = null;
+
+// UI State
+const showServerInfo = ref(false);
 
 // Setup flow state
 const showingPermissionsSetup = ref(false);

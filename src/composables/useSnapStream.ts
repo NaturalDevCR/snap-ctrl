@@ -55,9 +55,31 @@ export function useSnapStream() {
   const timeDiff = computed(() => timeProvider?.getDiff() ?? 0);
   const syncSamples = computed(() => timeProvider?.getSampleCount() ?? 0);
 
+  // Scheduler Worker
+  let schedulerWorker: Worker | null = null;
+
   // Event handlers for AudioContext resume
   let handleVisibilityChange: (() => void) | null = null;
   let handleFocus: (() => void) | null = null;
+
+  /**
+   * Initialize Scheduler Worker
+   */
+  function initSchedulerWorker() {
+    if (schedulerWorker) return;
+    
+    // Create a new worker for scheduling
+    schedulerWorker = new Worker(
+      new URL("../workers/scheduler.worker.ts", import.meta.url),
+      { type: "module" }
+    );
+
+    schedulerWorker.onmessage = (e) => {
+      if (e.data === "tick") {
+        scheduleNextBuffer();
+      }
+    };
+  }
 
   /**
    * Connect to Snapserver stream endpoint
@@ -67,6 +89,9 @@ export function useSnapStream() {
 
     connecting.value = true;
     error.value = "";
+
+    // Initialize the scheduler worker
+    initSchedulerWorker();
 
     try {
       // Create Audio Context
@@ -273,8 +298,13 @@ export function useSnapStream() {
         audioStream = new AudioStream(timeProvider, decoder.getSampleRate());
         console.log("Audio stream created");
 
-        // Start playback loop
-        scheduleNextBuffer();
+        // Start playback loop via Worker
+        if (schedulerWorker) {
+          schedulerWorker.postMessage("start");
+        } else {
+          // Fallback if worker failed (shouldn't happen)
+          scheduleNextBuffer();
+        }
       }
     } catch (err) {
       console.error("Failed to initialize decoder:", err);
@@ -465,7 +495,7 @@ export function useSnapStream() {
     }
 
     // Schedule next buffer
-    requestAnimationFrame(() => scheduleNextBuffer());
+    // requestAnimationFrame(() => scheduleNextBuffer());
   }
 
   /**
@@ -506,6 +536,13 @@ export function useSnapStream() {
     if (timeProvider) {
       timeProvider.stop();
       timeProvider = null;
+    }
+
+    // Stop scheduler worker
+    if (schedulerWorker) {
+      schedulerWorker.postMessage("stop");
+      schedulerWorker.terminate();
+      schedulerWorker = null;
     }
 
     // Clear stream

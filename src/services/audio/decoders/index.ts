@@ -7,6 +7,7 @@ import { type AudioDecoder } from "./types";
 import { PcmDecoder } from "./pcm-decoder";
 import { FlacDecoder } from "./flac-decoder";
 import { OpusDecoder } from "./opus-decoder";
+import { VorbisDecoder } from "./vorbis-decoder";
 
 export * from "./types";
 
@@ -17,6 +18,8 @@ export function createDecoder(codec: string): AudioDecoder {
     return new FlacDecoder();
   } else if (codecLower === "opus") {
     return new OpusDecoder();
+  } else if (codecLower === "vorbis") {
+    return new VorbisDecoder();
   } else if (codecLower === "pcm") {
     return new PcmDecoder();
   } else {

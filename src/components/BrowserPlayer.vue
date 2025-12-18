@@ -70,13 +70,15 @@
               </select>
             </div>
 
-            <div v-if="connected" class="hidden md:flex gap-1">
+            <div v-if="connected" class="flex gap-1 items-center">
               <span
-                class="text-[9px] px-1 py-0.5 bg-gray-100 dark:bg-slate-700 rounded text-gray-600 dark:text-gray-300 font-mono"
+                class="text-[9px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded font-mono uppercase font-bold tracking-wider"
+                title="Current Decoder"
                 >{{ codec || "PCM" }}</span
               >
               <span
-                class="text-[9px] px-1 py-0.5 bg-gray-100 dark:bg-slate-700 rounded text-gray-600 dark:text-gray-300 font-mono"
+                class="hidden md:inline-block text-[9px] px-1 py-0.5 bg-gray-100 dark:bg-slate-700 rounded text-gray-600 dark:text-gray-300 font-mono"
+                title="Latency"
                 >{{ latency }}ms</span
               >
             </div>

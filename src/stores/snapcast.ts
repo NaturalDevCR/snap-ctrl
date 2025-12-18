@@ -51,6 +51,21 @@ export interface ServerStatus {
   server: {
     groups: Group[];
     streams: Stream[];
+    server: {
+      host: {
+        arch: string;
+        ip: string;
+        mac: string;
+        name: string;
+        os: string;
+      };
+      snapserver: {
+        controlProtocolVersion: number;
+        name: string;
+        protocolVersion: number;
+        version: string;
+      };
+    };
   };
 }
 
