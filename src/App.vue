@@ -284,21 +284,33 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div
               v-for="group in sortedGroups"
               :key="group.id"
+              :draggable="!isBrowserGroup(group)"
+              @dragstart="handleMainDragStart(group, $event)"
+              @dragover="handleMainDragOver(group, $event)"
+              @drop="handleMainDrop(group, $event)"
+              @dragend="handleMainDragEnd"
               class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col"
+              :class="{ 'opacity-50 border-blue-500 ring-2 ring-blue-500 ring-opacity-50': draggedGroupId === group.id }"
             >
               <div
                 class="px-5 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-slate-800/50 flex items-center justify-between gap-3"
               >
-                <h3
-                  class="font-bold text-lg text-gray-900 dark:text-white truncate"
-                  :title="getGroupName(group)"
-                >
-                  {{ getGroupName(group) }}
-                </h3>
+                <div class="flex items-center gap-2 min-w-0 overflow-hidden">
+                  <span
+                    v-if="!isBrowserGroup(group)"
+                    class="mdi mdi-drag-vertical text-gray-400 cursor-move shrink-0"
+                  ></span>
+                  <h3
+                    class="font-bold text-lg text-gray-900 dark:text-white truncate"
+                    :title="getGroupName(group)"
+                  >
+                    {{ getGroupName(group) }}
+                  </h3>
+                </div>
                 <div class="flex items-center gap-1 shrink-0">
                   <Tooltip :text="group.muted ? 'Unmute group' : 'Mute group'">
                     <button
@@ -443,7 +455,9 @@
                 </div>
               </div>
 
-              <div class="p-5 flex-1 flex flex-col gap-4">
+              <div
+                class="p-5 flex-1 flex flex-col gap-4 max-h-[400px] overflow-y-auto custom-scrollbar"
+              >
                 <div
                   v-for="client in getDisplayClients(group)"
                   :key="client.id"
@@ -497,6 +511,14 @@
                     </div>
 
                     <div class="flex items-center gap-1 shrink-0">
+                      <Tooltip text="Client details">
+                        <button
+                          class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                          @click="openClientDetails(client)"
+                        >
+                          <span class="mdi mdi-information-outline"></span>
+                        </button>
+                      </Tooltip>
                       <Tooltip
                         :text="client.config.volume.muted ? 'Unmute' : 'Mute'"
                       >
@@ -831,7 +853,7 @@
             class="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between"
           >
             <h3 class="font-bold text-lg text-gray-900 dark:text-white">
-              Filter Groups
+              Manage Groups
             </h3>
             <button
               @click="showGroupFilter = false"
@@ -840,7 +862,7 @@
               <span class="mdi mdi-close text-xl"></span>
             </button>
           </div>
-          <div class="p-2 max-h-[60vh] overflow-y-auto">
+          <div class="p-2 max-h-[60vh] overflow-y-auto custom-scrollbar">
             <div
               v-if="snapcast.groups.length === 0"
               class="p-4 text-center text-gray-500 dark:text-gray-400"
@@ -848,12 +870,18 @@
               No groups available
             </div>
             <div
-              v-for="group in snapcast.filteredGroups"
+              v-for="(group, index) in orderedGroupsForFilter"
               :key="group.id"
-              class="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition-colors"
-              @click="toggleGroupVisibility(group.id)"
+              draggable="true"
+              @dragstart="handleDragStart(index, $event)"
+              @dragover.prevent="handleDragOver(index, $event)"
+              @drop="handleDrop(index, $event)"
+              @dragend="handleDragEnd"
+              class="flex items-center justify-between p-3 mb-2 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700/50 rounded-xl cursor-move transition-colors border border-gray-200 dark:border-gray-700"
+              :class="{ 'opacity-50': draggedIndex === index }"
             >
               <div class="flex items-center gap-3">
+                <span class="mdi mdi-drag-vertical text-gray-400"></span>
                 <span
                   class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
                   :class="getGroupColor(group.id)"
@@ -871,6 +899,7 @@
                     ? 'bg-blue-500 border-blue-500 text-white'
                     : 'border-gray-300 dark:border-gray-600'
                 "
+                @click.stop="toggleGroupVisibility(group.id)"
               >
                 <span
                   v-if="!settings.hiddenGroups.includes(group.id)"
@@ -891,6 +920,197 @@
           </div>
         </div>
       </div>
+      <!-- Client Details Modal -->
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="clientDetailsModal.open && clientDetailsModal.client"
+          class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          @click.self="closeClientDetails"
+        >
+          <div
+            class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 dark:border-gray-800 transform transition-all"
+            @click.stop
+          >
+            <div
+              class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between"
+            >
+              <h3
+                class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2"
+              >
+                <span class="mdi mdi-information-outline text-blue-500"></span>
+                Client Details
+              </h3>
+              <button
+                @click="closeClientDetails"
+                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              >
+                <span class="mdi mdi-close text-xl"></span>
+              </button>
+            </div>
+
+            <div class="p-6">
+              <div class="space-y-4">
+                <div
+                  class="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-gray-800"
+                >
+                  <div
+                    class="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400"
+                  >
+                    <span class="mdi mdi-monitor-speaker text-2xl"></span>
+                  </div>
+                  <div class="min-w-0">
+                    <h4
+                      class="font-bold text-lg text-gray-900 dark:text-white truncate"
+                    >
+                      {{
+                        clientDetailsModal.client.config.name ||
+                        clientDetailsModal.client.host.name
+                      }}
+                    </h4>
+                    <p
+                      class="text-sm text-gray-500 dark:text-gray-400 font-mono truncate"
+                    >
+                      {{ clientDetailsModal.client.id }}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
+                      >Status</label
+                    >
+                    <div class="flex items-center gap-2">
+                      <span
+                        class="w-2 h-2 rounded-full"
+                        :class="
+                          clientDetailsModal.client.connected
+                            ? 'bg-green-500'
+                            : 'bg-red-500'
+                        "
+                      ></span>
+                      <span
+                        class="text-sm font-medium text-gray-900 dark:text-white"
+                      >
+                        {{
+                          clientDetailsModal.client.connected
+                            ? "Connected"
+                            : "Disconnected"
+                        }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
+                      >IP Address</label
+                    >
+                    <p
+                      class="text-sm font-medium text-gray-900 dark:text-white font-mono"
+                    >
+                      {{ clientDetailsModal.client.host.ip }}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
+                      >MAC Address</label
+                    >
+                    <p
+                      class="text-sm font-medium text-gray-900 dark:text-white font-mono"
+                    >
+                      {{ clientDetailsModal.client.host.mac }}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
+                      >Host Name</label
+                    >
+                    <p
+                      class="text-sm font-medium text-gray-900 dark:text-white truncate"
+                    >
+                      {{ clientDetailsModal.client.host.name }}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
+                      >OS / Arch</label
+                    >
+                    <p
+                      class="text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      {{ clientDetailsModal.client.host.os }} /
+                      {{ clientDetailsModal.client.host.arch }}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
+                      >Version</label
+                    >
+                    <p
+                      class="text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      {{ clientDetailsModal.client.snapclient.version }}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
+                      >Latency</label
+                    >
+                    <p
+                      class="text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      {{ clientDetailsModal.client.config.latency }} ms
+                    </p>
+                  </div>
+
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
+                      >Instance</label
+                    >
+                    <p
+                      class="text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      {{ clientDetailsModal.client.config.instance }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="px-6 py-4 bg-gray-50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-gray-800 flex justify-end"
+            >
+              <button
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
+                @click="closeClientDetails"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
       <!-- Client Settings Modal -->
       <Transition
         enter-active-class="transition duration-200 ease-out"
@@ -1319,6 +1539,7 @@
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useSnapcastStore } from "./stores/snapcast";
 import { useSettingsStore } from "./stores/settings";
+import { useSnapStream } from "@/composables/useSnapStream";
 import { useAuthStore } from "./stores/auth";
 import type { Client, Group } from "./stores/snapcast";
 import type { AuthPermissions } from "./stores/auth";
@@ -1334,6 +1555,7 @@ import pkg from "../package.json";
 const snapcast = useSnapcastStore();
 const settings = useSettingsStore();
 const auth = useAuthStore();
+const { clientId: browserClientId } = useSnapStream();
 
 const hostInput = ref(snapcast.host);
 const refreshing = ref(false);
@@ -1347,6 +1569,8 @@ const showingUnlockForPermissions = ref(false);
 
 // Client ordering helpers
 const showGroupFilter = ref(false);
+const draggedIndex = ref<number | null>(null);
+const dragOverIndex = ref<number | null>(null);
 
 const sortedGroups = computed(() => {
   let groups = [...snapcast.filteredGroups];
@@ -1357,8 +1581,200 @@ const sortedGroups = computed(() => {
   if (!settings.showEmptyGroups) {
     groups = groups.filter((g) => g.clients.length > 0);
   }
-  return groups.sort((a, b) => a.name.localeCompare(b.name));
+
+  // Filter out the group that contains the browser player client
+  // User requested to show it at the end instead of hiding it
+  // if (browserClientId.value) {
+  //   groups = groups.filter(
+  //     (g) => !g.clients.some((c) => c.id === browserClientId.value)
+  //   );
+  // }
+
+  return groups.sort((a, b) => {
+    // 0. Browser Player Group always last (identified by client name "SnapCtrl")
+    const isBrowserA = a.clients.some((c) => c.config.name === "SnapCtrl");
+    const isBrowserB = b.clients.some((c) => c.config.name === "SnapCtrl");
+
+    if (isBrowserA && !isBrowserB) return 1;
+    if (!isBrowserA && isBrowserB) return -1;
+
+    // 1. Custom order
+    const indexA = settings.customGroupOrder.indexOf(a.id);
+    const indexB = settings.customGroupOrder.indexOf(b.id);
+
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+
+    // 2. Stream ID (group by source)
+    if (a.stream_id !== b.stream_id) {
+      return (a.stream_id || "").localeCompare(b.stream_id || "");
+    }
+
+    // 3. Name
+    return a.name.localeCompare(b.name);
+  });
 });
+
+// Groups ordered for filter modal (respects custom order)
+const orderedGroupsForFilter = computed(() => {
+  const allGroups = [...snapcast.filteredGroups];
+
+  // Separate browser player group
+  const browserGroup = allGroups.find((g) =>
+    g.clients.some((c) => c.config.name === "SnapCtrl")
+  );
+  const regularGroups = allGroups.filter(
+    (g) => !g.clients.some((c) => c.config.name === "SnapCtrl")
+  );
+
+  // Sort regular groups by custom order
+  const sorted = regularGroups.sort((a, b) => {
+    const indexA = settings.customGroupOrder.indexOf(a.id);
+    const indexB = settings.customGroupOrder.indexOf(b.id);
+
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  // Add browser group at the end if it exists
+  if (browserGroup) {
+    sorted.push(browserGroup);
+  }
+
+  return sorted;
+});
+
+// Drag & drop handlers
+const draggedGroupId = ref<string | null>(null);
+
+function handleMainDragStart(group: Group, event: DragEvent) {
+  draggedGroupId.value = group.id;
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", group.id);
+  }
+}
+
+function handleMainDragOver(group: Group, event: DragEvent) {
+  if (draggedGroupId.value && draggedGroupId.value !== group.id) {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = "move";
+    }
+  }
+}
+
+function handleMainDrop(targetGroup: Group, event: DragEvent) {
+  event.preventDefault();
+  if (!draggedGroupId.value || draggedGroupId.value === targetGroup.id) return;
+
+  const sourceId = draggedGroupId.value;
+  const targetId = targetGroup.id;
+
+  // Prevent moving the browser player group if strictly enforced,
+  // but the sort logic puts it at the end anyway. 
+  // The existing filter modal prevents it, so we should too for consistency.
+  const sourceGroup = snapcast.groups.find((g) => g.id === sourceId);
+  if (
+    sourceGroup &&
+    sourceGroup.clients.some((c) => c.config.name === "SnapCtrl")
+  ) {
+    return;
+  }
+
+  let newOrder = [...settings.customGroupOrder];
+
+  // If order is empty, initialize it with current sorted view to avoid jumping
+  if (newOrder.length === 0) {
+    newOrder = sortedGroups.value
+      .filter((g) => !g.clients.some((c) => c.config.name === "SnapCtrl"))
+      .map((g) => g.id);
+  }
+
+  // Ensure IDs exist in the list (if they were missing for some reason)
+  if (!newOrder.includes(sourceId)) newOrder.push(sourceId);
+  if (!newOrder.includes(targetId)) newOrder.push(targetId);
+
+  // Remove source
+  newOrder = newOrder.filter((id) => id !== sourceId);
+
+  // Insert before target
+  const targetIndex = newOrder.indexOf(targetId);
+  if (targetIndex !== -1) {
+    newOrder.splice(targetIndex, 0, sourceId);
+  } else {
+    newOrder.push(sourceId);
+  }
+
+  settings.setCustomGroupOrder(newOrder);
+  draggedGroupId.value = null;
+}
+
+function isBrowserGroup(group: Group): boolean {
+  return group.clients.some((c) => c.config.name === "SnapCtrl");
+}
+
+function handleMainDragEnd() {
+  draggedGroupId.value = null;
+}
+
+function handleDragStart(index: number, event: DragEvent) {
+  draggedIndex.value = index;
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = "move";
+  }
+}
+
+function handleDragOver(index: number, event: DragEvent) {
+  event.preventDefault();
+  dragOverIndex.value = index;
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = "move";
+  }
+}
+
+function handleDrop(index: number, event: DragEvent) {
+  event.preventDefault();
+  if (draggedIndex.value === null || draggedIndex.value === index) return;
+
+  const groups = [...orderedGroupsForFilter.value];
+  const draggedGroup = groups[draggedIndex.value];
+
+  // Safety check
+  if (!draggedGroup) {
+    draggedIndex.value = null;
+    dragOverIndex.value = null;
+    return;
+  }
+
+  // Don't allow reordering browser player group
+  if (draggedGroup.clients.some((c) => c.config.name === "SnapCtrl")) {
+    draggedIndex.value = null;
+    dragOverIndex.value = null;
+    return;
+  }
+
+  // Remove dragged item and insert at new position
+  groups.splice(draggedIndex.value, 1);
+  groups.splice(index, 0, draggedGroup);
+
+  // Filter out browser player group before updating custom order
+  const newOrder = groups
+    .filter((g) => !g.clients.some((c) => c.config.name === "SnapCtrl"))
+    .map((g) => g.id);
+
+  settings.setCustomGroupOrder(newOrder);
+  draggedIndex.value = null;
+  dragOverIndex.value = null;
+}
+
+function handleDragEnd() {
+  draggedIndex.value = null;
+  dragOverIndex.value = null;
+}
 
 const appVersion = computed(() => pkg.version || "0.0.0");
 
@@ -1757,6 +2173,23 @@ async function applyClientSettings() {
   closeClientSettings();
 }
 
+// Client Details Modal
+const clientDetailsModal = ref<{
+  open: boolean;
+  client: Client | null;
+}>({ open: false, client: null });
+
+function openClientDetails(client: Client) {
+  clientDetailsModal.value = {
+    open: true,
+    client: client,
+  };
+}
+
+function closeClientDetails() {
+  clientDetailsModal.value.open = false;
+}
+
 // Create group modal state
 const createGroupModal = ref<{
   open: boolean;
@@ -1927,5 +2360,30 @@ button {
 
 button:disabled {
   cursor: not-allowed;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 20px;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(75, 85, 99, 0.5);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(107, 114, 128, 0.8);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.8);
 }
 </style>

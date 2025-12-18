@@ -33,6 +33,41 @@ export const useSettingsStore = defineStore(
       groupVolumeLinks.value[groupId] = { linkedClientIds, referenceVolumes };
     }
 
+    // Custom group ordering
+    const customGroupOrder = ref<string[]>([]);
+
+    function setCustomGroupOrder(order: string[]) {
+      customGroupOrder.value = order;
+    }
+
+    function moveGroupUp(groupId: string) {
+      const index = customGroupOrder.value.indexOf(groupId);
+      if (index > 0) {
+        const newOrder = [...customGroupOrder.value];
+        const prev = newOrder[index - 1];
+        const curr = newOrder[index];
+        if (prev !== undefined && curr !== undefined) {
+          newOrder[index - 1] = curr;
+          newOrder[index] = prev;
+          customGroupOrder.value = newOrder;
+        }
+      }
+    }
+
+    function moveGroupDown(groupId: string) {
+      const index = customGroupOrder.value.indexOf(groupId);
+      if (index !== -1 && index < customGroupOrder.value.length - 1) {
+        const newOrder = [...customGroupOrder.value];
+        const curr = newOrder[index];
+        const next = newOrder[index + 1];
+        if (curr !== undefined && next !== undefined) {
+          newOrder[index] = next;
+          newOrder[index + 1] = curr;
+          customGroupOrder.value = newOrder;
+        }
+      }
+    }
+
     // Persisted client ordering per group id -> client id array
     // Removed manual client ordering feature per request
 
@@ -105,6 +140,10 @@ export const useSettingsStore = defineStore(
       setRefreshInterval,
       setHiddenGroups,
       setGroupVolumeLinks,
+      customGroupOrder,
+      setCustomGroupOrder,
+      moveGroupUp,
+      moveGroupDown,
     };
   },
   {
@@ -119,6 +158,7 @@ export const useSettingsStore = defineStore(
         "refreshInterval",
         "hiddenGroups",
         "groupVolumeLinks",
+        "customGroupOrder",
       ],
     },
   }

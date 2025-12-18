@@ -1,21 +1,21 @@
 <template>
   <div
-    class="relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-xl md:rounded-2xl p-3 md:p-4 overflow-hidden transition-all duration-300 shadow-sm"
+    class="relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-lg md:rounded-xl px-3 py-2 overflow-hidden transition-all duration-300 shadow-sm"
     :class="{
-      'border-blue-500 dark:border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.15)]':
+      'border-blue-500 dark:border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.1)]':
         connected,
     }"
   >
-    <div class="flex items-center justify-between gap-3 md:gap-4 relative z-10">
+    <div class="flex items-center justify-between gap-3 relative z-10">
       <!-- Left: Status & Info -->
-      <div class="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
+      <div class="flex items-center gap-3 flex-1 min-w-0">
         <div
-          class="relative w-10 h-10 bg-gray-100 dark:bg-slate-700 rounded-lg md:rounded-xl flex items-center justify-center text-xl text-gray-600 dark:text-gray-300 shrink-0"
+          class="relative w-8 h-8 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center text-lg text-gray-600 dark:text-gray-300 shrink-0"
         >
           <span class="mdi mdi-headphones"></span>
           <div
             v-if="connected"
-            class="absolute bottom-1.5 right-1.5 flex gap-[2px] items-end h-2.5"
+            class="absolute bottom-1 right-1 flex gap-[2px] items-end h-2"
           >
             <span
               class="w-[2px] bg-blue-500 rounded-[1px] animate-[equalize_1s_ease-in-out_infinite]"
@@ -30,67 +30,69 @@
         </div>
 
         <div class="min-w-0 flex flex-col justify-center">
-          <h3
-            class="m-0 text-sm font-bold text-gray-900 dark:text-white truncate leading-tight"
-          >
-            Browser Player
-          </h3>
-          <div class="text-xs font-medium truncate leading-tight mt-0.5">
-            <span
-              v-if="connected"
-              class="text-green-600 dark:text-green-400 flex items-center gap-1"
+          <div class="flex items-center gap-2">
+            <h3
+              class="m-0 text-xs font-bold text-gray-900 dark:text-white truncate leading-tight"
             >
-              <span class="mdi mdi-circle-small text-lg"></span> Live Audio
-            </span>
-            <span
-              v-else-if="connecting"
-              class="text-yellow-600 dark:text-yellow-400"
-              >Connecting...</span
-            >
-            <span v-else class="text-gray-500 dark:text-gray-400"
-              >Ready to play</span
-            >
-          </div>
-
-          <div v-if="connected" class="hidden md:flex gap-2 mt-1">
-            <span
-              class="text-[10px] px-1.5 py-0.5 bg-gray-100 dark:bg-slate-700 rounded text-gray-600 dark:text-gray-300 font-mono"
-              >{{ codec || "PCM" }}</span
-            >
-            <span
-              class="text-[10px] px-1.5 py-0.5 bg-gray-100 dark:bg-slate-700 rounded text-gray-600 dark:text-gray-300 font-mono"
-              >{{ latency }}ms latency</span
-            >
-          </div>
-
-          <!-- Stream Selector -->
-          <div v-if="connected && currentGroup" class="mt-2">
-            <select
-              v-model="currentStreamId"
-              class="text-xs bg-gray-100 dark:bg-slate-700 border-none rounded px-2 py-1 text-gray-700 dark:text-gray-200 focus:ring-1 focus:ring-blue-500 outline-none cursor-pointer max-w-[150px] truncate"
-              @click.stop
-            >
-              <option
-                v-for="stream in availableStreams"
-                :key="stream.id"
-                :value="stream.id"
+              Browser Player
+            </h3>
+            <div class="text-[10px] font-medium truncate leading-tight">
+              <span
+                v-if="connected"
+                class="text-green-600 dark:text-green-400 flex items-center gap-1"
               >
-                {{ stream.id }}
-              </option>
-            </select>
+                <span class="mdi mdi-circle-small text-sm"></span> Live
+              </span>
+              <span
+                v-else-if="connecting"
+                class="text-yellow-600 dark:text-yellow-400"
+                >Connecting...</span
+              >
+              <span v-else class="text-gray-500 dark:text-gray-400">Ready</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 mt-0.5">
+            <!-- Stream Selector -->
+            <div v-if="connected && currentGroup" class="flex items-center">
+              <select
+                v-model="currentStreamId"
+                class="text-[10px] bg-gray-100 dark:bg-slate-700 border-none rounded px-1.5 py-0.5 text-gray-700 dark:text-gray-200 focus:ring-1 focus:ring-blue-500 outline-none cursor-pointer max-w-[120px] truncate"
+                @click.stop
+              >
+                <option
+                  v-for="stream in availableStreams"
+                  :key="stream.id"
+                  :value="stream.id"
+                >
+                  {{ stream.id }}
+                </option>
+              </select>
+            </div>
+
+            <div v-if="connected" class="hidden md:flex gap-1">
+              <span
+                class="text-[9px] px-1 py-0.5 bg-gray-100 dark:bg-slate-700 rounded text-gray-600 dark:text-gray-300 font-mono"
+                >{{ codec || "PCM" }}</span
+              >
+              <span
+                class="text-[9px] px-1 py-0.5 bg-gray-100 dark:bg-slate-700 rounded text-gray-600 dark:text-gray-300 font-mono"
+                >{{ latency }}ms</span
+              >
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Right: Controls -->
-      <div class="flex items-center gap-3 md:gap-4 shrink-0">
+      <div class="flex items-center gap-2 shrink-0">
         <!-- Volume -->
         <div
-          class="flex items-center gap-2 md:gap-3 transition-opacity duration-200"
+          class="flex items-center gap-2 transition-opacity duration-200"
           :class="{ 'opacity-50 pointer-events-none': !connected }"
         >
           <button
-            class="bg-transparent border-none text-lg cursor-pointer p-1.5 rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-400"
+            class="bg-transparent border-none text-base cursor-pointer p-1 rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-400"
             @click="toggleMute"
             :disabled="!connected"
           >
@@ -101,18 +103,18 @@
 
           <!-- Volume Slider (Desktop only) -->
           <div
-            class="hidden md:flex flex-1 h-6 items-center relative group w-24 lg:w-32"
+            class="hidden md:flex flex-1 h-4 items-center relative group w-20 lg:w-24"
           >
             <input
               type="range"
               v-model.number="volume"
               min="0"
               max="100"
-              class="w-full h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125 relative z-10"
+              class="w-full h-1 bg-gray-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-sm [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125 relative z-10"
               :disabled="!connected || isMuted"
             />
             <div
-              class="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 bg-blue-600 dark:bg-blue-500 rounded-full pointer-events-none"
+              class="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-blue-600 dark:bg-blue-500 rounded-full pointer-events-none"
               :style="{ width: `${volume}%` }"
             ></div>
           </div>
@@ -120,7 +122,7 @@
 
         <!-- Play Button -->
         <button
-          class="w-10 h-10 md:w-12 md:h-12 rounded-full border-none bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-lg md:text-xl flex items-center justify-center cursor-pointer transition-all shadow-md hover:scale-105 md:hover:scale-110 hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
+          class="w-8 h-8 rounded-full border-none bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-base flex items-center justify-center cursor-pointer transition-all shadow-sm hover:scale-105 hover:shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
           :class="{ '!bg-blue-600 dark:!bg-blue-500 !text-white': connected }"
           @click="handleConnect"
           :disabled="connecting"
@@ -134,7 +136,7 @@
 
     <div
       v-if="error"
-      class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-lg text-sm shadow-lg animate-fade-in-up whitespace-nowrap z-20"
+      class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-red-500 text-white px-3 py-1 rounded text-xs shadow-md animate-fade-in-up whitespace-nowrap z-20"
     >
       {{ error }}
     </div>

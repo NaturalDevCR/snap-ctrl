@@ -55,6 +55,10 @@ export function useSnapStream() {
   const timeDiff = computed(() => timeProvider?.getDiff() ?? 0);
   const syncSamples = computed(() => timeProvider?.getSampleCount() ?? 0);
 
+  // Event handlers for AudioContext resume
+  let handleVisibilityChange: (() => void) | null = null;
+  let handleFocus: (() => void) | null = null;
+
   /**
    * Connect to Snapserver stream endpoint
    */
@@ -148,6 +152,29 @@ export function useSnapStream() {
       connecting.value = false;
       cleanup();
     }
+
+    // Handle AudioContext suspension when tab loses focus
+    // Resume audio context when tab becomes visible/focused again
+    handleVisibilityChange = () => {
+      if (audioCtx && audioCtx.state === "suspended" && !document.hidden) {
+        console.log("Resuming AudioContext after visibility change");
+        audioCtx.resume().catch((err) => {
+          console.error("Failed to resume AudioContext:", err);
+        });
+      }
+    };
+
+    handleFocus = () => {
+      if (audioCtx && audioCtx.state === "suspended") {
+        console.log("Resuming AudioContext after focus");
+        audioCtx.resume().catch((err) => {
+          console.error("Failed to resume AudioContext:", err);
+        });
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
   }
 
   /**
@@ -501,6 +528,16 @@ export function useSnapStream() {
 
     gainNode = null;
     nextPlayTime = 0;
+
+    // Remove event listeners
+    if (handleVisibilityChange) {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      handleVisibilityChange = null;
+    }
+    if (handleFocus) {
+      window.removeEventListener("focus", handleFocus);
+      handleFocus = null;
+    }
   }
 
   // Cleanup on unmount
