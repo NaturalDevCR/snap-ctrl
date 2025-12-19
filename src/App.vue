@@ -105,7 +105,7 @@
                 <button
                   v-if="snapcast.isConnected"
                   @click="showServerInfo = true"
-                  class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-gray-400 transition-colors"
+                  class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-gray-400 transition-colors cursor-pointer"
                 >
                   <span class="mdi mdi-information-outline text-xl"></span>
                 </button>
@@ -114,7 +114,7 @@
               <Tooltip text="Settings" position="bottom">
                 <button
                   @click="openAppSettings"
-                  class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-gray-400 transition-colors"
+                  class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-gray-400 transition-colors cursor-pointer"
                 >
                   <span class="mdi mdi-cog text-xl"></span>
                 </button>
@@ -235,7 +235,7 @@
                 <button
                   v-if="auth.permissions.showCreateGroup"
                   @click="openCreateGroup"
-                  class="w-10 h-10 flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors"
+                  class="w-10 h-10 flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors cursor-pointer"
                 >
                   <span class="mdi mdi-plus text-xl"></span>
                 </button>
@@ -243,7 +243,7 @@
               <Tooltip text="Refresh Status">
                 <button
                   @click="refreshStatus"
-                  class="w-10 h-10 flex items-center justify-center rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 shadow-sm transition-colors"
+                  class="w-10 h-10 flex items-center justify-center rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 shadow-sm transition-colors cursor-pointer"
                   :disabled="refreshing"
                 >
                   <span
@@ -260,7 +260,7 @@
                 "
               >
                 <button
-                  class="w-10 h-10 flex items-center justify-center rounded-lg border shadow-sm transition-colors"
+                  class="w-10 h-10 flex items-center justify-center rounded-lg border shadow-sm transition-colors cursor-pointer"
                   :class="
                     settings.showEmptyGroups
                       ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400'
@@ -280,7 +280,7 @@
               <Tooltip text="Filter Groups">
                 <button
                   v-if="auth.permissions.showGroupFilter"
-                  class="w-10 h-10 flex items-center justify-center rounded-lg border shadow-sm transition-colors"
+                  class="w-10 h-10 flex items-center justify-center rounded-lg border shadow-sm transition-colors cursor-pointer"
                   :class="
                     showGroupFilter
                       ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400'
@@ -298,22 +298,12 @@
             <div
               v-for="group in sortedGroups"
               :key="group.id"
-              :draggable="!isBrowserGroup(group)"
-              @dragstart="handleMainDragStart(group, $event)"
-              @dragover="handleMainDragOver(group, $event)"
-              @drop="handleMainDrop(group, $event)"
-              @dragend="handleMainDragEnd"
               class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col"
-              :class="{ 'opacity-50 border-blue-500 ring-2 ring-blue-500 ring-opacity-50': draggedGroupId === group.id }"
             >
               <div
                 class="px-5 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-slate-800/50 flex items-center justify-between gap-3"
               >
                 <div class="flex items-center gap-2 min-w-0 overflow-hidden">
-                  <span
-                    v-if="!isBrowserGroup(group)"
-                    class="mdi mdi-drag-vertical text-gray-400 cursor-move shrink-0"
-                  ></span>
                   <h3
                     class="font-bold text-lg text-gray-900 dark:text-white truncate"
                     :title="getGroupName(group)"
@@ -325,7 +315,7 @@
                   <Tooltip :text="group.muted ? 'Unmute group' : 'Mute group'">
                     <button
                       @click="toggleGroupMute(group)"
-                      class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+                      class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                       :class="
                         group.muted
                           ? 'text-red-500 dark:text-red-400'
@@ -344,7 +334,7 @@
                     <button
                       v-if="auth.permissions.showGroupSettings"
                       @click="openGroupSettings(group)"
-                      class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-gray-400 transition-colors"
+                      class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-gray-400 transition-colors cursor-pointer"
                     >
                       <span class="mdi mdi-cog text-xl"></span>
                     </button>
@@ -405,7 +395,7 @@
                   <div class="flex items-center gap-3">
                     <button
                       @click="adjustGroupVolume(group.id, -5)"
-                      class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-gray-200 dark:border-gray-700"
+                      class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-gray-200 dark:border-gray-700 cursor-pointer"
                       :disabled="getGroupVolume(group.id) <= 0"
                     >
                       <span class="mdi mdi-minus text-lg"></span>
@@ -435,13 +425,13 @@
                         "
                         min="0"
                         max="100"
-                        class="relative w-full appearance-none bg-transparent cursor-pointer z-10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-600 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125 [&::-webkit-slider-thumb]:active:scale-110"
+                        class="relative w-full appearance-none bg-transparent cursor-pointer z-10 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-600 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125 [&::-webkit-slider-thumb]:active:scale-150"
                       />
                     </div>
 
                     <button
                       @click="adjustGroupVolume(group.id, 5)"
-                      class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-gray-200 dark:border-gray-700"
+                      class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-gray-200 dark:border-gray-700 cursor-pointer"
                       :disabled="getGroupVolume(group.id) >= 100"
                     >
                       <span class="mdi mdi-plus text-lg"></span>
@@ -523,7 +513,7 @@
                     <div class="flex items-center gap-1 shrink-0">
                       <Tooltip text="Client details">
                         <button
-                          class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                          class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
                           @click="openClientDetails(client)"
                         >
                           <span class="mdi mdi-information-outline"></span>
@@ -533,7 +523,7 @@
                         :text="client.config.volume.muted ? 'Unmute' : 'Mute'"
                       >
                         <button
-                          class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                          class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                           :class="
                             client.config.volume.muted
                               ? 'text-red-500'
@@ -554,7 +544,7 @@
                       <Tooltip text="Client settings">
                         <button
                           v-if="auth.permissions.showClientSettings"
-                          class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                          class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
                           @click="openClientSettings(client)"
                         >
                           <span class="mdi mdi-cog"></span>
@@ -661,7 +651,7 @@
               </h3>
               <button
                 @click="closeGroupSettings"
-                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
               >
                 <span class="mdi mdi-close text-xl"></span>
               </button>
@@ -1692,7 +1682,7 @@ function handleMainDrop(targetGroup: Group, event: DragEvent) {
   const targetId = targetGroup.id;
 
   // Prevent moving the browser player group if strictly enforced,
-  // but the sort logic puts it at the end anyway. 
+  // but the sort logic puts it at the end anyway.
   // The existing filter modal prevents it, so we should too for consistency.
   const sourceGroup = snapcast.groups.find((g) => g.id === sourceId);
   if (
