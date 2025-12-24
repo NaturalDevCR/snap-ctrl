@@ -143,7 +143,47 @@
       {{ error }}
     </div>
   </div>
+
+  <!-- Temporary Group Card (Simplified) -->
+  <Transition
+    enter-active-class="transition duration-300 ease-out"
+    enter-from-class="opacity-0 -translate-y-2"
+    enter-to-class="opacity-100 translate-y-0"
+    leave-active-class="transition duration-200 ease-in"
+    leave-from-class="opacity-100 translate-y-0"
+    leave-to-class="opacity-0 -translate-y-2"
+  >
+    <div
+      v-if="connected && currentGroup"
+      class="mt-2 mx-1 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-900/30 rounded-lg px-3 py-2 flex items-center justify-between shadow-sm"
+    >
+      <div class="flex items-center gap-2 min-w-0">
+        <span
+          class="flex items-center justify-center w-6 h-6 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+        >
+          <span class="mdi mdi-speaker-group text-xs"></span>
+        </span>
+        <div class="min-w-0">
+          <p class="text-xs font-bold text-gray-900 dark:text-white truncate">
+            {{ currentGroup.name }}
+          </p>
+          <p class="text-[10px] text-gray-500 dark:text-gray-400 truncate">
+            Temporary Audio Group
+          </p>
+        </div>
+      </div>
+      <button
+        @click="cleanTemporaryGroup"
+        class="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 rounded transition-colors"
+        title="Remove this temporary group"
+      >
+        <span class="mdi mdi-delete-outline"></span>
+        Cleanup
+      </button>
+    </div>
+  </Transition>
 </template>
+
 
 <script setup lang="ts">
 import { watch, computed } from "vue";
@@ -210,6 +250,25 @@ async function handleConnect() {
     await disconnect();
   } else {
     connect(snapcast.host);
+  }
+}
+
+async function cleanTemporaryGroup() {
+  const idToDelete = clientId.value;
+  if (idToDelete) {
+    try {
+      if (connected.value) {
+        // disconnect() handles cleaning up the client from the server
+        await disconnect();
+      } else {
+        // If not connected, we need to manually clean up
+        await snapcast.deleteClient(idToDelete);
+      }
+      notifications.success("Temporary group cleaned up");
+    } catch (e) {
+      console.error("Failed to clean up group:", e);
+      notifications.error("Failed to clean up group");
+    }
   }
 }
 </script>

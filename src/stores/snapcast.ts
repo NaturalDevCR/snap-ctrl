@@ -88,6 +88,11 @@ export const useSnapcastStore = defineStore(
     const websocket = ref<WebSocket | null>(null);
     const requestId = ref(1);
 
+    // Track the browser player's ID to hide its temporary group
+    const browserPlayerId = ref<string | null>(
+      localStorage.getItem("snapcast-client-id")
+    );
+
     // Get auth store for permission checks
     const auth = useAuthStore();
 
@@ -617,8 +622,13 @@ export const useSnapcastStore = defineStore(
       return null;
     }
 
+    function setBrowserPlayerId(id: string | null) {
+      browserPlayerId.value = id;
+    }
+
     return {
       host,
+      browserPlayerId,
       isConnected,
       isConnecting,
       connectionError,
@@ -645,6 +655,7 @@ export const useSnapcastStore = defineStore(
       deleteClient,
       setGroupVolumeProportional,
       findClientById,
+      setBrowserPlayerId,
     };
   },
   {
