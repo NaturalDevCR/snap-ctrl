@@ -1,12 +1,16 @@
 import { defineStore } from "pinia";
 import { ref, watch } from "vue";
 
+// Force HMR reload
+
 export interface GroupVolumeLink {
   linkedClientIds: string[];
   // Reference volumes (100% baseline) for each linked client
   // Key: clientId, Value: reference volume percentage
   referenceVolumes: Record<string, number>;
 }
+
+export type ClientSourceVolumes = Record<string, Record<string, number>>;
 
 export const useSettingsStore = defineStore(
   "settings",
@@ -20,6 +24,47 @@ export const useSettingsStore = defineStore(
     const hiddenGroups = ref<string[]>([]);
     // Group volume control links: which clients are linked to group volume
     const groupVolumeLinks = ref<Record<string, GroupVolumeLink>>({});
+
+    // Per-source volume memory
+    // List of group IDs that have per-source volume enabled
+    const enabledPerSourceVolumeGroups = ref<string[]>([]);
+    // client_id -> stream_id -> volume_percent
+    const clientSourceVolumes = ref<ClientSourceVolumes>({});
+
+    function isPerSourceVolumeEnabled(groupId: string): boolean {
+      return enabledPerSourceVolumeGroups.value.includes(groupId);
+    }
+
+    function setPerSourceVolumeEnabled(groupId: string, enabled: boolean) {
+      if (enabled) {
+        if (!enabledPerSourceVolumeGroups.value.includes(groupId)) {
+          enabledPerSourceVolumeGroups.value.push(groupId);
+        }
+      } else {
+        enabledPerSourceVolumeGroups.value = enabledPerSourceVolumeGroups.value.filter(
+          (id) => id !== groupId
+        );
+      }
+    }
+
+    function saveClientVolume(
+      clientId: string,
+      streamId: string,
+      volume: number
+    ) {
+      console.log(`[Settings] saveClientVolume: Client=${clientId}, Stream=${streamId}, Vol=${volume}`);
+      if (!clientSourceVolumes.value[clientId]) {
+        clientSourceVolumes.value[clientId] = {};
+      }
+      clientSourceVolumes.value[clientId][streamId] = volume;
+    }
+
+    function getClientVolume(
+      clientId: string,
+      streamId: string
+    ): number | undefined {
+      return clientSourceVolumes.value[clientId]?.[streamId];
+    }
 
     function setHiddenGroups(groups: string[]) {
       hiddenGroups.value = groups;
@@ -144,6 +189,12 @@ export const useSettingsStore = defineStore(
       setCustomGroupOrder,
       moveGroupUp,
       moveGroupDown,
+      clientSourceVolumes,
+      enabledPerSourceVolumeGroups,
+      isPerSourceVolumeEnabled,
+      setPerSourceVolumeEnabled,
+      saveClientVolume,
+      getClientVolume,
     };
   },
   {
@@ -159,6 +210,8 @@ export const useSettingsStore = defineStore(
         "hiddenGroups",
         "groupVolumeLinks",
         "customGroupOrder",
+        "enabledPerSourceVolumeGroups",
+        "clientSourceVolumes",
       ],
     },
   }

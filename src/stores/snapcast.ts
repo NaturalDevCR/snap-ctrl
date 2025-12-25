@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { useAuthStore } from "./auth";
+import { useSettingsStore } from "./settings";
 
 export interface Client {
   id: string;
@@ -95,6 +96,7 @@ export const useSnapcastStore = defineStore(
 
     // Get auth store for permission checks
     const auth = useAuthStore();
+    const settings = useSettingsStore();
 
     // Filtered entities based on permissions
     const filteredGroups = computed(() => {
@@ -318,6 +320,8 @@ export const useSnapcastStore = defineStore(
         // Handle notifications
         switch (data.method) {
           case "Client.OnVolumeChanged":
+            // PER-SOURCE VOLUME: Auto-save disabled in favor of manual snapshot
+            break;
           case "Client.OnConnect":
           case "Client.OnDisconnect":
           case "Client.OnNameChanged":
@@ -325,6 +329,20 @@ export const useSnapcastStore = defineStore(
           case "Group.OnMute":
             // Refresh server status when clients change
             getServerStatus();
+            break;
+          case "Stream.OnUpdate":
+            // Update specific stream
+            if (data.params?.stream) {
+              const updatedStream = data.params.stream;
+              const index = streams.value.findIndex(
+                (s) => s.id === updatedStream.id
+              );
+              if (index !== -1) {
+                streams.value[index] = updatedStream;
+              } else {
+                streams.value.push(updatedStream);
+              }
+            }
             break;
         }
       } else if (data.result) {
@@ -370,8 +388,18 @@ export const useSnapcastStore = defineStore(
         return;
       }
 
-      // Optimistic update to remove UI lag
       const cl = findClientById(clientId);
+      if (cl) {
+        // Optimization: Don't send request if values are identical
+        if (
+          cl.config.volume.percent === volume &&
+          cl.config.volume.muted === mute
+        ) {
+          return;
+        }
+      }
+
+      // Optimistic update to remove UI lag
       const previous = cl ? { ...cl.config.volume } : null;
       if (cl) {
         cl.config.volume.percent = Math.max(0, Math.min(100, volume));
@@ -466,12 +494,37 @@ export const useSnapcastStore = defineStore(
     async function setGroupStream(groupId: string, streamId: string) {
       const g = groups.value.find((g) => g.id === groupId);
       const prev = g ? g.stream_id : null;
-      if (g) g.stream_id = streamId;
+      if (!g) return;
+
+      const isEnabled = settings.isPerSourceVolumeEnabled(groupId);
+      console.log(`[SnapCtrl] Switching Group ${g.name} stream: ${prev} -> ${streamId}. PSV Enabled: ${isEnabled}`);
+
+      // Optimistic update
+      g.stream_id = streamId;
+
       try {
         await sendRequest("Group.SetStream", {
           id: groupId,
           stream_id: streamId,
         });
+
+        // PER-SOURCE VOLUME: Restore volumes for the NEW stream if available
+        if (settings.isPerSourceVolumeEnabled(groupId)) {
+          const groupClients = g.clients;
+          
+          // Use Promise.all to send requests in parallel instead of sequentially
+          await Promise.all(groupClients.map(async (client) => {
+            if (!client.connected) return;
+
+            const savedVolume = settings.getClientVolume(client.id, streamId);
+            console.log(`[SnapCtrl] Checking restore: Client=${client.id}, Stream=${streamId}, SavedVol=${savedVolume}`);
+            if (savedVolume !== undefined) {
+              // Apply saved volume
+              console.log(`[SnapCtrl] Restoring volume: Client=${client.id}, Vol=${savedVolume}%`);
+              await setClientVolume(client.id, savedVolume, client.config.volume.muted);
+            }
+          }));
+        }
       } catch (error) {
         console.error("Failed to set group stream:", error);
         if (g && prev !== null) g.stream_id = prev;

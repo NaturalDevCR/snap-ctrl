@@ -21,12 +21,22 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
   - **Feature Control**: Enable or disable specific features like volume adjustment, renaming, or group creation.
   - **UI Visibility**: Toggle the visibility of UI elements such as settings, filters, and the browser player.
   - **Access Restrictions**: Restrict access to specific groups, sources, or clients.
+- **Smart Volume Memory**:
+  - **Per-Source Volume**: Optionally remember volume levels for each source **per group**. Enable this in Group Settings to have clients in that group restore their volume when switching sources.
+  - **Multi-Device Sync**: Volume memory is synchronized across all devices. If you change the volume for a source on your phone, your laptop will learn and remember that volume too.
 - **Integrated Browser Player**: Listen to your Snapcast streams directly within the browser, utilizing WASM-based decoders (FLAC, Vorbis, PCM) for high-quality playback.
 - **Stream Management**: Intuitive interface for assigning streams to groups.
 - **PWA Support**: Install as a Progressive Web App (PWA) on your device for a native-like experience.
 - **Development Ready**: Includes optional HTTPS support for local development environments.
 
 ## Changelog
+
+### v0.1.15
+
+- **New**: **Per-Source Volume Memory**. Added optional "Per-Source Volume" setting for groups. When enabled, client volumes are remembered and restored for each specific stream.
+- **New**: **Stream Status Indicators**. Added visual indicators and tooltips to show if a stream is Playing, Idle, or in Error state.
+- **Improved**: **Performance**. Optimized stream switching logic to execute parallel requests, significantly reducing delay when changing sources.
+- **Improved**: **Network Efficiency**. Logic added to prevent sending redundant volume update requests.
 
 ### v0.1.14
 

@@ -368,14 +368,22 @@
                 </Tooltip>
               </div>
               <div class="relative group">
-                <span
-                  class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors pointer-events-none"
-                >
-                  <span class="mdi mdi-music-note"></span>
-                </span>
+                <div class="absolute left-3 top-1/2 -translate-y-1/2 z-10">
+                  <Tooltip :text="getStreamStatusTooltip(group.stream_id)">
+                    <span
+                      class="transition-colors cursor-help"
+                      :class="getStreamStatusColor(group.stream_id)"
+                    >
+                      <span
+                        class="mdi"
+                        :class="getStreamStatusIcon(group.stream_id)"
+                      ></span>
+                    </span>
+                  </Tooltip>
+                </div>
                 <select
-                  v-model="group.stream_id"
-                  @change="changeGroupStream(group, $event)"
+                  :value="group.stream_id"
+                  @change="changeGroupStream(group, ($event.target as HTMLSelectElement).value)"
                   class="w-full pl-10 pr-10 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none appearance-none cursor-pointer transition-all hover:bg-white dark:hover:bg-slate-700"
                 >
                   <option
@@ -418,7 +426,7 @@
 
                   <div class="flex items-center gap-3">
                     <button
-                      @click="adjustGroupVolume(group.id, -5)"
+                      @click="adjustGroupVolume(group.id, -1)"
                       class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-gray-200 dark:border-gray-700 cursor-pointer"
                       :disabled="getGroupVolume(group.id) <= 0"
                     >
@@ -454,7 +462,7 @@
                     </div>
 
                     <button
-                      @click="adjustGroupVolume(group.id, 5)"
+                      @click="adjustGroupVolume(group.id, 1)"
                       class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-gray-200 dark:border-gray-700 cursor-pointer"
                       :disabled="getGroupVolume(group.id) >= 100"
                     >
@@ -689,6 +697,43 @@
                 </div>
               </div>
 
+              <!-- Per-Source Volume Toggle -->
+              <label
+                class="block mb-6 cursor-pointer"
+              >
+                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div class="flex flex-col">
+                    <span class="font-medium text-gray-900 dark:text-white"
+                      >Per-Source Volume</span
+                    >
+                    <span class="text-xs text-gray-500 dark:text-gray-400"
+                      >Remember volume settings for each source</span
+                    >
+                  </div>
+                  <div class="relative inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      v-model="groupModal.perSourceVolumeEnabled"
+                      class="sr-only peer"
+                    />
+                    <div
+                      class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
+                    ></div>
+                  </div>
+                </div>
+              </label>
+
+              <!-- Save Snapshot Button (only if PSV enabled) -->
+              <div v-if="groupModal.perSourceVolumeEnabled" class="mb-6 flex justify-end">
+                <button
+                  @click="saveVolumeSnapshot"
+                  class="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 border border-blue-200 dark:border-blue-800"
+                >
+                  <span class="mdi mdi-content-save-outline"></span>
+                  Save Volumes for Current Source
+                </button>
+              </div>
+
               <div>
                 <div class="flex items-center justify-between mb-4">
                   <label
@@ -740,7 +785,7 @@
                     <!-- Client name and volume -->
                     <div class="flex-1 min-w-0">
                       <div
-                        class="font-medium text-gray-900 dark:text-white truncate flex items-center gap-2"
+                        class="font-medium text-gray-900 dark:text-white flex items-center gap-2"
                       >
                         <!-- Online/Offline Indicator -->
                         <span
@@ -751,7 +796,7 @@
                               : 'bg-gray-400 dark:bg-gray-600'
                           "
                         ></span>
-                        <span class="truncate">
+                        <span class="break-words">
                           {{ c.config.name || c.host.name }}
                         </span>
                         <span
@@ -1330,6 +1375,7 @@
                     ></div>
                   </div>
                 </label>
+
               </div>
 
               <!-- Support Section -->
@@ -1534,7 +1580,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useSnapcastStore } from "./stores/snapcast";
-import { useSettingsStore } from "./stores/settings";
+import { useSettingsStore } from "./stores/settings"; // Force reload
 import { useSnapStream } from "@/composables/useSnapStream";
 import { useAuthStore } from "./stores/auth";
 import type { Client, Group } from "./stores/snapcast";
@@ -1839,6 +1885,34 @@ function getStreamName(stream: any): string {
   return stream?.id ?? "Unknown Stream";
 }
 
+function getStreamStatus(streamId: string): string {
+  const stream = snapcast.streams.find((s) => s.id === streamId);
+  return stream?.status || "unknown";
+}
+
+function getStreamStatusColor(streamId: string): string {
+  const status = getStreamStatus(streamId).toLowerCase();
+  if (status === "playing" || status === "kplaying") return "text-green-500";
+  if (status === "idle" || status === "kidle") return "text-amber-500";
+  return "text-red-500";
+}
+
+function getStreamStatusIcon(streamId: string): string {
+  const status = getStreamStatus(streamId).toLowerCase();
+  if (status === "playing" || status === "kplaying") return "mdi-play-circle";
+  if (status === "idle" || status === "kidle") return "mdi-pause-circle"; // or mdi-sleep
+  return "mdi-alert-circle";
+}
+
+function getStreamStatusTooltip(streamId: string): string {
+  const status = getStreamStatus(streamId).toLowerCase();
+  if (status === "playing" || status === "kplaying")
+    return "Playing: Source is active";
+  if (status === "idle" || status === "kidle")
+    return "Idle: Source is silent or paused";
+  return "Error: Source has an issue";
+}
+
 /**
  * Determine group display name. Prefer the group name if available; otherwise
  * try to use the assigned stream's name, falling back to a concise
@@ -1874,8 +1948,8 @@ function toggleGroupMute(group: Group) {
   snapcast.setGroupMute(group.id, !group.muted);
 }
 
-function changeGroupStream(group: Group, event: Event) {
-  const streamId = (event.target as HTMLSelectElement).value;
+function changeGroupStream(group: Group, streamId: string) {
+  if (!streamId) return;
   snapcast.setGroupStream(group.id, streamId);
 }
 
@@ -1974,6 +2048,7 @@ const groupModal = ref<{
   linkedClientIds: string[];
   streamId: string | null;
   name: string;
+  perSourceVolumeEnabled: boolean;
 }>({
   open: false,
   groupId: null,
@@ -1981,6 +2056,7 @@ const groupModal = ref<{
   linkedClientIds: [],
   streamId: null,
   name: "",
+  perSourceVolumeEnabled: false,
 });
 
 function openGroupSettings(group: Group) {
@@ -1993,6 +2069,7 @@ function openGroupSettings(group: Group) {
     linkedClientIds: [...linkedIds],
     streamId: group.stream_id,
     name: group.name || "",
+    perSourceVolumeEnabled: settings.isPerSourceVolumeEnabled(group.id),
   };
 }
 
@@ -2002,6 +2079,12 @@ function closeGroupSettings() {
 
 async function applyGroupSettings() {
   if (!groupModal.value.groupId) return;
+
+  // Save per-source volume setting first so it applies to stream changes immediately
+  settings.setPerSourceVolumeEnabled(
+    groupModal.value.groupId,
+    groupModal.value.perSourceVolumeEnabled
+  );
 
   // Update stream
   if (groupModal.value.streamId) {
@@ -2055,7 +2138,25 @@ async function applyGroupSettings() {
     referenceVolumes
   );
 
+
   closeGroupSettings();
+}
+
+function saveVolumeSnapshot() {
+  if (!groupModal.value.groupId || !groupModal.value.streamId) return;
+
+  const group = snapcast.groups.find((g) => g.id === groupModal.value.groupId);
+  if (!group) return;
+
+  // Save current volume of all clients in the group for the current stream
+  for (const client of group.clients) {
+    console.log(`[App] Snapshotting volume: Client=${client.id}, Stream=${groupModal.value.streamId}, Vol=${client.config.volume.percent}`);
+    settings.saveClientVolume(
+      client.id,
+      groupModal.value.streamId, // Use the selected stream ID from modal
+      client.config.volume.percent
+    );
+  }
 }
 
 async function deleteCurrentGroup() {
