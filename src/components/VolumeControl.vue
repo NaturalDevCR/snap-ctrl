@@ -31,8 +31,8 @@
           <div
             class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between"
           >
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white">
-              Volume Control
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white truncate pr-4">
+              {{ name || "Volume Control" }}
             </h3>
             <button
               class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
@@ -101,6 +101,7 @@ import { ref, computed, onUnmounted } from "vue";
 const props = defineProps<{
   volume: number;
   muted: boolean;
+  name?: string;
 }>();
 
 const emit = defineEmits<{

@@ -12,6 +12,7 @@ export interface AuthPermissions {
   showClientSettings: boolean;
   showGroupFilter: boolean;
   showCreateGroup: boolean;
+  showBrowserPlayer: boolean;
 
   // Entity permissions (empty arrays = all allowed)
   allowedGroups: string[];
@@ -32,6 +33,7 @@ export const useAuthStore = defineStore(
       showClientSettings: true,
       showGroupFilter: true,
       showCreateGroup: true,
+      showBrowserPlayer: true,
       allowedGroups: [],
       allowedSources: [],
       allowedClients: [],
@@ -150,6 +152,7 @@ export const useAuthStore = defineStore(
         showClientSettings: true,
         showGroupFilter: true,
         showCreateGroup: true,
+        showBrowserPlayer: true,
         allowedGroups: [],
         allowedSources: [],
         allowedClients: [],

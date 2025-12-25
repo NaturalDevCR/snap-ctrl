@@ -124,7 +124,11 @@
 
           <!-- Browser Player in Header when connected -->
           <div
-            v-if="snapcast.isConnected && !isMobile"
+            v-if="
+              snapcast.isConnected &&
+              !isMobile &&
+              auth.permissions.showBrowserPlayer
+            "
             class="py-3 border-t border-gray-200 dark:border-gray-800"
           >
             <BrowserPlayer />
@@ -301,73 +305,93 @@
               class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col"
             >
               <div
-                class="px-5 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-slate-800/50 flex items-center justify-between gap-3"
+              class="px-5 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-slate-800/50 relative flex items-center justify-between min-h-[80px]"
+            >
+              <!-- Icon (Left) -->
+              <div
+                class="w-10 h-10 rounded-lg bg-white dark:bg-slate-700 border border-gray-200 dark:border-gray-600 shadow-sm flex items-center justify-center shrink-0 z-10"
               >
-                <div class="flex items-center gap-2 min-w-0 overflow-hidden">
-                  <h3
-                    class="font-bold text-lg text-gray-900 dark:text-white truncate"
-                    :title="getGroupName(group)"
-                  >
-                    {{ getGroupName(group) }}
-                  </h3>
-                </div>
-                <div class="flex items-center gap-1 shrink-0">
-                  <Tooltip :text="group.muted ? 'Unmute group' : 'Mute group'">
-                    <button
-                      @click="toggleGroupMute(group)"
-                      class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-                      :class="
-                        group.muted
-                          ? 'text-red-500 dark:text-red-400'
-                          : 'text-gray-500 dark:text-gray-400'
-                      "
-                    >
-                      <span
-                        class="mdi text-xl"
-                        :class="
-                          group.muted ? 'mdi-volume-off' : 'mdi-volume-high'
-                        "
-                      ></span>
-                    </button>
-                  </Tooltip>
-                  <Tooltip text="Group settings">
-                    <button
-                      v-if="auth.permissions.showGroupSettings"
-                      @click="openGroupSettings(group)"
-                      class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-gray-400 transition-colors cursor-pointer"
-                    >
-                      <span class="mdi mdi-cog text-xl"></span>
-                    </button>
-                  </Tooltip>
-                </div>
+                <span
+                  class="mdi mdi-speaker-multiple text-xl text-blue-600 dark:text-blue-400"
+                ></span>
               </div>
 
-              <div class="p-5 border-b border-gray-100 dark:border-gray-800">
-                <div class="relative">
-                  <span
-                    class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+              <!-- Title (Absolute Center) -->
+              <div
+                class="absolute inset-0 flex items-center justify-center px-16 pointer-events-none"
+              >
+                <h3
+                  class="font-bold text-lg text-gray-900 dark:text-white truncate pointer-events-auto max-w-full"
+                  :title="getGroupName(group)"
+                >
+                  {{ getGroupName(group) }}
+                </h3>
+              </div>
+
+              <!-- Buttons (Right) -->
+              <div class="flex items-center gap-1 shrink-0 z-10">
+                <Tooltip :text="group.muted ? 'Unmute group' : 'Mute group'">
+                  <button
+                    @click="toggleGroupMute(group)"
+                    class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                    :class="
+                      group.muted
+                        ? 'text-red-500 dark:text-red-400'
+                        : 'text-gray-500 dark:text-gray-400'
+                    "
                   >
-                    <span class="mdi mdi-music-note"></span>
-                  </span>
-                  <select
-                    v-model="group.stream_id"
-                    @change="changeGroupStream(group, $event)"
-                    class="w-full pl-10 pr-10 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none appearance-none cursor-pointer transition-colors"
+                    <span
+                      class="mdi text-xl"
+                      :class="
+                        group.muted ? 'mdi-volume-off' : 'mdi-volume-high'
+                      "
+                    ></span>
+                  </button>
+                </Tooltip>
+                <Tooltip text="Group settings">
+                  <button
+                    v-if="auth.permissions.showGroupSettings"
+                    @click="openGroupSettings(group)"
+                    class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-gray-400 transition-colors cursor-pointer"
                   >
-                    <option
-                      v-for="stream in snapcast.filteredStreams"
-                      :key="stream.id"
-                      :value="stream.id"
-                    >
-                      {{ getStreamName(stream) }}
-                    </option>
-                  </select>
-                  <span
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                    <span class="mdi mdi-cog text-xl"></span>
+                  </button>
+                </Tooltip>
+              </div>
+            </div>
+
+            <div class="p-5 border-b border-gray-100 dark:border-gray-800">
+              <div class="flex items-center gap-2 mb-2 px-1">
+                <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Source</label>
+                <Tooltip text="The audio source currently playing in this group">
+                  <span class="mdi mdi-help-circle-outline text-gray-400 hover:text-blue-500 transition-colors cursor-help text-sm"></span>
+                </Tooltip>
+              </div>
+              <div class="relative group">
+                <span
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors pointer-events-none"
+                >
+                  <span class="mdi mdi-music-note"></span>
+                </span>
+                <select
+                  v-model="group.stream_id"
+                  @change="changeGroupStream(group, $event)"
+                  class="w-full pl-10 pr-10 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none appearance-none cursor-pointer transition-all hover:bg-white dark:hover:bg-slate-700"
+                >
+                  <option
+                    v-for="stream in snapcast.filteredStreams"
+                    :key="stream.id"
+                    :value="stream.id"
                   >
-                    <span class="mdi mdi-chevron-down"></span>
-                  </span>
-                </div>
+                    {{ getStreamName(stream) }}
+                  </option>
+                </select>
+                <span
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                >
+                  <span class="mdi mdi-chevron-down"></span>
+                </span>
+              </div>
 
                 <!-- Group Volume Control -->
                 <div
@@ -469,105 +493,74 @@
                   "
                   v-show="client.connected || settings.showDisconnectedClients"
                 >
-                  <div class="flex items-start justify-between mb-4 gap-3">
-                    <div class="flex-1 min-w-0">
-                      <div class="flex items-center gap-2 mb-1">
-                        <!-- Online/Offline Indicator -->
-                        <Tooltip
-                          :text="client.connected ? 'Online' : 'Offline'"
-                        >
-                          <span
-                            class="w-2 h-2 rounded-full"
-                            :class="
-                              client.connected
-                                ? 'bg-green-500'
-                                : 'bg-gray-400 dark:bg-gray-600'
-                            "
-                          ></span>
-                        </Tooltip>
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-0 gap-3">
+                    <div class="flex-1 w-full min-w-0 flex items-center gap-3">
+                      <!-- Online/Offline Indicator -->
+                      <Tooltip
+                        :text="client.connected ? 'Online' : 'Offline'"
+                      >
                         <span
-                          class="mdi"
+                          class="w-2.5 h-2.5 rounded-full shrink-0"
                           :class="
                             client.connected
-                              ? 'mdi-speaker text-blue-500'
-                              : 'mdi-speaker-off text-gray-400'
+                              ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]'
+                              : 'bg-gray-300 dark:bg-gray-600'
                           "
                         ></span>
-                        <input
-                          v-model.trim="client.config.name"
-                          @blur="updateClientName(client)"
-                          @keyup.enter="
-                            ($event.target as HTMLInputElement).blur()
-                          "
-                          class="bg-transparent border border-transparent hover:border-gray-300 dark:hover:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 rounded px-1.5 py-0.5 -ml-1.5 font-semibold text-gray-900 dark:text-white w-full outline-none transition-colors truncate"
-                          placeholder="Rename client"
-                        />
-                      </div>
-                      <div
-                        class="text-xs text-gray-500 dark:text-gray-400 font-mono pl-7 truncate"
-                      >
-                        {{ client.host.name }}
-                      </div>
+                      </Tooltip>
+                      
+                      <span
+                        class="mdi text-xl shrink-0"
+                        :class="
+                          client.connected
+                            ? 'mdi-speaker text-blue-600 dark:text-blue-400'
+                            : 'mdi-speaker-off text-gray-400'
+                        "
+                      ></span>
+                      
+                      <input
+                        v-model.trim="client.config.name"
+                        @blur="updateClientName(client)"
+                        @keyup.enter="
+                          ($event.target as HTMLInputElement).blur()
+                        "
+                        class="bg-transparent border border-transparent hover:border-gray-300 dark:hover:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 rounded px-2 py-1 font-semibold text-gray-900 dark:text-white w-full outline-none transition-all truncate"
+                        placeholder="Rename client"
+                      />
                     </div>
 
-                    <div class="flex items-center gap-1 shrink-0">
-                      <Tooltip text="Client details">
-                        <button
-                          class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
-                          @click="openClientDetails(client)"
-                        >
-                          <span class="mdi mdi-information-outline"></span>
-                        </button>
-                      </Tooltip>
-                      <Tooltip
-                        :text="client.config.volume.muted ? 'Unmute' : 'Mute'"
-                      >
-                        <button
-                          class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-                          :class="
-                            client.config.volume.muted
-                              ? 'text-red-500'
-                              : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-                          "
-                          @click="toggleClientMute(client)"
-                        >
-                          <span
-                            class="mdi"
-                            :class="
-                              client.config.volume.muted
-                                ? 'mdi-volume-off'
-                                : 'mdi-volume-high'
-                            "
-                          ></span>
-                        </button>
-                      </Tooltip>
-                      <Tooltip text="Client settings">
-                        <button
-                          v-if="auth.permissions.showClientSettings"
-                          class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
-                          @click="openClientSettings(client)"
-                        >
-                          <span class="mdi mdi-cog"></span>
-                        </button>
-                      </Tooltip>
+                    <div class="flex w-full sm:w-auto items-center justify-between sm:justify-end gap-2 shrink-0">
+                      <VolumeControl
+                        :volume="client.config.volume.percent"
+                        :muted="client.config.volume.muted"
+                        :name="client.config.name || client.host.name"
+                        @update:volume="setVolume(client, $event)"
+                        @update:muted="toggleClientMute(client)"
+                      />
+
+                      <div class="hidden sm:block w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1"></div>
+
+                      <div class="flex items-center gap-2">
+                        <Tooltip text="Client details">
+                          <button
+                            class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                            @click="openClientDetails(client)"
+                          >
+                            <span class="mdi mdi-information-outline text-lg"></span>
+                          </button>
+                        </Tooltip>
+                        
+                        <Tooltip text="Client settings">
+                          <button
+                            v-if="auth.permissions.showClientSettings"
+                            class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
+                            @click="openClientSettings(client)"
+                          >
+                            <span class="mdi mdi-cog text-lg"></span>
+                          </button>
+                        </Tooltip>
+                      </div>
                     </div>
-                  </div>
-
-                  <div class="pl-7">
-                    <VolumeControl
-                      :volume="client.config.volume.percent"
-                      :muted="client.config.volume.muted"
-                      @update:volume="setVolume(client, $event)"
-                      @update:muted="toggleClientMute(client)"
-                    />
-                  </div>
-
-                  <div v-if="!client.connected" class="mt-2 pl-7">
-                    <span
-                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400"
-                    >
-                      Offline
-                    </span>
                   </div>
                 </div>
               </div>
@@ -1590,12 +1583,12 @@ const sortedGroups = computed(() => {
   }
 
   // Filter out the group that contains the browser player client
-  // User requested to show it at the end instead of hiding it
-  // if (browserClientId.value) {
-  //   groups = groups.filter(
-  //     (g) => !g.clients.some((c) => c.id === browserClientId.value)
-  //   );
-  // }
+  // We now show this in the BrowserPlayer component instead
+  if (snapcast.browserPlayerId) {
+    groups = groups.filter(
+      (g) => !g.clients.some((c) => c.id === snapcast.browserPlayerId)
+    );
+  }
 
   return groups.sort((a, b) => {
     // 0. Browser Player Group always last (identified by client name "SnapCtrl")

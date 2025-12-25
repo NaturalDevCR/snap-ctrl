@@ -124,7 +124,7 @@ export function useSnapStream() {
       ws.value = new WebSocket(url);
       ws.value.binaryType = "arraybuffer";
 
-      ws.value.onopen = () => {
+      ws.value.onopen = async () => {
         console.log("WebSocket connected");
 
         // Get or generate persistent Client ID
@@ -140,6 +140,15 @@ export function useSnapStream() {
         }
 
         clientId.value = storedId;
+
+        // Sync client ID to store for group filtering
+        try {
+          const { useSnapcastStore } = await import("@/stores/snapcast");
+          const snapcast = useSnapcastStore();
+          snapcast.setBrowserPlayerId(storedId);
+        } catch (e) {
+          console.warn("Failed to sync browser player ID to store", e);
+        }
 
         const helloMsg = buildHelloMessage(
           "SnapCtrl", // Client Name
