@@ -30,6 +30,7 @@ export function useSnapStream() {
   // Audio state
   const codec = ref<string>("");
   const bufferMs = ref(1000); // Default buffer 1000ms
+  const additionalLatency = ref(0); // Client-side buffer safety margin
   const latency = ref(0);
   const volume = ref(80);
   const isMuted = ref(false);
@@ -46,7 +47,7 @@ export function useSnapStream() {
 
   // Playback buffers
   const activeBuffers: AudioBufferSourceNode[] = [];
-  const maxActiveBuffers = 3;
+  const maxActiveBuffers = 100;
   let nextPlayTime = 0;
 
   // Stats
@@ -401,11 +402,31 @@ export function useSnapStream() {
       return;
     }
 
+    // Calculate play time
+    const now = audioCtx.currentTime;
+
+    // Throttling: Don't schedule too far into the future.
+    // If we are already scheduled 100ms ahead, wait.
+    if (nextPlayTime > now + 0.1) {
+      return;
+    }
+
+    if (nextPlayTime < now) {
+      nextPlayTime = now;
+    }
+
     // Get next buffer from stream
-    // Buffer playback: chunks with timestamp = now - (bufferMs + latency)
+    // Buffer playback: chunks with timestamp = now - (bufferMs + latency + additionalLatency)
+    // We ask for the buffer corresponding to our scheduled *next* play time.
+    // nextPlayTime is in seconds, convert to ms for audio stream
     const decodedAudio = audioStream.getNextBuffer(
-      -(bufferMs.value + latency.value)
+      nextPlayTime * 1000,
+      -(bufferMs.value + latency.value + additionalLatency.value)
     );
+
+    if (!decodedAudio) {
+       return;
+    }
 
     if (
       decodedAudio &&
@@ -435,13 +456,6 @@ export function useSnapStream() {
         source.buffer = audioBuffer;
         source.connect(gainNode);
 
-        // Calculate play time
-        const now = audioCtx.currentTime;
-
-        if (nextPlayTime < now) {
-          nextPlayTime = now;
-        }
-
         // Soft sync: adjust playback rate to match server time
         if (timeProvider && decodedAudio.timestamp) {
           // When we plan to play this chunk
@@ -451,7 +465,8 @@ export function useSnapStream() {
           const targetPlayTime =
             decodedAudio.timestamp.sec * 1000 +
             decodedAudio.timestamp.usec / 1000 +
-            bufferMs.value;
+            bufferMs.value +
+            additionalLatency.value;
 
           // Drift: positive means we are playing LATE (need to speed up)
           // negative means we are playing EARLY (need to slow down)
@@ -525,6 +540,14 @@ export function useSnapStream() {
     if (gainNode && !isMuted.value) {
       gainNode.gain.value = volume.value / 100;
     }
+  }
+
+  /**
+   * Set additional latency (buffer safety margin)
+   */
+  function setAdditionalLatency(ms: number): void {
+    additionalLatency.value = ms;
+    // We don't persist here, the component handles persistence if needed
   }
 
   /**
@@ -610,6 +633,7 @@ export function useSnapStream() {
     latency,
     volume,
     isMuted,
+    additionalLatency,
 
     // Stats
     bufferLength,
@@ -622,6 +646,7 @@ export function useSnapStream() {
     disconnect,
     toggleMute,
     setVolume,
+    setAdditionalLatency,
     clientId,
   };
 }

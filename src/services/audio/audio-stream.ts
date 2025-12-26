@@ -18,7 +18,7 @@ export class AudioStream {
   private readonly maxChunks = 1000; // Support up to ~20s buffer (assuming 20ms chunks)
   private playedFrames = 0;
   private readonly hardSyncThreshold = 500; // ms - increased to allow playbackRate sync
-  private readonly softSyncThreshold = 500; // ms - increased to allow playbackRate sync
+  private readonly softSyncThreshold = 60; // ms - reduced to enable soft sync before hard sync
   private readonly softSyncFrames = 10; // frames to adjust per sync
 
   constructor(private timeProvider: TimeProvider, private sampleRate: number) {}
@@ -49,19 +49,23 @@ export class AudioStream {
 
   /**
    * Get the next audio buffer for playback, applying synchronization
+   * @param clientPlayTime - The client time (AudioContext) when this buffer will start playing
+   * @param latencyMs - Latency offset
    */
-  getNextBuffer(latencyMs: number): DecodedAudio | null {
+  getNextBuffer(clientPlayTime: number, latencyMs: number): DecodedAudio | null {
     if (this.chunks.length === 0) {
       return null;
     }
-
-    // Get current client time (AudioContext time)
-    const clientNow = this.timeProvider.now();
+    
+    // Ensure we are synced before attempting to calculate server time
+    if (!this.timeProvider.isSynced()) {
+       return null; 
+    }
 
     // Convert to server time for comparison with chunk timestamps
     // Chunks have server absolute timestamps, so we need to convert our playback time
     const serverPlaybackTime = this.timeProvider.serverTime(
-      clientNow + latencyMs
+      clientPlayTime + latencyMs
     );
 
     // Find the chunk that should be playing now
@@ -76,8 +80,21 @@ export class AudioStream {
       }
     }
 
+    if (chunkIndex === -1 && this.chunks.length > 0) {
+      // If we couldn't find a chunk that started in the past,
+      // check if the first chunk is "close enough" (or if we just need to play it to maintain flow).
+      // If the first chunk is in the future relative to serverPlaybackTime, 
+      // it means we are slightly behind the data stream (or data is future).
+      // We should start playing it to avoid starvation.
+      // The sync logic will handle the time difference (inserting silence if needed).
+      chunkIndex = 0;
+      
+      // Optional: limit how far we jump?
+      // For now, assume any gap is better filled than starving.
+    }
+
     if (chunkIndex === -1) {
-      // No chunk ready yet, too early
+      // No chunk ready yet, too early (and no future chunks?)
       return null;
     }
 
@@ -144,13 +161,13 @@ export class AudioStream {
         };
       }
 
-      console.log(
-        `Hard sync: discarding ${framesToDiscard} frames (${timeDiff.toFixed(
-          2
-        )}ms ahead, now=${this.timeProvider.now().toFixed(0)}, chunk=${
-          audio.timestamp?.sec
-        }.${audio.timestamp?.usec})`
-      );
+      // console.log(
+      //   `Hard sync: discarding ${framesToDiscard} frames (${timeDiff.toFixed(
+      //     2
+      //   )}ms ahead, now=${this.timeProvider.now().toFixed(0)}, chunk=${
+      //     audio.timestamp?.sec
+      //   }.${audio.timestamp?.usec})`
+      // );
 
       return {
         samples: audio.samples.map((channel) => channel.slice(framesToDiscard)),
@@ -158,6 +175,15 @@ export class AudioStream {
       };
     } else {
       // We're behind, need to insert silence
+      const absDiff = Math.abs(timeDiff);
+      
+      // SAFETY GUARD: If the lag is massive (> 60 seconds), something is wrong with sync.
+      // Do not attempt to allocate gigabytes of silence.
+      if (absDiff > 60000) {
+         console.warn(`Hard sync: Ignoring massive lag of ${absDiff.toFixed(2)}ms. Clock not synced?`);
+         return audio;
+      }
+      
       console.log(
         `Hard sync: inserting ${framesToAdjust} silent frames (${Math.abs(
           timeDiff
@@ -166,9 +192,14 @@ export class AudioStream {
 
       return {
         samples: audio.samples.map((channel) => {
-          const newChannel = new Float32Array(channel.length + framesToAdjust);
-          newChannel.set(channel, framesToAdjust);
-          return newChannel;
+          try {
+             const newChannel = new Float32Array(channel.length + framesToAdjust);
+             newChannel.set(channel, framesToAdjust);
+             return newChannel;
+          } catch(e) {
+             console.error("Hard sync allocation failed:", e);
+             return channel;
+          }
         }),
         sampleRate: audio.sampleRate,
       };
@@ -260,5 +291,21 @@ export class AudioStream {
    */
   setSampleRate(sampleRate: number): void {
     this.sampleRate = sampleRate;
+  }
+
+  getDebugInfo(latencyMs: number): string {
+    const clientNow = this.timeProvider.now();
+    const serverPlaybackTime = this.timeProvider.serverTime(
+      clientNow + latencyMs
+    );
+    
+    if (this.chunks.length === 0) return "No chunks";
+
+    const first = this.chunks[0];
+    const last = this.chunks[this.chunks.length - 1];
+
+    if (!first) return "No chunks";
+
+    return `Now(Srv): ${serverPlaybackTime.toFixed(0)}, Head: ${first.playTime.toFixed(0)} (${(first.playTime - serverPlaybackTime).toFixed(0)}ms away), Tail: ${last?.playTime.toFixed(0)}`; 
   }
 }

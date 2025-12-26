@@ -69,6 +69,20 @@
                 </option>
               </select>
             </div>
+            
+            <div v-if="connected" class="flex items-center">
+              <select
+                v-model="bufferSetting"
+                class="text-[10px] bg-gray-100 dark:bg-slate-700 border-none rounded px-1.5 py-0.5 text-gray-700 dark:text-gray-200 focus:ring-1 focus:ring-blue-500 outline-none cursor-pointer max-w-[80px] truncate"
+                title="Jitter Buffer (Safety Margin)"
+                @click.stop
+              >
+                <option :value="0">Buffer: 0ms</option>
+                <option :value="500">Buffer: 0.5s</option>
+                <option :value="1000">Buffer: 1s</option>
+                <option :value="2000">Buffer: 2s</option>
+              </select>
+            </div>
 
             <div v-if="connected" class="flex gap-1 items-center">
               <span
@@ -186,7 +200,7 @@
 
 
 <script setup lang="ts">
-import { watch, computed } from "vue";
+import { watch, computed, ref } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useNotificationStore } from "@/stores/notification";
 import { useSnapStream } from "@/composables/useSnapStream";
@@ -210,8 +224,20 @@ const {
   disconnect,
   toggleMute,
   setVolume,
+  setAdditionalLatency,
   clientId,
 } = useSnapStream();
+
+// Buffer Settings
+const bufferSetting = ref(parseInt(localStorage.getItem("snapcast-buffer") || "0"));
+
+watch(bufferSetting, (val) => {
+  localStorage.setItem("snapcast-buffer", val.toString());
+  setAdditionalLatency(val);
+});
+
+// Initialize buffer
+setAdditionalLatency(bufferSetting.value);
 
 // Stream Selection Logic
 const currentGroup = computed(() => {

@@ -1,6 +1,6 @@
 {
   "name": "snapcast-vue",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild"

@@ -190,4 +190,8 @@ export class TimeProvider {
   getDiff(): number {
     return this.median;
   }
+
+  isSynced(): boolean {
+    return this.samples.length > 0;
+  }
 }
