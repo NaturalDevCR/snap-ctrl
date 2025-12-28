@@ -31,6 +31,11 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
 
 ## Changelog
 
+### v0.1.18
+
+- **New**: Added "Last Seen" information to the Client Details modal, showing when a client was last connected to the server.
+- **Improved**: Enhanced visual feedback in the Client Details view.
+
 ### v0.1.17
 
 - **Enhanced Zone Control Modal**: Moved detailed group controls (volume, clients, source) into a dedicated modal to prevent accidental volume adjustments while scrolling or navigating using touch devices.

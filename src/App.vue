@@ -883,6 +883,20 @@
                   <div>
                     <label
                       class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
+                      >Last Seen</label
+                    >
+                    <p
+                      class="text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      {{
+                        formatLastSeen(clientDetailsModal.client.lastSeen.sec)
+                      }}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
                       >IP Address</label
                     >
                     <p
@@ -1407,6 +1421,14 @@
         </div>
       </Transition>
     </template>
+
+    <!-- Server Info Modal -->
+    <ServerInfo
+      v-if="showServerInfo"
+      :is-open="showServerInfo"
+      @close="showServerInfo = false"
+    />
+
     <!-- End Main App UI -->
   </div>
 </template>
@@ -2167,6 +2189,12 @@ async function applyClientSettings() {
     clientModal.value.latency
   );
   closeClientSettings();
+}
+
+// Helper to format last seen timestamp
+function formatLastSeen(sec: number): string {
+  if (!sec) return "Never";
+  return new Date(sec * 1000).toLocaleString();
 }
 
 // Client Details Modal
