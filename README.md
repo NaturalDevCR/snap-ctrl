@@ -31,6 +31,17 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
 
 ## Changelog
 
+### v0.1.17
+
+- **Enhanced Zone Control Modal**: Moved detailed group controls (volume, clients, source) into a dedicated modal to prevent accidental volume adjustments while scrolling or navigating using touch devices.
+- **Improved Volume Controls**:
+  - Larger, more accessible touch targets for volume sliders and buttons.
+  - Added dedicated +/- buttons for fine-grained control.
+  - Visual indicators for interactive elements (hover states, cursor pointers).
+- **Redesigned Source Selector**: New custom dropdown UI for better visibility and ease of use, eliminating native select limitations.
+- **Better Navigability**: Simplified the main grid layout by reducing clutter on group cards, making it easier to scan and manage multiple zones.
+- **Client Management**: Restored quick access to Client Settings and Client Details directly from the control modal.
+
 ### v0.1.15
 
 - **New**: **Per-Source Volume Memory**. Added optional "Per-Source Volume" setting for groups. When enabled, client volumes are remembered and restored for each specific stream.
