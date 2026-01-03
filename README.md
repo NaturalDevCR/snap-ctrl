@@ -3,8 +3,6 @@
 A modern, responsive, and feature-rich web interface for [Snapcast](https://github.com/badaix/snapcast), built with Vue 3 and Tailwind CSS.
 
 <img width="3598" height="1786" alt="image" src="https://github.com/user-attachments/assets/7e61aa70-4937-4e1e-b9c3-7ef8db096934" />
-<img width="500" height="550" alt="image" src="https://github.com/user-attachments/assets/a4266067-0a43-4bcf-b19f-b27b67506176" />
-<img width="450" height="720" alt="image" src="https://github.com/user-attachments/assets/c4b7dfe9-25cf-433a-8fbe-095138b4f987" />
 
 ## Features
 
