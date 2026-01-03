@@ -4,10 +4,7 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
 
 <img width="3598" height="1786" alt="image" src="https://github.com/user-attachments/assets/7e61aa70-4937-4e1e-b9c3-7ef8db096934" />
 <img width="500" height="550" alt="image" src="https://github.com/user-attachments/assets/a4266067-0a43-4bcf-b19f-b27b67506176" />
-<img width="500" height="600" alt="image" src="https://github.com/user-attachments/assets/5e496d67-1a97-4967-b2d2-b8b6cc8a470c" />
 <img width="450" height="720" alt="image" src="https://github.com/user-attachments/assets/c4b7dfe9-25cf-433a-8fbe-095138b4f987" />
-<img width="450" height="315" alt="image" src="https://github.com/user-attachments/assets/eb8aeb50-06d3-48d5-ae3b-bbbe9eb9cae5" />
-<img width="700" height="950" alt="image" src="https://github.com/user-attachments/assets/6a7faa26-e945-4321-b48a-caad051c7eae" />
 
 ## Features
 
