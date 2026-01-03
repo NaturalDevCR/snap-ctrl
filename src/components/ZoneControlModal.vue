@@ -38,11 +38,12 @@
                       <div class="relative inline-block" ref="dropdownRef">
                         <button
                           type="button"
-                          @click="toggleDropdown"
-                          class="group flex items-center gap-1 px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors text-xs font-medium cursor-pointer text-gray-900 dark:text-gray-200"
+                          @click="canSelectStream && toggleDropdown()"
+                          class="group flex items-center gap-1 px-2 py-1 rounded-md transition-colors text-xs font-medium text-gray-900 dark:text-gray-200"
+                          :class="canSelectStream ? 'hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer' : 'cursor-default'"
                         >
                           <span class="truncate max-w-[200px]">{{ streams.find(s => s.id === streamId)?.name || streamId }}</span>
-                          <span class="mdi mdi-chevron-down text-base opacity-50 group-hover:opacity-100 transition-all duration-200" :class="{ 'rotate-180': isDropdownOpen }"></span>
+                          <span v-if="canSelectStream" class="mdi mdi-chevron-down text-base opacity-50 group-hover:opacity-100 transition-all duration-200" :class="{ 'rotate-180': isDropdownOpen }"></span>
                         </button>
 
                         <Transition
@@ -74,19 +75,22 @@
               </div>
           </div>
           <div class="flex items-center gap-2" @click.stop>
-            <button
-              v-if="showSettingsButton"
-              @click="$emit('open-settings')"
-              class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
-            >
-               <span class="mdi mdi-cog text-xl"></span>
-            </button>
-            <button
-              @click="close"
-              class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
-            >
-              <span class="mdi mdi-close text-xl"></span>
-            </button>
+            <Tooltip v-if="showSettingsButton" text="Group Settings">
+              <button
+                @click="$emit('open-settings')"
+                class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
+              >
+                  <span class="mdi mdi-cog text-xl"></span>
+              </button>
+            </Tooltip>
+            <Tooltip text="Close">
+              <button
+                @click="close"
+                class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
+              >
+                <span class="mdi mdi-close text-xl"></span>
+              </button>
+            </Tooltip>
           </div>
         </div>
 
@@ -122,7 +126,7 @@
                     <!-- Top Row: Icon and Name -->
                     <div class="flex items-center gap-3 w-full">
                         <!-- Status Icon -->
-                        <div class="shrink-0 flex items-center justify-center w-8">
+                        <div class="shrink-0 flex items-center justify-center w-8 h-8">
                             <div class="relative">
                                <span
                                 class="mdi text-xl"
@@ -150,20 +154,31 @@
                                  </div>
                              </Tooltip>
                              <div class="flex items-center gap-1">
-                               <button
-                                  @click="$emit('open-client-details', client)"
-                                  class="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:text-blue-600 dark:text-gray-500 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer"
-                                  title="Client Info"
-                               >
-                                  <span class="mdi mdi-information-outline text-lg"></span>
-                               </button>
-                               <button
-                                  @click="$emit('open-client-settings', client)"
-                                  class="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
-                                  title="Client Settings"
-                               >
-                                  <span class="mdi mdi-cog-outline text-lg"></span>
-                               </button>
+                               <Tooltip text="Client Info">
+                                 <button
+                                    @click="$emit('open-client-details', client)"
+                                    class="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:text-blue-600 dark:text-gray-500 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer"
+                                 >
+                                    <span class="mdi mdi-information-outline text-lg"></span>
+                                 </button>
+                                </Tooltip>
+                               <Tooltip v-if="showClientSettingsButton" text="Client Settings">
+                                 <button
+                                    @click="$emit('open-client-settings', client)"
+                                    class="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
+                                 >
+                                    <span class="mdi mdi-cog-outline text-lg"></span>
+                                 </button>
+                               </Tooltip>
+                               <Tooltip :text="client.config.volume.muted ? 'Unmute Client' : 'Mute Client'">
+                                 <button
+                                    @click="$emit('toggle-client-mute', client)"
+                                    class="w-7 h-7 flex items-center justify-center rounded-full transition-all cursor-pointer border"
+                                    :class="client.config.volume.muted ? 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-900/50 text-red-500 hover:text-red-600 dark:text-red-400' : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-gray-700 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:bg-white dark:hover:bg-slate-700'"
+                                 >
+                                    <span class="mdi text-sm" :class="client.config.volume.muted ? 'mdi-volume-off' : 'mdi-volume-high'"></span>
+                                 </button>
+                               </Tooltip>
                              </div>
                         </div>
                     </div>
@@ -175,6 +190,7 @@
                          :muted="client.config.volume.muted"
                          :name="client.config.name || client.host.name"
                          variant="inline"
+                         :show-mute-button="false"
                          @update:volume="$emit('update-client-volume', client, $event)"
                          @update:muted="$emit('toggle-client-mute', client)"
                        />
@@ -218,6 +234,8 @@ const props = defineProps<{
   clients: any[]; // Array of clients
   linkedClientIds: string[];
   showSettingsButton?: boolean;
+  showClientSettingsButton?: boolean;
+  canSelectStream?: boolean;
 }>();
 
 const emit = defineEmits<{

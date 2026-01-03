@@ -31,6 +31,17 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
 
 ## Changelog
 
+### v0.1.19
+
+- **Refactored**: **Per-Source Volume Logic**. The "Per-Source Volume" feature is now fully automatic. Volumes are auto-saved on change and strictly restored when switching streams. New streams "fork" the current volume levels. Removed the manual "Save" button for a seamless experience.
+- **Improved**: **Real-Time Synchronization**. Updates for client names, latency, mute status, and group streams are now handled with granular event listeners. This eliminates full state refreshes and prevents UI "ghosting" or lag.
+- **Fixed**: **Group Sorting**. Fixed a bug where changing a group's source would reset or scramble the card order. Custom sort order is now preserved during source switches.
+- **Improved**: **Mobile Experience**. Redesigned volume controls for mobile:
+  - Maximize slider width for precise control.
+  - Moved mute toggle to the client icon to save space.
+  - Better touch targets for standard +/- buttons.
+- **Improved**: **UI Polish**. Added valid tooltips to stream status indicators and other controls for better accessibility and clarity.
+
 ### v0.1.18
 
 - **New**: Added "Last Seen" information to the Client Details modal, showing when a client was last connected to the server.

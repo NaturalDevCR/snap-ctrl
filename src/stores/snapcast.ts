@@ -320,14 +320,49 @@ export const useSnapcastStore = defineStore(
         // Handle notifications
         switch (data.method) {
           case "Client.OnVolumeChanged":
-            // PER-SOURCE VOLUME: Auto-save disabled in favor of manual snapshot
+            if (data.params && data.params.id && data.params.volume) {
+              const client = findClientById(data.params.id);
+              if (client) {
+                // Update specific client volume directly
+                // This ensures real-time updates without full server refresh
+                client.config.volume = data.params.volume;
+              }
+            }
+            break;
+          case "Client.OnLatencyChanged":
+            if (data.params?.id && data.params.latency !== undefined) {
+              const client = findClientById(data.params.id);
+              if (client) client.config.latency = data.params.latency;
+            }
+            break;
+          case "Client.OnNameChanged":
+            if (data.params?.id && data.params.name !== undefined) {
+              const client = findClientById(data.params.id);
+              if (client) client.config.name = data.params.name;
+            }
+            break;
+          case "Group.OnMute":
+            if (data.params?.id && data.params.mute !== undefined) {
+              const group = groups.value.find((g) => g.id === data.params.id);
+              if (group) group.muted = data.params.mute;
+            }
+            break;
+          case "Group.OnStreamChanged":
+            if (data.params?.id && data.params.stream_id !== undefined) {
+              const group = groups.value.find((g) => g.id === data.params.id);
+              if (group) group.stream_id = data.params.stream_id;
+            }
+            break;
+          case "Group.OnNameChanged":
+            if (data.params?.id && data.params.name !== undefined) {
+              const group = groups.value.find((g) => g.id === data.params.id);
+              if (group) group.name = data.params.name;
+            }
             break;
           case "Client.OnConnect":
           case "Client.OnDisconnect":
-          case "Client.OnNameChanged":
-          case "Group.OnStreamChanged":
-          case "Group.OnMute":
-            // Refresh server status when clients change
+            // Refresh server status when clients connection status changes
+            // as this affects which groups they belong to / visibility
             getServerStatus();
             break;
           case "Stream.OnUpdate":
@@ -413,6 +448,22 @@ export const useSnapcastStore = defineStore(
             muted: mute,
           },
         });
+
+        // PER-SOURCE VOLUME: Save new volume if enabled for the client's group
+        const group = groups.value.find((g) =>
+          g.clients.some((c) => c.id === clientId)
+        );
+        if (
+          group &&
+          settings.isPerSourceVolumeEnabled(group.id) &&
+          group.stream_id
+        ) {
+          settings.saveClientVolume(
+            clientId,
+            group.stream_id,
+            Math.max(0, Math.min(100, volume))
+          );
+        }
       } catch (error) {
         console.error("Failed to set client volume:", error);
         // Revert on failure
@@ -497,7 +548,9 @@ export const useSnapcastStore = defineStore(
       if (!g) return;
 
       const isEnabled = settings.isPerSourceVolumeEnabled(groupId);
-      console.log(`[SnapCtrl] Switching Group ${g.name} stream: ${prev} -> ${streamId}. PSV Enabled: ${isEnabled}`);
+      console.log(
+        `[SnapCtrl] Switching Group ${g.name} stream: ${prev} -> ${streamId}. PSV Enabled: ${isEnabled}`
+      );
 
       // Optimistic update
       g.stream_id = streamId;
@@ -508,22 +561,39 @@ export const useSnapcastStore = defineStore(
           stream_id: streamId,
         });
 
-        // PER-SOURCE VOLUME: Restore volumes for the NEW stream if available
-        if (settings.isPerSourceVolumeEnabled(groupId)) {
+        // PER-SOURCE VOLUME
+        if (isEnabled) {
           const groupClients = g.clients;
-          
-          // Use Promise.all to send requests in parallel instead of sequentially
-          await Promise.all(groupClients.map(async (client) => {
-            if (!client.connected) return;
 
-            const savedVolume = settings.getClientVolume(client.id, streamId);
-            console.log(`[SnapCtrl] Checking restore: Client=${client.id}, Stream=${streamId}, SavedVol=${savedVolume}`);
-            if (savedVolume !== undefined) {
-              // Apply saved volume
-              console.log(`[SnapCtrl] Restoring volume: Client=${client.id}, Vol=${savedVolume}%`);
-              await setClientVolume(client.id, savedVolume, client.config.volume.muted);
-            }
-          }));
+          await Promise.all(
+            groupClients.map(async (client) => {
+              if (!client.connected) return;
+
+              const savedVolume = settings.getClientVolume(client.id, streamId);
+              
+              if (savedVolume !== undefined) {
+                // Restore saved volume
+                console.log(
+                  `[SnapCtrl] Restoring volume: Client=${client.id}, Vol=${savedVolume}%`
+                );
+                await setClientVolume(
+                  client.id,
+                  savedVolume,
+                  client.config.volume.muted
+                );
+              } else {
+                // FORK: No saved volume for this stream, save current volume as new baseline
+                console.log(
+                  `[SnapCtrl] Forking volume: Client=${client.id}, Stream=${streamId}, Vol=${client.config.volume.percent}%`
+                );
+                settings.saveClientVolume(
+                  client.id,
+                  streamId,
+                  client.config.volume.percent
+                );
+              }
+            })
+          );
         }
       } catch (error) {
         console.error("Failed to set group stream:", error);

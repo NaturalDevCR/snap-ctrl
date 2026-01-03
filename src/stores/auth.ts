@@ -6,6 +6,10 @@ export interface AuthPermissions {
   canAdjustVolumes: boolean;
   canRenameGroups: boolean;
   canRenameClients: boolean;
+  canSelectStream: boolean;
+  canConfigurePSV: boolean;
+  canAssignClients: boolean;
+  canLinkClients: boolean;
 
   // UI Visibility permissions
   showGroupSettings: boolean;
@@ -29,6 +33,10 @@ export const useAuthStore = defineStore(
       canAdjustVolumes: true,
       canRenameGroups: true,
       canRenameClients: true,
+      canSelectStream: true,
+      canConfigurePSV: true,
+      canAssignClients: true,
+      canLinkClients: true,
       showGroupSettings: true,
       showClientSettings: true,
       showGroupFilter: true,
@@ -89,7 +97,13 @@ export const useAuthStore = defineStore(
     function hasFeaturePermission(
       feature: keyof Pick<
         AuthPermissions,
-        "canAdjustVolumes" | "canRenameGroups" | "canRenameClients"
+        | "canAdjustVolumes"
+        | "canRenameGroups"
+        | "canRenameClients"
+        | "canSelectStream"
+        | "canConfigurePSV"
+        | "canAssignClients"
+        | "canLinkClients"
       >
     ): boolean {
       return permissions.value[feature];
@@ -148,6 +162,10 @@ export const useAuthStore = defineStore(
         canAdjustVolumes: true,
         canRenameGroups: true,
         canRenameClients: true,
+        canSelectStream: true,
+        canConfigurePSV: true,
+        canAssignClients: true,
+        canLinkClients: true,
         showGroupSettings: true,
         showClientSettings: true,
         showGroupFilter: true,

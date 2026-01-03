@@ -1,34 +1,39 @@
 <template>
   <div :class="{ 'w-full': variant === 'inline', 'inline-block': variant === 'modal' }">
     <!-- Inline Variant -->
-    <div v-if="variant === 'inline'" class="flex items-center gap-2 w-full">
-      <button
-        type="button"
-        @click="toggleMute"
-        class="shrink-0 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-        :class="muted ? 'text-red-500 dark:text-red-400' : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'"
-      >
-        <span class="mdi text-xl" :class="muted ? 'mdi-volume-off' : 'mdi-volume-high'"></span>
-      </button>
+    <div v-if="variant === 'inline'" class="flex items-center gap-1 w-full">
+      <Tooltip v-if="showMuteButton" :text="muted ? 'Unmute' : 'Mute'">
+        <button
+          type="button"
+          @click="toggleMute"
+          class="shrink-0 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          :class="muted ? 'text-red-500 dark:text-red-400' : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'"
+        >
+          <span class="mdi text-xl" :class="muted ? 'mdi-volume-off' : 'mdi-volume-high'"></span>
+        </button>
+      </Tooltip>
       
       <!-- Decrease Button -->
-      <button
-        type="button"
-        @click="adjustVolume(-1)"
-        class="shrink-0 w-9 h-9 flex items-center justify-center rounded-full text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer"
-        :disabled="volume <= 0"
-      >
-        <span class="mdi mdi-minus text-xl"></span>
-      </button>
+      <Tooltip text="Decrease Volume">
+        <button
+          type="button"
+          @click="adjustVolume(-1)"
+          class="shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer"
+          :disabled="volume <= 0"
+        >
+          <span class="mdi mdi-minus text-xl"></span>
+        </button>
+      </Tooltip>
 
-      <div class="flex-1 relative h-6 flex items-center group/slider px-2">
+      <div class="flex-1 relative h-6 flex items-center group/slider">
         <input
           type="range"
           :value="volume"
           @input="handleVolumeChange"
           min="0"
           max="100"
-          class="relative w-full h-2 bg-gray-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform"
+          step="1"
+          class="relative w-full h-2 bg-gray-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer touch-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform"
           :style="{
             backgroundImage: `linear-gradient(to right, ${muted ? '#9ca3af' : '#2563eb'} 0%, ${muted ? '#9ca3af' : '#2563eb'} ${volume}%, transparent ${volume}%, transparent 100%)`
           }"
@@ -36,14 +41,16 @@
       </div>
 
       <!-- Increase Button -->
-      <button
-        type="button"
-        @click="adjustVolume(1)"
-        class="shrink-0 w-9 h-9 flex items-center justify-center rounded-full text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer"
-        :disabled="volume >= 100"
-      >
-        <span class="mdi mdi-plus text-xl"></span>
-      </button>
+      <Tooltip text="Increase Volume">
+        <button
+          type="button"
+          @click="adjustVolume(1)"
+          class="shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer"
+          :disabled="volume >= 100"
+        >
+          <span class="mdi mdi-plus text-xl"></span>
+        </button>
+      </Tooltip>
       
       <div class="text-xs font-mono text-gray-400 w-9 text-right">{{ volume }}%</div>
     </div>
@@ -112,7 +119,7 @@
                   <div class="relative w-full h-3 rounded-full flex items-center group/slider">
                     <input
                       type="range"
-                      class="relative w-full h-3 bg-gray-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform"
+                      class="relative w-full h-3 bg-gray-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer touch-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-8 [&::-webkit-slider-thumb]:h-8 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform"
                       :value="volume"
                       @input="handleVolumeChange"
                       min="0"
@@ -148,15 +155,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onUnmounted } from "vue";
+import { ref, watch, nextTick, computed, onUnmounted } from "vue";
+import Tooltip from '@/components/Tooltip.vue';
 
 const props = withDefaults(defineProps<{
   volume: number;
   muted: boolean;
   name?: string;
   variant?: 'modal' | 'inline';
+  showMuteButton?: boolean;
 }>(), {
-  variant: 'modal'
+  variant: 'modal',
+  showMuteButton: true
 });
 
 const emit = defineEmits<{

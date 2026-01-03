@@ -329,23 +329,26 @@
                          </div>
                     </div>
                     
-                    <!-- Quick Mute/Settings -->
-                    <div class="flex items-center gap-1 shrink-0">
-                       <button
-                          @click="toggleGroupMute(group)"
-                          class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
-                          :class="group.muted ? 'text-red-500' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'"
-                        >
-                          <span class="mdi" :class="group.muted ? 'mdi-volume-off' : 'mdi-volume-high'"></span>
-                        </button>
-                        <button
-                          v-if="auth.permissions.showGroupSettings"
-                          @click="openGroupSettings(group)"
-                          class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                        >
-                          <span class="mdi mdi-cog"></span>
-                        </button>
-                    </div>
+                      <!-- Quick Mute/Settings -->
+                      <div class="flex items-center gap-1 shrink-0">
+                         <Tooltip :text="group.muted ? 'Unmute Group' : 'Mute Group'">
+                           <button
+                              @click="toggleGroupMute(group)"
+                              class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                              :class="group.muted ? 'text-red-500' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'"
+                            >
+                              <span class="mdi" :class="group.muted ? 'mdi-volume-off' : 'mdi-volume-high'"></span>
+                            </button>
+                         </Tooltip>
+                         <Tooltip v-if="auth.permissions.showGroupSettings" text="Group Settings">
+                            <button
+                              @click="openGroupSettings(group)"
+                              class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                            >
+                              <span class="mdi mdi-cog"></span>
+                            </button>
+                         </Tooltip>
+                      </div>
                   </div>
                 </div>
 
@@ -362,13 +365,15 @@
                        </span>
                     </div>
 
-                    <button
-                      @click="openZoneControl(group)"
-                      class="px-3 py-1.5 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5"
-                    >
-                      <span>Control</span>
-                      <span class="mdi mdi-chevron-right"></span>
-                    </button>
+                     <Tooltip text="Open Zone Control">
+                       <button
+                         @click="openZoneControl(group)"
+                         class="px-3 py-1.5 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5"
+                       >
+                         <span>Control</span>
+                         <span class="mdi mdi-chevron-right"></span>
+                       </button>
+                     </Tooltip>
                  </div>
               </div>
             </div>
@@ -437,7 +442,9 @@
         :is-muted="zoneControlGroup!.muted"
         :clients="zoneControlGroup!.clients"
         :linked-client-ids="settings.groupVolumeLinks[zoneControlGroup!.id]?.linkedClientIds || []"
-        :show-settings-button="true"
+        :show-settings-button="auth.permissions.showGroupSettings"
+        :show-client-settings-button="auth.permissions.showClientSettings"
+        :can-select-stream="auth.permissions.canSelectStream"
         @close="closeZoneControl"
         @update:volume="setGroupVolume(zoneControlGroup!.id, $event)"
         @adjust-volume="adjustGroupVolume(zoneControlGroup!.id, $event)"
@@ -461,7 +468,7 @@
       >
         <div
           v-if="groupModal.open"
-          class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          class="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
           @click.self="closeGroupSettings"
         >
           <div
@@ -489,13 +496,14 @@
                   >Group Name</label
                 >
                 <input
-                  class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-gray-900 dark:text-white"
+                  class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 dark:disabled:bg-slate-800/50"
                   v-model.trim="groupModal.name"
                   placeholder="Custom group name"
+                  :disabled="!auth.permissions.canRenameGroups"
                 />
               </div>
 
-              <div>
+              <div v-if="auth.permissions.canSelectStream">
                 <label
                   class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                   >Stream</label
@@ -523,6 +531,7 @@
 
               <!-- Per-Source Volume Toggle -->
               <label
+                v-if="auth.permissions.canConfigurePSV"
                 class="block mb-6 cursor-pointer"
               >
                 <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -547,16 +556,7 @@
                 </div>
               </label>
 
-              <!-- Save Snapshot Button (only if PSV enabled) -->
-              <div v-if="groupModal.perSourceVolumeEnabled" class="mb-6 flex justify-end">
-                <button
-                  @click="saveVolumeSnapshot"
-                  class="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 border border-blue-200 dark:border-blue-800"
-                >
-                  <span class="mdi mdi-content-save-outline"></span>
-                  Save Volumes for Current Source
-                </button>
-              </div>
+
 
               <div>
                 <div class="flex items-center justify-between mb-4">
@@ -643,7 +643,8 @@
                         type="checkbox"
                         :value="c.id"
                         v-model="groupModal.clientIds"
-                        class="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        class="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                        :disabled="!auth.permissions.canAssignClients"
                       />
                     </div>
 
@@ -653,7 +654,7 @@
                         type="checkbox"
                         :value="c.id"
                         v-model="groupModal.linkedClientIds"
-                        :disabled="!groupModal.clientIds.includes(c.id)"
+                        :disabled="!groupModal.clientIds.includes(c.id) || !auth.permissions.canLinkClients"
                         class="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                       />
                     </div>
@@ -1035,8 +1036,9 @@
                   >Name</label
                 >
                 <input
-                  class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-gray-900 dark:text-white"
+                  class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 dark:disabled:bg-slate-800/50"
                   v-model.trim="clientModal.name"
+                  :disabled="!auth.permissions.canRenameClients"
                 />
               </div>
               <div>
@@ -1466,7 +1468,8 @@ function closeZoneControl() {
 
 function handleOpenSettingsFromZoneControl() {
   const group = zoneControlGroup.value;
-  closeZoneControl();
+  // Don't close zone control to allow stacking (dialog over dialog)
+  // closeZoneControl(); 
   if (group) {
     openGroupSettings(group);
   }
@@ -1534,10 +1537,7 @@ const sortedGroups = computed(() => {
     if (indexA !== -1) return -1;
     if (indexB !== -1) return 1;
 
-    // 2. Stream ID (group by source)
-    if (a.stream_id !== b.stream_id) {
-      return (a.stream_id || "").localeCompare(b.stream_id || "");
-    }
+
 
     // 3. Name
     return a.name.localeCompare(b.name);
@@ -1997,11 +1997,33 @@ function closeGroupSettings() {
 async function applyGroupSettings() {
   if (!groupModal.value.groupId) return;
 
-  // Save per-source volume setting first so it applies to stream changes immediately
+  // Save per-source volume setting first
   settings.setPerSourceVolumeEnabled(
     groupModal.value.groupId,
     groupModal.value.perSourceVolumeEnabled
   );
+
+  // SNAPSHOT: If enabled, snapshot current volumes for current stream immediately.
+  // This handles the "Se activa... y esto guarda el estado actual" requirement.
+  if (groupModal.value.perSourceVolumeEnabled) {
+    const group = snapcast.groups.find(
+      (g) => g.id === groupModal.value.groupId
+    );
+    // Use group stream unless overridden by modal selection
+    const targetStream = groupModal.value.streamId || group?.stream_id;
+    
+    if (group && targetStream) {
+      group.clients.forEach((client) => {
+        // Only snapshot if connected? Requirement says "clients" generally.
+        // It's safer to save current config state.
+         settings.saveClientVolume(
+          client.id,
+          targetStream,
+          client.config.volume.percent
+        );
+      });
+    }
+  }
 
   // Update stream
   if (groupModal.value.streamId) {
@@ -2057,23 +2079,6 @@ async function applyGroupSettings() {
 
 
   closeGroupSettings();
-}
-
-function saveVolumeSnapshot() {
-  if (!groupModal.value.groupId || !groupModal.value.streamId) return;
-
-  const group = snapcast.groups.find((g) => g.id === groupModal.value.groupId);
-  if (!group) return;
-
-  // Save current volume of all clients in the group for the current stream
-  for (const client of group.clients) {
-    console.log(`[App] Snapshotting volume: Client=${client.id}, Stream=${groupModal.value.streamId}, Vol=${client.config.volume.percent}`);
-    settings.saveClientVolume(
-      client.id,
-      groupModal.value.streamId, // Use the selected stream ID from modal
-      client.config.volume.percent
-    );
-  }
 }
 
 async function deleteCurrentGroup() {
