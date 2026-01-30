@@ -123,7 +123,7 @@
           >
             <input
               type="range"
-              v-model.number="volume"
+              v-model.number="sliderValue"
               min="0"
               max="100"
               class="w-full h-1 bg-gray-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-sm [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125 relative z-10"
@@ -131,7 +131,7 @@
             />
             <div
               class="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-blue-600 dark:bg-blue-500 rounded-full pointer-events-none"
-              :style="{ width: `${volume}%` }"
+              :style="{ width: `${sliderValue}%` }"
             ></div>
           </div>
         </div>
@@ -205,7 +205,11 @@ import { useSnapcastStore } from "@/stores/snapcast";
 import { useNotificationStore } from "@/stores/notification";
 import { useSnapStream } from "@/composables/useSnapStream";
 
+import { useSettingsStore } from "@/stores/settings";
+import { sliderToVolume, volumeToSlider } from "@/utils/volume";
+
 const snapcast = useSnapcastStore();
+const settings = useSettingsStore();
 const notifications = useNotificationStore();
 
 const {
@@ -248,6 +252,19 @@ const currentGroup = computed(() => {
   );
 });
 
+// Volume Exponent
+const volumeExponent = computed(() => {
+  return settings.getVolumeExponent(currentGroup.value?.id);
+});
+
+// Slider Value (0-100)
+const sliderValue = computed({
+  get: () => volumeToSlider(volume.value, volumeExponent.value),
+  set: (val: number) => {
+    volume.value = sliderToVolume(val, volumeExponent.value);
+  }
+});
+
 const currentStreamId = computed({
   get: () => currentGroup.value?.stream_id || "",
   set: (newStreamId: string) => {
@@ -258,6 +275,15 @@ const currentStreamId = computed({
 });
 
 const availableStreams = computed(() => snapcast.streams);
+
+// Watch volume changes handled by slider/setVolume inside getter/setter
+// But we need to sync if volume changes from elsewhere
+// volume ref -> setVolume call is handled by slider interaction or upstream?
+// useSnapStream implementation details: usually volume is a ref.
+// If we set volume.value, does it call setVolume?
+// The original code had:
+// watch(volume, (newVolume) => { setVolume(newVolume); });
+// I should keep that.
 
 // Watch volume changes
 watch(volume, (newVolume) => {

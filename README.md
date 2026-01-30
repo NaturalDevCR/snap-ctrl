@@ -5,7 +5,6 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
 <img width="3598" height="1786" alt="image" src="https://github.com/user-attachments/assets/7e61aa70-4937-4e1e-b9c3-7ef8db096934" />
 <img width="3588" height="2082" alt="image" src="https://github.com/user-attachments/assets/cf8799a9-bd98-40e6-a932-7c15ed2fe6ba" />
 
-
 ## Features
 
 - **Modern & Responsive UI**: A fully responsive interface featuring a sleek dark mode, designed for seamless use on desktop and mobile devices.
@@ -30,6 +29,63 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
 - **Stream Management**: Intuitive interface for assigning streams to groups.
 - **PWA Support**: Install as a Progressive Web App (PWA) on your device for a native-like experience.
 - **Development Ready**: Includes optional HTTPS support for local development environments.
+
+## Changelog
+
+### v0.1.20
+
+- **Optimized**: **Connection Efficiency**. Eliminated unnecessary periodic polling. The app now relies entirely on Snapcast's real-time push notifications for state updates (volume, mute, streams, client connections). This significantly reduces server load and network traffic, especially in multi-client environments.
+- **Removed**: Deprecated `refreshInterval` and `autoRefreshEnabled` settings as they are no longer needed.
+
+### v0.1.19
+
+- **Refactored**: **Per-Source Volume Logic**. The "Per-Source Volume" feature is now fully automatic. Volumes are auto-saved on change and strictly restored when switching streams. New streams "fork" the current volume levels. Removed the manual "Save\" button for a seamless experience.
+- **Improved**: **Real-Time Synchronization**. Updates for client names, latency, mute status, and group streams are now handled with granular event listeners. This eliminates full state refreshes and prevents UI "ghosting" or lag.
+- **Fixed**: **Group Sorting**. Fixed a bug where changing a group's source would reset or scramble the card order. Custom sort order is now preserved during source switches.
+- **Improved**: **Mobile Experience**. Redesigned volume controls for mobile:
+  - Maximize slider width for precise control.
+  - Moved mute toggle to the client icon to save space.
+  - Better touch targets for standard +/- buttons.
+- **Improved**: **UI Polish**. Added valid tooltips to stream status indicators and other controls for better accessibility and clarity.
+
+### v0.1.18
+
+- **New**: Added "Last Seen" information to the Client Details modal, showing when a client was last connected to the server.
+- **Improved**: Enhanced visual feedback in the Client Details view.
+
+### v0.1.17
+
+- **Enhanced Zone Control Modal**: Moved detailed group controls (volume, clients, source) into a dedicated modal to prevent accidental volume adjustments while scrolling or navigating using touch devices.
+- **Improved Volume Controls**:
+  - Larger, more accessible touch targets for volume sliders and buttons.
+  - Added dedicated +/- buttons for fine-grained control.
+  - Visual indicators for interactive elements (hover states, cursor pointers).
+- **Redesigned Source Selector**: New custom dropdown UI for better visibility and ease of use, eliminating native select limitations.
+- **Better Navigability**: Simplified the main grid layout by reducing clutter on group cards, making it easier to scan and manage multiple zones.
+- **Client Management**: Restored quick access to Client Settings and Client Details directly from the control modal.
+
+### v0.1.15
+
+- **New**: **Per-Source Volume Memory**. Added optional "Per-Source Volume" setting for groups. When enabled, client volumes are remembered and restored for each specific stream.
+- **New**: **Stream Status Indicators**. Added visual indicators and tooltips to show if a stream is Playing, Idle, or in Error state.
+- **Improved**: **Performance**. Optimized stream switching logic to execute parallel requests, significantly reducing delay when changing sources.
+- **Improved**: **Network Efficiency**. Logic added to prevent sending redundant volume update requests.
+
+### v0.1.14
+
+- **New**: **Granular Permissions System**. Added a robust permissions system allowing administrators to:
+  - Lock specific features (Volume, Renaming).
+  - Hide UI elements (Settings, Filters, Browser Player).
+  - Restrict access to specific Groups, Clients, or Sources.
+- **New**: **UI Improvements**. Refined visual elements and layout for a more polished user experience.
+- **Improved**: **Browser Player Visibility**. Added the ability to toggle the Browser Player visibility via permissions.
+- **Maintenance**: General code cleanup and performance optimizations for permission handling.
+
+### v0.1.13
+
+- **Fixed**: Resolved issue where the "Browser Player" (web client) would appear as a phantom card in the main Audio Groups list.
+- **Fixed**: Fixed double deletion error when cleaning up the temporary browser player group.
+- **Improved**: Web client group is now properly filtered and only appears in the dedicated player section.
 
 ## Getting Started
 

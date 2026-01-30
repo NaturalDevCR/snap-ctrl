@@ -105,6 +105,7 @@
                     :muted="isMuted"
                     :name="groupName + ' Master'"
                     variant="inline"
+                    :exponent="volumeExponent"
                     @update:volume="$emit('update:volume', $event)"
                     @toggle-mute="$emit('toggle-mute')"
                   />
@@ -191,6 +192,7 @@
                          :name="client.config.name || client.host.name"
                          variant="inline"
                          :show-mute-button="false"
+                         :exponent="volumeExponent"
                          @update:volume="$emit('update-client-volume', client, $event)"
                          @update:muted="$emit('toggle-client-mute', client)"
                        />
@@ -219,10 +221,15 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import VolumeControl from './VolumeControl.vue';
 import Tooltip from '@/components/Tooltip.vue';
 
+import { useSettingsStore } from "@/stores/settings";
+
+const settings = useSettingsStore();
+
 // Define props to receive group data
 // We'll pass disconnected entities so App-level logic can handle it
 const props = defineProps<{
   isOpen: boolean;
+  groupId: string;
   groupName: string;
   streamId: string;
   streams: any[];
@@ -237,6 +244,10 @@ const props = defineProps<{
   showClientSettingsButton?: boolean;
   canSelectStream?: boolean;
 }>();
+
+const volumeExponent = computed(() => {
+  return settings.getVolumeExponent(props.groupId);
+});
 
 const emit = defineEmits<{
   (e: 'close'): void;

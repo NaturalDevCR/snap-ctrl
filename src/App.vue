@@ -432,6 +432,7 @@
       <ZoneControlModal
         v-if="zoneControlGroup"
         :is-open="!!zoneControlGroup"
+        :group-id="zoneControlGroup!.id"
         :group-name="getGroupName(zoneControlGroup!)"
         :stream-id="zoneControlGroup!.stream_id"
         :streams="displayStreams"
@@ -555,6 +556,46 @@
                   </div>
                 </div>
               </label>
+
+              <!-- Volume Control Mode -->
+              <div v-if="auth.permissions.canConfigurePSV" class="space-y-4 mb-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Volume Control Mode</label>
+                  <div class="relative">
+                    <select
+                      v-model="groupModal.volumeMode"
+                      class="w-full pl-4 pr-10 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-gray-900 dark:text-white"
+                    >
+                      <option value="global">Global Default ({{ settings.globalVolumeControlMode }})</option>
+                      <option value="linear">Linear</option>
+                      <option value="nonlinear">Non-Linear</option>
+                    </select>
+                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                      <span class="mdi mdi-chevron-down"></span>
+                    </span>
+                  </div>
+                </div>
+
+                <div v-if="groupModal.volumeMode === 'nonlinear' || (groupModal.volumeMode === 'global' && settings.globalVolumeControlMode === 'nonlinear')">
+                   <div class="flex items-center justify-between mb-2">
+                      <label class="text-sm font-medium text-gray-700 dark:text-white">Exponent (Curve)</label>
+                      <span class="text-xs font-mono bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">
+                        {{ groupModal.volumeExponent ?? settings.globalVolumeExponent }}
+                      </span>
+                   </div>
+                   <input 
+                      type="range"
+                      v-model.number="groupModal.volumeExponent"
+                      min="1.0"
+                      max="5.0"
+                      step="0.1"
+                      class="w-full h-2 bg-gray-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                   />
+                   <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                     Higher values provide more precision at low volumes.
+                   </p>
+                </div>
+              </div>
 
 
 
@@ -1228,6 +1269,49 @@
 
               </div>
 
+              <!-- Global Volume Settings -->
+              <div class="pt-4 border-t border-gray-100 dark:border-gray-800">
+                <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Volume Control</h4>
+                
+                <div class="space-y-3">
+                   <label class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
+                      <div>
+                        <span class="block font-medium text-gray-900 dark:text-white">Control Mode</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Global default for volume sliders</span>
+                      </div>
+                      <div class="relative inline-flex items-center cursor-pointer">
+                        <select 
+                            v-model="settings.globalVolumeControlMode"
+                            class="bg-transparent border-none text-right focus:ring-0 text-sm font-medium text-blue-600 dark:text-blue-400 cursor-pointer outline-none"
+                        >
+                            <option value="linear">Linear</option>
+                            <option value="nonlinear">Non-Linear</option>
+                        </select>
+                      </div>
+                   </label>
+
+                   <div v-if="settings.globalVolumeControlMode === 'nonlinear'" class="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <div class="flex items-center justify-between mb-2">
+                        <span class="font-medium text-gray-900 dark:text-white text-sm">Control Curve (Exponent)</span>
+                        <span class="text-xs font-mono bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded text-gray-700 dark:text-gray-300">
+                          {{ settings.globalVolumeExponent }}
+                        </span>
+                      </div>
+                      <input 
+                        type="range"
+                        v-model.number="settings.globalVolumeExponent"
+                        min="1.0"
+                        max="5.0"
+                        step="0.1"
+                        class="w-full h-2 bg-gray-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                      />
+                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                         Higher values provide more precision at low volumes.
+                       </p>
+                   </div>
+                </div>
+              </div>
+
               <!-- Support Section -->
               <div class="pt-4 border-t border-gray-100 dark:border-gray-800">
                 <a
@@ -1487,7 +1571,7 @@ const { clientId: browserClientId } = useSnapStream();
 
 const hostInput = ref(snapcast.host);
 const refreshing = ref(false);
-let refreshInterval: number | null = null;
+
 
 // UI State
 const showServerInfo = ref(false);
@@ -1966,6 +2050,8 @@ const groupModal = ref<{
   streamId: string | null;
   name: string;
   perSourceVolumeEnabled: boolean;
+  volumeMode: "global" | "linear" | "nonlinear";
+  volumeExponent: number | null;
 }>({
   open: false,
   groupId: null,
@@ -1974,6 +2060,8 @@ const groupModal = ref<{
   streamId: null,
   name: "",
   perSourceVolumeEnabled: false,
+  volumeMode: "global" as "global" | "linear" | "nonlinear",
+  volumeExponent: null as number | null,
 });
 
 function openGroupSettings(group: Group) {
@@ -1987,6 +2075,8 @@ function openGroupSettings(group: Group) {
     streamId: group.stream_id,
     name: group.name || "",
     perSourceVolumeEnabled: settings.isPerSourceVolumeEnabled(group.id),
+    volumeMode: settings.groupVolumeControlConfig[group.id]?.mode || "global",
+    volumeExponent: settings.groupVolumeControlConfig[group.id]?.exponent ?? null,
   };
 }
 
@@ -2077,6 +2167,12 @@ async function applyGroupSettings() {
     referenceVolumes
   );
 
+  // Save volume control config
+  settings.setGroupVolumeControlConfig(
+    groupModal.value.groupId,
+    groupModal.value.volumeMode,
+    groupModal.value.volumeExponent ?? undefined
+  );
 
   closeGroupSettings();
 }
@@ -2367,12 +2463,8 @@ onMounted(async () => {
     snapcast.connect();
   }
 
-  // Set up periodic refresh
-  refreshInterval = window.setInterval(() => {
-    if (snapcast.isConnected) {
-      snapcast.getServerStatus();
-    }
-  }, settings.refreshInterval);
+  // No periodic polling needed - Snapcast server pushes real-time notifications
+  // for all state changes (volume, mute, stream, client connect/disconnect)
 });
 
 onUnmounted(() => {

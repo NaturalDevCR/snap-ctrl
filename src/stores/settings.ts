@@ -20,7 +20,6 @@ export const useSettingsStore = defineStore(
     const showDisconnectedClients = ref(false);
     const showEmptyGroups = ref(true);
     const volumeStep = ref(5);
-    const refreshInterval = ref(5000); // milliseconds
     const hiddenGroups = ref<string[]>([]);
     // Group volume control links: which clients are linked to group volume
     const groupVolumeLinks = ref<Record<string, GroupVolumeLink>>({});
@@ -44,6 +43,62 @@ export const useSettingsStore = defineStore(
         enabledPerSourceVolumeGroups.value = enabledPerSourceVolumeGroups.value.filter(
           (id) => id !== groupId
         );
+      }
+    }
+
+    // Non-linear volume control settings
+    const globalVolumeControlMode = ref<"linear" | "nonlinear">("linear");
+    const globalVolumeExponent = ref(2.0);
+    // Group-specific overrides: undefined/null means use global setting
+    const groupVolumeControlConfig = ref<
+      Record<string, { mode: "global" | "linear" | "nonlinear"; exponent?: number }>
+    >({});
+
+    /**
+     * Get the effective volume control mode for a group.
+     * If no group provided or group set to 'global', returns global mode.
+     */
+    function getVolumeControlMode(groupId?: string): "linear" | "nonlinear" {
+      if (groupId && groupVolumeControlConfig.value[groupId]) {
+        const config = groupVolumeControlConfig.value[groupId];
+        if (config.mode !== "global") {
+          return config.mode;
+        }
+      }
+      return globalVolumeControlMode.value;
+    }
+
+    /**
+     * Get the effective volume exponent for a group.
+     * If linear mode, returns 1.
+     * If non-linear:
+     *   - If group has specific exponent, use it.
+     *   - Otherwise use global exponent.
+     */
+    function getVolumeExponent(groupId?: string): number {
+      const mode = getVolumeControlMode(groupId);
+      if (mode === "linear") return 1;
+
+      if (groupId && groupVolumeControlConfig.value[groupId]) {
+        const config = groupVolumeControlConfig.value[groupId];
+        if (config.exponent !== undefined && config.exponent !== null) {
+          return config.exponent;
+        }
+      }
+      return globalVolumeExponent.value;
+    }
+
+    function setGroupVolumeControlConfig(
+      groupId: string,
+      mode: "global" | "linear" | "nonlinear",
+      exponent?: number
+    ) {
+      if (!groupVolumeControlConfig.value[groupId]) {
+        groupVolumeControlConfig.value[groupId] = { mode: "global" };
+      }
+      groupVolumeControlConfig.value[groupId].mode = mode;
+      if (exponent !== undefined) {
+        groupVolumeControlConfig.value[groupId].exponent = exponent;
       }
     }
 
@@ -147,10 +202,6 @@ export const useSettingsStore = defineStore(
       volumeStep.value = Math.max(1, Math.min(20, step));
     }
 
-    function setRefreshInterval(interval: number) {
-      refreshInterval.value = Math.max(1000, Math.min(30000, interval));
-    }
-
     // Watch for theme changes to apply to document (for persistence rehydration)
     watch(theme, (newTheme) => {
       if (newTheme === "dark") {
@@ -173,7 +224,6 @@ export const useSettingsStore = defineStore(
       showDisconnectedClients,
       showEmptyGroups,
       volumeStep,
-      refreshInterval,
       hiddenGroups,
       groupVolumeLinks,
       setTheme,
@@ -182,7 +232,6 @@ export const useSettingsStore = defineStore(
       setShowDisconnectedClients,
       setShowEmptyGroups,
       setVolumeStep,
-      setRefreshInterval,
       setHiddenGroups,
       setGroupVolumeLinks,
       customGroupOrder,
@@ -195,6 +244,12 @@ export const useSettingsStore = defineStore(
       setPerSourceVolumeEnabled,
       saveClientVolume,
       getClientVolume,
+      globalVolumeControlMode,
+      globalVolumeExponent,
+      groupVolumeControlConfig,
+      getVolumeControlMode,
+      getVolumeExponent,
+      setGroupVolumeControlConfig,
     };
   },
   {
@@ -206,12 +261,14 @@ export const useSettingsStore = defineStore(
         "showDisconnectedClients",
         "showEmptyGroups",
         "volumeStep",
-        "refreshInterval",
         "hiddenGroups",
         "groupVolumeLinks",
         "customGroupOrder",
         "enabledPerSourceVolumeGroups",
         "clientSourceVolumes",
+        "globalVolumeControlMode",
+        "globalVolumeExponent",
+        "groupVolumeControlConfig",
       ],
     },
   }

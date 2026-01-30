@@ -28,14 +28,14 @@
       <div class="flex-1 relative h-6 flex items-center group/slider">
         <input
           type="range"
-          :value="volume"
+          :value="sliderValue"
           @input="handleVolumeChange"
           min="0"
           max="100"
           step="1"
           class="relative w-full h-2 bg-gray-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer touch-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform"
           :style="{
-            backgroundImage: `linear-gradient(to right, ${muted ? '#9ca3af' : '#2563eb'} 0%, ${muted ? '#9ca3af' : '#2563eb'} ${volume}%, transparent ${volume}%, transparent 100%)`
+            backgroundImage: `linear-gradient(to right, ${muted ? '#9ca3af' : '#2563eb'} 0%, ${muted ? '#9ca3af' : '#2563eb'} ${sliderValue}%, transparent ${sliderValue}%, transparent 100%)`
           }"
         />
       </div>
@@ -120,14 +120,14 @@
                     <input
                       type="range"
                       class="relative w-full h-3 bg-gray-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer touch-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-8 [&::-webkit-slider-thumb]:h-8 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform"
-                      :value="volume"
+                      :value="sliderValue"
                       @input="handleVolumeChange"
                       min="0"
                       max="100"
                       step="1"
                       :disabled="muted"
                       :style="{
-                        backgroundImage: `linear-gradient(to right, ${muted ? '#9ca3af' : '#2563eb'} 0%, ${muted ? '#9ca3af' : '#2563eb'} ${volume}%, transparent ${volume}%, transparent 100%)`
+                        backgroundImage: `linear-gradient(to right, ${muted ? '#9ca3af' : '#2563eb'} 0%, ${muted ? '#9ca3af' : '#2563eb'} ${sliderValue}%, transparent ${sliderValue}%, transparent 100%)`
                       }"
                     />
                   </div>
@@ -157,6 +157,7 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, computed, onUnmounted } from "vue";
 import Tooltip from '@/components/Tooltip.vue';
+import { sliderToVolume, volumeToSlider } from "@/utils/volume";
 
 const props = withDefaults(defineProps<{
   volume: number;
@@ -164,9 +165,11 @@ const props = withDefaults(defineProps<{
   name?: string;
   variant?: 'modal' | 'inline';
   showMuteButton?: boolean;
+  exponent?: number;
 }>(), {
   variant: 'modal',
-  showMuteButton: true
+  showMuteButton: true,
+  exponent: 1
 });
 
 const emit = defineEmits<{
@@ -183,6 +186,11 @@ const volumeIcon = computed(() => {
   return "🔊";
 });
 
+// Computed slider position (0-100) based on volume and exponent
+const sliderValue = computed(() => {
+  return volumeToSlider(props.volume, props.exponent);
+});
+
 function openModal() {
   isOpen.value = true;
 }
@@ -193,7 +201,9 @@ function closeModal() {
 
 function handleVolumeChange(e: Event) {
   const target = e.target as HTMLInputElement;
-  emit("update:volume", parseInt(target.value));
+  const val = parseInt(target.value);
+  const newVol = sliderToVolume(val, props.exponent);
+  emit("update:volume", newVol);
 }
 
 function toggleMute() {
@@ -201,9 +211,14 @@ function toggleMute() {
 }
 
 function adjustVolume(delta: number) {
-  let newVol = props.volume + delta;
-  if (newVol < 0) newVol = 0;
-  if (newVol > 100) newVol = 100;
+  // Adjust based on slider position (perceptual/linear to user)
+  const currentSlider = volumeToSlider(props.volume, props.exponent);
+  let newSlider = currentSlider + delta;
+  
+  if (newSlider < 0) newSlider = 0;
+  if (newSlider > 100) newSlider = 100;
+  
+  const newVol = sliderToVolume(newSlider, props.exponent);
   emit("update:volume", newVol);
 }
 
