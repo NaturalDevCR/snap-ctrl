@@ -119,6 +119,29 @@ export const useSnapcastStore = defineStore(
     let reconnectTimeout: number | null = null;
     let manualDisconnect = false;
 
+    // Heartbeat to keep WebSocket connection alive
+    const heartbeatInterval = 30000; // 30 seconds
+    let heartbeatTimer: number | null = null;
+
+    function startHeartbeat() {
+      stopHeartbeat();
+      heartbeatTimer = window.setInterval(() => {
+        if (websocket.value?.readyState === WebSocket.OPEN) {
+          // Send a lightweight request to keep connection alive
+          sendRequest("Server.GetStatus").catch(() => {
+            // Ignore errors - the connection error handler will take care of reconnection
+          });
+        }
+      }, heartbeatInterval);
+    }
+
+    function stopHeartbeat() {
+      if (heartbeatTimer) {
+        clearInterval(heartbeatTimer);
+        heartbeatTimer = null;
+      }
+    }
+
     const allClients = computed(() => {
       if (!serverStatus.value) return [];
       return serverStatus.value.server.groups.flatMap((group) => group.clients);
@@ -217,10 +240,12 @@ export const useSnapcastStore = defineStore(
         reconnectAttempts.value = 0; // Reset on successful connection
         console.log("Connected to Snapcast server");
         getServerStatus();
+        startHeartbeat(); // Start heartbeat to keep connection alive
       };
 
       websocket.value.onclose = (event) => {
         clearTimeout(connectionTimeout);
+        stopHeartbeat(); // Stop heartbeat on disconnect
         isConnected.value = false;
         isConnecting.value = false;
 
@@ -258,6 +283,8 @@ export const useSnapcastStore = defineStore(
     function disconnect() {
       manualDisconnect = true;
       reconnectAttempts.value = 0;
+
+      stopHeartbeat(); // Stop heartbeat on manual disconnect
 
       if (reconnectTimeout) {
         clearTimeout(reconnectTimeout);
