@@ -127,10 +127,8 @@ export const useSnapcastStore = defineStore(
       stopHeartbeat();
       heartbeatTimer = window.setInterval(() => {
         if (websocket.value?.readyState === WebSocket.OPEN) {
-          // Send a lightweight request to keep connection alive
-          sendRequest("Server.GetStatus").catch(() => {
-            // Ignore errors - the connection error handler will take care of reconnection
-          });
+          // Refresh server status to keep connection alive AND sync state
+          getServerStatus();
         }
       }, heartbeatInterval);
     }
