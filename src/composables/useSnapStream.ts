@@ -45,6 +45,7 @@ export function useSnapStream() {
   const latency = ref(0);
   const volume = ref(80);
   const isMuted = ref(false);
+  const isInternalMuted = ref(false);
   const sampleFormat = ref<SampleFormat | null>(null);
 
   // Audio context
@@ -75,6 +76,150 @@ export function useSnapStream() {
   let handleFocus: (() => void) | null = null;
 
   /**
+   * Update gain node based on volume and mute states
+   */
+  function updateGain() {
+    if (!gainNode) return;
+    
+    // Mute if user muted OR system requesting mute (internal)
+    if (isMuted.value || isInternalMuted.value) {
+      gainNode.gain.value = 0;
+    } else {
+      gainNode.gain.value = volume.value / 100;
+    }
+  }
+
+  /**
+   * Set internal mute state (e.g. for syncing)
+   */
+  function setInternalMute(muted: boolean) {
+    isInternalMuted.value = muted;
+    updateGain();
+  }
+
+  /**
+   * Schedule next buffer for playback
+   */
+  function scheduleNextBuffer(): void {
+    if (!audioCtx || !gainNode || !audioStream || !connected.value) {
+      return;
+    }
+
+    // Calculate play time
+    const now = audioCtx.currentTime;
+
+    // Throttling: Don't schedule too far into the future.
+    // If we are already scheduled 100ms ahead, wait.
+    if (nextPlayTime > now + 0.1) {
+      return;
+    }
+
+    if (nextPlayTime < now) {
+      nextPlayTime = now;
+    }
+
+    // Get next buffer from stream
+    // Buffer playback: chunks with timestamp = now - (bufferMs + latency + additionalLatency)
+    // We ask for the buffer corresponding to our scheduled *next* play time.
+    // nextPlayTime is in seconds, convert to ms for audio stream
+    const decodedAudio = audioStream.getNextBuffer(
+      nextPlayTime * 1000,
+      -(bufferMs.value + latency.value + additionalLatency.value)
+    );
+
+    if (!decodedAudio) {
+       return;
+    }
+
+    if (
+      decodedAudio &&
+      decodedAudio.samples.length > 0 &&
+      decodedAudio.samples[0]
+    ) {
+      const samplesPerChannel = decodedAudio.samples[0].length;
+
+      if (samplesPerChannel > 0) {
+        // Create AudioBuffer
+        const audioBuffer = audioCtx.createBuffer(
+          decodedAudio.samples.length,
+          samplesPerChannel,
+          decodedAudio.sampleRate
+        );
+
+        // Copy samples to buffer
+        for (let ch = 0; ch < decodedAudio.samples.length; ch++) {
+          // Fix: check bounds
+          if (ch < decodedAudio.samples.length) {
+            const channelData = decodedAudio.samples[ch];
+             if (channelData) {
+               audioBuffer.getChannelData(ch).set(channelData);
+             }
+          }
+        }
+
+        // Create source
+        const source = audioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(gainNode);
+
+        // Soft sync: adjust playback rate to match server time
+        if (timeProvider && decodedAudio.timestamp) {
+          // When we plan to play this chunk
+          const serverPlayTime = timeProvider.serverTime(nextPlayTime * 1000);
+
+          // When the chunk SHOULD be played (server time)
+          const targetPlayTime =
+            decodedAudio.timestamp.sec * 1000 +
+            decodedAudio.timestamp.usec / 1000 +
+            bufferMs.value +
+            additionalLatency.value;
+
+          // Drift: positive means we are playing LATE (need to speed up)
+          // negative means we are playing EARLY (need to slow down)
+          const drift = serverPlayTime - targetPlayTime;
+
+          let rate = 1.0;
+
+          // Ignore drift < 50ms to prevent resampling artifacts
+          if (Math.abs(drift) > 50) {
+            // Correction: correct over 2 seconds (gentler)
+            rate = 1.0 + drift / 2000;
+          }
+
+          // Limit rate to avoid pitch bending artifacts (0.95 - 1.05)
+          source.playbackRate.value = Math.max(0.95, Math.min(1.05, rate));
+        }
+
+        // Start playback
+        source.start(nextPlayTime);
+        nextPlayTime += audioBuffer.duration / source.playbackRate.value;
+
+        // Cleanup on end
+        source.onended = () => {
+          const index = activeBuffers.indexOf(source);
+          if (index > -1) {
+            activeBuffers.splice(index, 1);
+          }
+        };
+
+        activeBuffers.push(source);
+
+        // Keep only recent buffers
+        if (activeBuffers.length > maxActiveBuffers) {
+          const oldSource = activeBuffers.shift();
+          if (oldSource) {
+            try {
+              oldSource.stop();
+            } catch (e) {
+              // Ignore errors
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
    * Initialize Scheduler Worker
    */
   function initSchedulerWorker() {
@@ -92,6 +237,35 @@ export function useSnapStream() {
       }
     };
   }
+  
+  /**
+   * Handle time message (sync response)
+   */
+  function handleTimeMessage(msg: any): void {
+    // console.log("Received TimeMessage", msg);
+
+    if (!timeProvider) return;
+
+    // Parse latency from payload (8 bytes: sec + usec)
+    if (!msg.payload || msg.payload.length < 8) {
+      console.warn("Invalid TimeMessage payload");
+      return;
+    }
+
+    const dv = new DataView(
+      msg.payload.buffer,
+      msg.payload.byteOffset,
+      msg.payload.byteLength
+    );
+    const latency = {
+      sec: dv.getInt32(0, true),
+      usec: dv.getInt32(4, true),
+    };
+
+    // Call handleTimeResponse with latency from payload
+    timeProvider.handleTimeResponse(msg.id, msg.sent, msg.received, latency);
+  }
+
 
   /**
    * Connect to Snapserver stream endpoint
@@ -114,7 +288,7 @@ export function useSnapStream() {
 
       // Create gain node for volume control
       gainNode = audioCtx.createGain();
-      gainNode.gain.value = isMuted.value ? 0 : volume.value / 100;
+      updateGain();
       gainNode.connect(audioCtx.destination);
 
       nextPlayTime = audioCtx.currentTime;
@@ -358,176 +532,18 @@ export function useSnapStream() {
 
     if (!isMuted.value) {
       volume.value = settings.volume;
-      if (gainNode) {
-        gainNode.gain.value = volume.value / 100;
-      }
+      updateGain();
     }
   }
 
-  /**
-   * Handle time message (sync response)
-   */
-  function handleTimeMessage(msg: any): void {
-    // console.log("Received TimeMessage", msg);
-
-    if (!timeProvider) return;
-
-    // Parse latency from payload (8 bytes: sec + usec)
-    if (!msg.payload || msg.payload.length < 8) {
-      console.warn("Invalid TimeMessage payload");
-      return;
-    }
-
-    const dv = new DataView(
-      msg.payload.buffer,
-      msg.payload.byteOffset,
-      msg.payload.byteLength
-    );
-    const latency = {
-      sec: dv.getInt32(0, true),
-      usec: dv.getInt32(4, true),
-    };
-
-    // Call handleTimeResponse with latency from payload
-    timeProvider.handleTimeResponse(msg.id, msg.sent, msg.received, latency);
-  }
-
-  /**
-   * Schedule next buffer for playback
-   */
-  function scheduleNextBuffer(): void {
-    if (!audioCtx || !gainNode || !audioStream || !connected.value) {
-      return;
-    }
-
-    // Calculate play time
-    const now = audioCtx.currentTime;
-
-    // Throttling: Don't schedule too far into the future.
-    // If we are already scheduled 100ms ahead, wait.
-    if (nextPlayTime > now + 0.1) {
-      return;
-    }
-
-    if (nextPlayTime < now) {
-      nextPlayTime = now;
-    }
-
-    // Get next buffer from stream
-    // Buffer playback: chunks with timestamp = now - (bufferMs + latency + additionalLatency)
-    // We ask for the buffer corresponding to our scheduled *next* play time.
-    // nextPlayTime is in seconds, convert to ms for audio stream
-    const decodedAudio = audioStream.getNextBuffer(
-      nextPlayTime * 1000,
-      -(bufferMs.value + latency.value + additionalLatency.value)
-    );
-
-    if (!decodedAudio) {
-       return;
-    }
-
-    if (
-      decodedAudio &&
-      decodedAudio.samples.length > 0 &&
-      decodedAudio.samples[0]
-    ) {
-      const samplesPerChannel = decodedAudio.samples[0].length;
-
-      if (samplesPerChannel > 0) {
-        // Create AudioBuffer
-        const audioBuffer = audioCtx.createBuffer(
-          decodedAudio.samples.length,
-          samplesPerChannel,
-          decodedAudio.sampleRate
-        );
-
-        // Copy samples to buffer
-        for (let ch = 0; ch < decodedAudio.samples.length; ch++) {
-          const channelData = decodedAudio.samples[ch];
-          if (channelData) {
-            audioBuffer.getChannelData(ch).set(channelData);
-          }
-        }
-
-        // Create source
-        const source = audioCtx.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(gainNode);
-
-        // Soft sync: adjust playback rate to match server time
-        if (timeProvider && decodedAudio.timestamp) {
-          // When we plan to play this chunk
-          const serverPlayTime = timeProvider.serverTime(nextPlayTime * 1000);
-
-          // When the chunk SHOULD be played (server time)
-          const targetPlayTime =
-            decodedAudio.timestamp.sec * 1000 +
-            decodedAudio.timestamp.usec / 1000 +
-            bufferMs.value +
-            additionalLatency.value;
-
-          // Drift: positive means we are playing LATE (need to speed up)
-          // negative means we are playing EARLY (need to slow down)
-          const drift = serverPlayTime - targetPlayTime;
-
-          let rate = 1.0;
-
-          // Ignore drift < 50ms to prevent resampling artifacts
-          if (Math.abs(drift) > 50) {
-            // Correction: correct over 2 seconds (gentler)
-            rate = 1.0 + drift / 2000;
-          }
-
-          // Limit rate to avoid pitch bending artifacts (0.95 - 1.05)
-          source.playbackRate.value = Math.max(0.95, Math.min(1.05, rate));
-
-          // console.log(
-          //   `Sync: drift=${drift.toFixed(
-          //     2
-          //   )}ms, rate=${source.playbackRate.value.toFixed(4)}`
-          // );
-        }
-
-        // Start playback
-        source.start(nextPlayTime);
-        nextPlayTime += audioBuffer.duration / source.playbackRate.value;
-
-        // Cleanup on end
-        source.onended = () => {
-          const index = activeBuffers.indexOf(source);
-          if (index > -1) {
-            activeBuffers.splice(index, 1);
-          }
-        };
-
-        activeBuffers.push(source);
-
-        // Keep only recent buffers
-        if (activeBuffers.length > maxActiveBuffers) {
-          const oldSource = activeBuffers.shift();
-          if (oldSource) {
-            try {
-              oldSource.stop();
-            } catch (e) {
-              // Ignore errors
-            }
-          }
-        }
-      }
-    }
-
-    // Schedule next buffer
-    // requestAnimationFrame(() => scheduleNextBuffer());
-  }
+  // ... (omitted same content)
 
   /**
    * Toggle mute
    */
   function toggleMute(): void {
     isMuted.value = !isMuted.value;
-    if (gainNode) {
-      gainNode.gain.value = isMuted.value ? 0 : volume.value / 100;
-    }
+    updateGain();
   }
 
   /**
@@ -535,9 +551,7 @@ export function useSnapStream() {
    */
   function setVolume(newVolume: number): void {
     volume.value = Math.max(0, Math.min(100, newVolume));
-    if (gainNode && !isMuted.value) {
-      gainNode.gain.value = volume.value / 100;
-    }
+    updateGain();
   }
 
   /**
@@ -645,6 +659,7 @@ export function useSnapStream() {
     toggleMute,
     setVolume,
     setAdditionalLatency,
+    setInternalMute,
     clientId,
   };
 }

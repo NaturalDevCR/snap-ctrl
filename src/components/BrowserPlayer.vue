@@ -230,6 +230,7 @@ const {
   setVolume,
   setAdditionalLatency,
   clientId,
+  setInternalMute,
 } = useSnapStream();
 
 // Buffer Settings
@@ -254,6 +255,27 @@ const currentGroup = computed(() => {
 
 // Local stream selection preference
 const selectedStreamId = ref(localStorage.getItem("snapcast-browser-stream") || "");
+
+// Watch for stream mismatch to mute playback until synced
+watch(
+  [() => currentGroup.value?.stream_id, selectedStreamId, connected],
+  ([groupStreamId, selected, isConnected]) => {
+    if (!isConnected) {
+      setInternalMute(false);
+      return;
+    }
+
+    if (groupStreamId && selected && groupStreamId !== selected) {
+      // Mute while switching streams
+      console.log(`Muting browser player: stream mismatch (${groupStreamId} !== ${selected})`);
+      setInternalMute(true);
+    } else {
+      // Unmute when matched or no valid selection
+      setInternalMute(false);
+    }
+  },
+  { immediate: true }
+);
 
 // Volume Exponent
 const volumeExponent = computed(() => {
