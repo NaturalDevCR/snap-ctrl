@@ -25,7 +25,18 @@ export function useSnapStream() {
   const connected = ref(false);
   const connecting = ref(false);
   const error = ref<string>("");
-  const clientId = ref<string>("");
+  // Get or generate persistent Client ID immediately
+  let storedId = localStorage.getItem("snapcast-client-id");
+  if (!storedId) {
+    // Generate a random MAC address-like string
+    storedId = Array.from({ length: 6 }, () =>
+      Math.floor(Math.random() * 256)
+        .toString(16)
+        .padStart(2, "0")
+    ).join(":");
+    localStorage.setItem("snapcast-client-id", storedId);
+  }
+  const clientId = ref<string>(storedId);
 
   // Audio state
   const codec = ref<string>("");
@@ -128,25 +139,11 @@ export function useSnapStream() {
       ws.value.onopen = async () => {
         console.log("WebSocket connected");
 
-        // Get or generate persistent Client ID
-        let storedId = localStorage.getItem("snapcast-client-id");
-        if (!storedId) {
-          // Generate a random MAC address-like string
-          storedId = Array.from({ length: 6 }, () =>
-            Math.floor(Math.random() * 256)
-              .toString(16)
-              .padStart(2, "0")
-          ).join(":");
-          localStorage.setItem("snapcast-client-id", storedId);
-        }
-
-        clientId.value = storedId;
-
         // Sync client ID to store for group filtering
         try {
           const { useSnapcastStore } = await import("@/stores/snapcast");
           const snapcast = useSnapcastStore();
-          snapcast.setBrowserPlayerId(storedId);
+          snapcast.setBrowserPlayerId(clientId.value);
         } catch (e) {
           console.warn("Failed to sync browser player ID to store", e);
         }
@@ -154,9 +151,10 @@ export function useSnapStream() {
         const helloMsg = buildHelloMessage(
           "SnapCtrl", // Client Name
           window.location.hostname,
-          storedId,
-          storedId // Pass MAC explicitly
+          clientId.value,
+          clientId.value // Pass MAC explicitly
         );
+
 
         ws.value?.send(helloMsg);
         console.log("Hello message sent");

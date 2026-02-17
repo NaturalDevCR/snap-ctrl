@@ -54,7 +54,7 @@
 
           <div class="flex items-center gap-2 mt-0.5">
             <!-- Stream Selector -->
-            <div v-if="connected && currentGroup" class="flex items-center">
+            <div v-if="availableStreams.length > 0" class="flex items-center">
               <select
                 v-model="currentStreamId"
                 class="text-[10px] bg-gray-100 dark:bg-slate-700 border-none rounded px-1.5 py-0.5 text-gray-700 dark:text-gray-200 focus:ring-1 focus:ring-blue-500 outline-none cursor-pointer max-w-[120px] truncate"
@@ -252,6 +252,9 @@ const currentGroup = computed(() => {
   );
 });
 
+// Local stream selection preference
+const selectedStreamId = ref(localStorage.getItem("snapcast-browser-stream") || "");
+
 // Volume Exponent
 const volumeExponent = computed(() => {
   return settings.getVolumeExponent(currentGroup.value?.id);
@@ -266,8 +269,16 @@ const sliderValue = computed({
 });
 
 const currentStreamId = computed({
-  get: () => currentGroup.value?.stream_id || "",
+  get: () => {
+    // If we have a local preference, use it. Otherwise fall back to actual group stream.
+    if (selectedStreamId.value) return selectedStreamId.value;
+    return currentGroup.value?.stream_id || "";
+  },
   set: (newStreamId: string) => {
+    selectedStreamId.value = newStreamId;
+    localStorage.setItem("snapcast-browser-stream", newStreamId);
+    
+    // If connected and we have a group, apply it immediately
     if (currentGroup.value && newStreamId) {
       snapcast.setGroupStream(currentGroup.value.id, newStreamId);
     }
@@ -276,14 +287,23 @@ const currentStreamId = computed({
 
 const availableStreams = computed(() => snapcast.streams);
 
-// Watch volume changes handled by slider/setVolume inside getter/setter
-// But we need to sync if volume changes from elsewhere
-// volume ref -> setVolume call is handled by slider interaction or upstream?
-// useSnapStream implementation details: usually volume is a ref.
-// If we set volume.value, does it call setVolume?
-// The original code had:
-// watch(volume, (newVolume) => { setVolume(newVolume); });
-// I should keep that.
+// Sync stream when connecting or when group becomes available
+watch([connected, currentGroup], ([isConnected, group]) => {
+  if (isConnected && group && selectedStreamId.value) {
+    if (group.stream_id !== selectedStreamId.value) {
+      console.log(`Syncing browser player stream to preferred: ${selectedStreamId.value}`);
+      snapcast.setGroupStream(group.id, selectedStreamId.value);
+    }
+  }
+});
+
+// If we receive a group update and it has a stream, update our local preference if it was empty
+watch(() => currentGroup.value?.stream_id, (newStreamId) => {
+  if (newStreamId && !selectedStreamId.value) {
+    selectedStreamId.value = newStreamId;
+    localStorage.setItem("snapcast-browser-stream", newStreamId);
+  }
+});
 
 // Watch volume changes
 watch(volume, (newVolume) => {
