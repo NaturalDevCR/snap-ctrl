@@ -265,14 +265,18 @@ watch(
       return;
     }
 
-    if (groupStreamId && selected && groupStreamId !== selected) {
-      // Mute while switching streams
-      console.log(`Muting browser player: stream mismatch (${groupStreamId} !== ${selected})`);
-      setInternalMute(true);
-    } else {
-      // Unmute when matched or no valid selection
-      setInternalMute(false);
+    // If user has a selected stream, ensure we are playing THAT stream
+    if (selected) {
+      // If group info is missing OR stream doesn't match -> MUTE
+      if (!groupStreamId || groupStreamId !== selected) {
+        console.log(`Muting browser player: stream sync pending (${groupStreamId} -> ${selected})`);
+        setInternalMute(true);
+        return;
+      }
     }
+
+    // Unmute when matched or no valid selection
+    setInternalMute(false);
   },
   { immediate: true }
 );
