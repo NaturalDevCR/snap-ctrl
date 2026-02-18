@@ -256,6 +256,8 @@ const currentGroup = computed(() => {
 // Local stream selection preference (No persistence)
 const selectedStreamId = ref("");
 
+const availableStreams = computed(() => snapcast.streams);
+
 // Auto-select first stream if none selected
 watch(
   () => availableStreams.value,
@@ -321,7 +323,7 @@ const currentStreamId = computed({
   },
 });
 
-const availableStreams = computed(() => snapcast.streams);
+
 
 // Sync stream when connecting or when group becomes available
 watch([connected, currentGroup], ([isConnected, group]) => {
