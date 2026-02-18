@@ -253,8 +253,19 @@ const currentGroup = computed(() => {
   );
 });
 
-// Local stream selection preference
-const selectedStreamId = ref(localStorage.getItem("snapcast-browser-stream") || "");
+// Local stream selection preference (No persistence)
+const selectedStreamId = ref("");
+
+// Auto-select first stream if none selected
+watch(
+  () => availableStreams.value,
+  (streams) => {
+    if (!selectedStreamId.value && streams.length > 0 && streams[0]) {
+      selectedStreamId.value = streams[0].id;
+    }
+  },
+  { immediate: true }
+);
 
 // Watch for stream mismatch to mute playback until synced
 watch(
@@ -302,7 +313,6 @@ const currentStreamId = computed({
   },
   set: (newStreamId: string) => {
     selectedStreamId.value = newStreamId;
-    localStorage.setItem("snapcast-browser-stream", newStreamId);
     
     // If connected and we have a group, apply it immediately
     if (currentGroup.value && newStreamId) {
@@ -320,14 +330,6 @@ watch([connected, currentGroup], ([isConnected, group]) => {
       console.log(`Syncing browser player stream to preferred: ${selectedStreamId.value}`);
       snapcast.setGroupStream(group.id, selectedStreamId.value);
     }
-  }
-});
-
-// If we receive a group update and it has a stream, update our local preference if it was empty
-watch(() => currentGroup.value?.stream_id, (newStreamId) => {
-  if (newStreamId && !selectedStreamId.value) {
-    selectedStreamId.value = newStreamId;
-    localStorage.setItem("snapcast-browser-stream", newStreamId);
   }
 });
 
