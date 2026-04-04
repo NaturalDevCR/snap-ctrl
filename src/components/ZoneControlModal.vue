@@ -106,6 +106,7 @@
                     :name="groupName + ' Master'"
                     variant="inline"
                     :exponent="volumeExponent"
+                    :step="settings.volumeStep"
                     @update:volume="$emit('update:volume', $event)"
                     @toggle-mute="$emit('toggle-mute')"
                   />
@@ -193,6 +194,7 @@
                          variant="inline"
                          :show-mute-button="false"
                          :exponent="volumeExponent"
+                         :step="settings.volumeStep"
                          @update:volume="$emit('update-client-volume', client, $event)"
                          @update:muted="$emit('toggle-client-mute', client)"
                        />

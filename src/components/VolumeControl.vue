@@ -166,10 +166,13 @@ const props = withDefaults(defineProps<{
   variant?: 'modal' | 'inline';
   showMuteButton?: boolean;
   exponent?: number;
+  /** Step size in slider-space (0-100). Should equal settings.volumeStep. */
+  step?: number;
 }>(), {
   variant: 'modal',
   showMuteButton: true,
-  exponent: 1
+  exponent: 1,
+  step: 1,
 });
 
 const emit = defineEmits<{
@@ -211,14 +214,15 @@ function toggleMute() {
 }
 
 function adjustVolume(delta: number) {
-  // Adjust based on slider position (perceptual/linear to user)
+  // Operate in slider-space so each step feels equal to the user
+  // regardless of the exponent curve.
   const currentSlider = volumeToSlider(props.volume, props.exponent);
-  let newSlider = currentSlider + delta;
-  
+  let newSlider = currentSlider + delta * props.step;
+
   if (newSlider < 0) newSlider = 0;
   if (newSlider > 100) newSlider = 100;
-  
-  const newVol = sliderToVolume(newSlider, props.exponent);
+
+  const newVol = sliderToVolume(Math.round(newSlider), props.exponent);
   emit("update:volume", newVol);
 }
 
