@@ -191,7 +191,17 @@
             </div>
 
             <div class="flex flex-col gap-4">
-              <div class="relative">
+              <!-- HA addon mode: show read-only Snapcast info, no manual host entry -->
+              <div v-if="haSnapcastInfo" class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  <span class="mdi mdi-home-assistant"></span>
+                </span>
+                <div class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-500 dark:text-gray-400 text-sm">
+                  Snapcast: <span class="font-mono text-gray-700 dark:text-gray-200">{{ haSnapcastInfo }}</span>
+                  <span class="ml-2 text-xs text-gray-400">(via addon proxy)</span>
+                </div>
+              </div>
+              <div v-else class="relative">
                 <span
                   class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                 >
@@ -1570,6 +1580,7 @@ const auth = useAuthStore();
 const { clientId: browserClientId } = useSnapStream();
 
 const hostInput = ref(snapcast.host);
+const haSnapcastInfo = (window as any).__HA_SNAPCAST_INFO__ as string | undefined;
 const refreshing = ref(false);
 
 

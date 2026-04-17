@@ -13,6 +13,16 @@ export default defineConfig({
     emptyOutDir: true,
   },
   plugins: [
+    // Inject ha-config.js at build time so it's always present in the HTML
+    {
+      name: "inject-ha-config",
+      transformIndexHtml(html) {
+        return html.replace(
+          "</head>",
+          '<script src="./ha-config.js"></script>\n  </head>'
+        );
+      },
+    },
     vue(),
     tailwindcss(),
     VitePWA({

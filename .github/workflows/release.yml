@@ -31,11 +31,18 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Zip dist folder
-        run: zip -r dist.zip dist
+      - name: Build HA addon
+        run: pnpm run build:ha
+
+      - name: Zip dist folders
+        run: |
+          zip -r dist.zip dist
+          cd addon && zip -r ../dist-ha.zip dist
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: dist.zip
+          files: |
+            dist.zip
+            dist-ha.zip
           generate_release_notes: true

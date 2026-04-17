@@ -13,17 +13,17 @@ else
     UI_PORT="8099"
 fi
 
-# Force the app to always connect through the nginx proxy by:
-# 1. Clearing any saved host from localStorage
-# 2. Setting __HA_SNAPCAST_HOST__ to the current window location so the
-#    app targets the proxy (nginx) instead of Snapcast directly
-cat > /var/www/html/ha-config.js << 'EOF'
-localStorage.removeItem("snapcast_host");
-window.__HA_SNAPCAST_HOST__ = window.location.host + window.location.pathname.replace(/\/$/, "");
-EOF
+# Generate ha-config.js — loaded by index.html at build time (injected via vite.config.ha.ts).
+# Sets the proxy host so the app never connects directly to Snapcast (avoids WSS→WS mixed content).
+# Also exposes the real Snapcast address as __HA_SNAPCAST_INFO__ for read-only display in the UI.
+cat > /var/www/html/ha-config.js << 'HAEOF'
+(function () {
+  localStorage.removeItem("snapcast_host");
+  window.__HA_SNAPCAST_HOST__ = window.location.host + window.location.pathname.replace(/\/$/, "");
+HAEOF
 
-# Patch index.html to load ha-config.js before the app scripts
-sed -i 's|</head>|<script src="./ha-config.js"></script></head>|' /var/www/html/index.html
+echo "  window.__HA_SNAPCAST_INFO__ = \"${SNAPCAST_HOST}:${SNAPCAST_PORT}\";" >> /var/www/html/ha-config.js
+echo "})();" >> /var/www/html/ha-config.js
 
 # Substitute placeholders in nginx config
 sed -i "s|__UI_PORT__|${UI_PORT}|g" /etc/nginx/nginx.conf
