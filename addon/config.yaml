@@ -1,8 +1,8 @@
 name: "Snap Ctrl"
 description: "Modern web interface for Snapcast multiroom audio control"
-version: "0.1.29"
+version: "0.1.30"
 slug: "snap-ctrl"
-url: "https://github.com/jdavidoa91/snap-ctrl"
+url: "https://github.com/NaturalDevCR/snap-ctrl"
 init: false
 
 arch:
@@ -15,10 +15,17 @@ arch:
 options:
   snapcast_host: "localhost"
   snapcast_port: 1780
+  ui_port: 8099
 
 schema:
   snapcast_host: str
   snapcast_port: int
+  ui_port: int
+
+ports:
+  8099/tcp: 8099
+ports_description:
+  8099/tcp: "Web UI"
 
 ingress: true
 ingress_port: 8099
