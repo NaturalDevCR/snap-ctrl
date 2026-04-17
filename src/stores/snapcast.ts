@@ -74,13 +74,9 @@ export const useSnapcastStore = defineStore(
   "snapcast",
   () => {
     // Default to current hostname if not localhost, otherwise localhost.
-    // When running as a Home Assistant addon, __HA_SNAPCAST_HOST__ is injected at startup.
-    // Use !== undefined so that even a localhost-based HA ingress URL takes precedence.
-    const haHost = (window as any).__HA_SNAPCAST_HOST__;
+    // In HA addon mode, connect() ignores this value and builds a relative ws URL.
     const defaultHost =
-      haHost !== undefined
-        ? haHost
-        : window.location.hostname === "localhost"
+      window.location.hostname === "localhost"
         ? "localhost:1780"
         : window.location.host + window.location.pathname.replace(/\/$/, "");
     const host = ref(defaultHost);
@@ -210,8 +206,18 @@ export const useSnapcastStore = defineStore(
       isConnecting.value = true;
       connectionError.value = null;
 
-      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${protocol}//${host.value}/jsonrpc`;
+      // In HA addon mode, always use a relative URL so nginx (same origin)
+      // proxies to Snapcast. This avoids WSS→WS mixed-content issues and
+      // works regardless of how HA is accessed (localhost, ingress, direct port).
+      let wsUrl: string;
+      if ((window as any).__HA_SNAPCAST_HOST__) {
+        const base = new URL("./jsonrpc", window.location.href);
+        base.protocol = base.protocol === "https:" ? "wss:" : "ws:";
+        wsUrl = base.toString();
+      } else {
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        wsUrl = `${protocol}//${host.value}/jsonrpc`;
+      }
       console.log(`Connecting to ${wsUrl}...`);
 
       try {

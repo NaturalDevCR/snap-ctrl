@@ -18,8 +18,8 @@ fi
 # Also exposes the real Snapcast address as __HA_SNAPCAST_INFO__ for read-only display in the UI.
 cat > /var/www/html/ha-config.js << 'HAEOF'
 (function () {
-  localStorage.removeItem("snapcast_host");
-  window.__HA_SNAPCAST_HOST__ = window.location.host + window.location.pathname.replace(/\/$/, "");
+  try { localStorage.removeItem("snapcast_host"); } catch (e) {}
+  window.__HA_SNAPCAST_HOST__ = true;
 HAEOF
 
 echo "  window.__HA_SNAPCAST_INFO__ = \"${SNAPCAST_HOST}:${SNAPCAST_PORT}\";" >> /var/www/html/ha-config.js
