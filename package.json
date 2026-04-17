@@ -1,6 +1,6 @@
 {
   "name": "snapcast-vue",
-  "version": "0.1.28",
+  "version": "0.1.29",
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild"
@@ -15,8 +15,10 @@
     "dev": "vite",
     "dev:https": "HTTPS=true vite",
     "build": "run-p type-check \"build-only {@}\" --",
+    "build:ha": "run-p type-check \"build-only:ha {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
+    "build-only:ha": "vite build --config vite.config.ha.ts",
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
