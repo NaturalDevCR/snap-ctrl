@@ -1,6 +1,6 @@
 name: "Snap Ctrl"
 description: "Modern web interface for Snapcast multiroom audio control"
-version: "0.1.32"
+version: "0.1.33"
 slug: "snap-ctrl"
 url: "https://github.com/NaturalDevCR/snap-ctrl"
 init: false

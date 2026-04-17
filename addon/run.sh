@@ -13,10 +13,13 @@ else
     UI_PORT="8099"
 fi
 
-# Inject a small script that clears any saved host so the app always connects
-# through the nginx proxy (avoids mixed-content WSS→WS issues via HA ingress)
-cat > /var/www/html/ha-config.js << EOF
+# Force the app to always connect through the nginx proxy by:
+# 1. Clearing any saved host from localStorage
+# 2. Setting __HA_SNAPCAST_HOST__ to the current window location so the
+#    app targets the proxy (nginx) instead of Snapcast directly
+cat > /var/www/html/ha-config.js << 'EOF'
 localStorage.removeItem("snapcast_host");
+window.__HA_SNAPCAST_HOST__ = window.location.host + window.location.pathname.replace(/\/$/, "");
 EOF
 
 # Patch index.html to load ha-config.js before the app scripts
