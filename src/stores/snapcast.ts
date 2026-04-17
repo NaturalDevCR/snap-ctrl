@@ -75,11 +75,14 @@ export const useSnapcastStore = defineStore(
   () => {
     // Default to current hostname if not localhost, otherwise localhost.
     // When running as a Home Assistant addon, __HA_SNAPCAST_HOST__ is injected at startup.
+    // Use !== undefined so that even a localhost-based HA ingress URL takes precedence.
+    const haHost = (window as any).__HA_SNAPCAST_HOST__;
     const defaultHost =
-      (window as any).__HA_SNAPCAST_HOST__ ||
-      (window.location.hostname === "localhost"
+      haHost !== undefined
+        ? haHost
+        : window.location.hostname === "localhost"
         ? "localhost:1780"
-        : window.location.host + window.location.pathname.replace(/\/$/, ""));
+        : window.location.host + window.location.pathname.replace(/\/$/, "");
     const host = ref(defaultHost);
     const isConnected = ref(false);
     const isConnecting = ref(false);
