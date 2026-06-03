@@ -34,6 +34,10 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
 
 > **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
 
+### v0.3.1
+
+- **Security**: `Content-Security-Policy` is now sent as a response header from the HA addon nginx (and should be configured the same way in any other reverse proxy). The CSP via `<meta>` is kept as a fallback for direct static hosting, but `frame-ancestors` has been removed from the meta tag because per the CSP spec it is silently ignored there. The bundled `addon/nginx.conf` now emits the full policy (including `frame-ancestors 'self'`), plus `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, and `Referrer-Policy: strict-origin-when-cross-origin`. The README's Security Notes section documents the deployment-time requirement.
+
 ### v0.3.0
 
 - **Refactored**: `App.vue` decomposed from 2 521 to 1 460 lines (–42%). Five inline modals extracted into standalone components (`GroupFilterModal`, `ClientDetailsModal`, `ClientSettingsModal`, `AppSettingsModal`, `CreateGroupModal`). Drag-and-drop / custom ordering / visibility / browser-player filtering logic moved into a reusable `useZoneOrder` composable. The `formatLastSeen` helper moved to `src/utils/last-seen.ts` and is now covered by unit tests.
@@ -200,6 +204,16 @@ The optional passcode is a **client-side UX guard**, not a real authentication l
 For real access control, place Snapcast behind a reverse proxy that enforces authentication (e.g. nginx with `auth_basic` or Caddy with `basicauth`), or run snap-ctrl in a network you trust. SnapCtrl will use the same credentials transparently.
 
 `window.crypto.subtle` is required (HTTPS or `localhost`). The app will refuse to set a passcode over an insecure origin.
+
+### Content Security Policy
+
+A `Content-Security-Policy` is set via a `<meta>` tag in `index.html` as a defense-in-depth fallback. **One directive cannot be set this way: `frame-ancestors`**. Per the CSP spec, `frame-ancestors` is silently ignored when delivered via `<meta>` and must come from a response header. If you serve SnapCtrl behind your own web server or reverse proxy, make sure the response includes:
+
+```
+Content-Security-Policy: ...; frame-ancestors 'self'
+```
+
+The bundled HA addon (`addon/nginx.conf`) already does this. For the standalone static build (`dist/`), configure your reverse proxy accordingly — see the `addon/nginx.conf` block for the exact policy.
 
 ## Support This Project
 
