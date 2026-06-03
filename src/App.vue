@@ -1535,6 +1535,7 @@ import { useSnapcastStore } from "./stores/snapcast";
 import { useSettingsStore } from "./stores/settings"; // Force reload
 import { useSnapStream } from "@/composables/useSnapStream";
 import { useAuthStore } from "./stores/auth";
+import { useZoneOrder } from "@/composables/useZoneOrder";
 import type { Client, Group } from "./stores/snapcast";
 import type { AuthPermissions } from "./stores/auth";
 import BrowserPlayer from "@/components/BrowserPlayer.vue";
@@ -1595,90 +1596,32 @@ const showingUnlockForPermissions = ref(false);
 
 // Client ordering helpers
 const showGroupFilter = ref(false);
-const draggedIndex = ref<number | null>(null);
-const dragOverIndex = ref<number | null>(null);
 
-const sortedGroups = computed(() => {
-  let groups = [...snapcast.filteredGroups];
-
-  // Filter out hidden groups
-  groups = groups.filter((g) => !settings.hiddenGroups.includes(g.id));
-
-  if (!settings.showEmptyGroups) {
-    groups = groups.filter((g) => g.clients.length > 0);
-  }
-
-  // Filter out the group that contains the browser player client
-  // We now show this in the BrowserPlayer component instead
-  if (snapcast.browserPlayerId) {
-    groups = groups.filter(
-      (g) => !g.clients.some((c) => c.id === snapcast.browserPlayerId)
-    );
-  }
-
-  return groups.sort((a, b) => {
-    // 0. Browser Player Group always last (identified by client name "SnapCtrl")
-    const isBrowserA = a.clients.some((c) => c.config.name === "SnapCtrl");
-    const isBrowserB = b.clients.some((c) => c.config.name === "SnapCtrl");
-
-    if (isBrowserA && !isBrowserB) return 1;
-    if (!isBrowserA && isBrowserB) return -1;
-
-    // 1. Custom order
-    const indexA = settings.customGroupOrder.indexOf(a.id);
-    const indexB = settings.customGroupOrder.indexOf(b.id);
-
-    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-    if (indexA !== -1) return -1;
-    if (indexB !== -1) return 1;
-
-
-
-    // 3. Name
-    return a.name.localeCompare(b.name);
-  });
+const {
+  sortedZones: sortedGroups,
+  orderedZonesForFilter: orderedGroupsForFilter,
+  draggedIndex,
+  dragOverIndex,
+  moveInCustomOrder,
+  handleDragStart,
+  handleDragOver,
+  handleDrop,
+  handleDragEnd,
+  toggleVisibility: toggleGroupVisibility,
+  isBrowserZone: isBrowserGroup,
+} = useZoneOrder(computed(() => snapcast.filteredGroups), {
+  hiddenZoneIds: computed(() => settings.hiddenGroups),
+  showEmptyZones: computed(() => settings.showEmptyGroups),
+  browserPlayerId: computed(() => snapcast.browserPlayerId),
 });
-
-// Groups ordered for filter modal (respects custom order)
-const orderedGroupsForFilter = computed(() => {
-  const allGroups = [...snapcast.filteredGroups];
-
-  // Separate browser player group
-  const browserGroup = allGroups.find((g) =>
-    g.clients.some((c) => c.config.name === "SnapCtrl")
-  );
-  const regularGroups = allGroups.filter(
-    (g) => !g.clients.some((c) => c.config.name === "SnapCtrl")
-  );
-
-  // Sort regular groups by custom order
-  const sorted = regularGroups.sort((a, b) => {
-    const indexA = settings.customGroupOrder.indexOf(a.id);
-    const indexB = settings.customGroupOrder.indexOf(b.id);
-
-    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-    if (indexA !== -1) return -1;
-    if (indexB !== -1) return 1;
-    return a.name.localeCompare(b.name);
-  });
-
-  // Add browser group at the end if it exists
-  if (browserGroup) {
-    sorted.push(browserGroup);
-  }
-
-  return sorted;
-});
-
-// Drag & drop handlers
-const draggedGroupId = ref<string | null>(null);
 
 function handleMainDragStart(group: Group, event: DragEvent) {
-  draggedGroupId.value = group.id;
   if (event.dataTransfer) {
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", group.id);
   }
+  handleDragStart(-1, event);
+  draggedGroupId.value = group.id;
 }
 
 function handleMainDragOver(group: Group, event: DragEvent) {
@@ -1693,122 +1636,18 @@ function handleMainDragOver(group: Group, event: DragEvent) {
 function handleMainDrop(targetGroup: Group, event: DragEvent) {
   event.preventDefault();
   if (!draggedGroupId.value || draggedGroupId.value === targetGroup.id) return;
-
-  const sourceId = draggedGroupId.value;
-  const targetId = targetGroup.id;
-
-  // Prevent moving the browser player group if strictly enforced,
-  // but the sort logic puts it at the end anyway.
-  // The existing filter modal prevents it, so we should too for consistency.
-  const sourceGroup = snapcast.groups.find((g) => g.id === sourceId);
-  if (
-    sourceGroup &&
-    sourceGroup.clients.some((c) => c.config.name === "SnapCtrl")
-  ) {
-    return;
-  }
-
-  let newOrder = [...settings.customGroupOrder];
-
-  // If order is empty, initialize it with current sorted view to avoid jumping
-  if (newOrder.length === 0) {
-    newOrder = sortedGroups.value
-      .filter((g) => !g.clients.some((c) => c.config.name === "SnapCtrl"))
-      .map((g) => g.id);
-  }
-
-  // Ensure IDs exist in the list (if they were missing for some reason)
-  if (!newOrder.includes(sourceId)) newOrder.push(sourceId);
-  if (!newOrder.includes(targetId)) newOrder.push(targetId);
-
-  // Remove source
-  newOrder = newOrder.filter((id) => id !== sourceId);
-
-  // Insert before target
-  const targetIndex = newOrder.indexOf(targetId);
-  if (targetIndex !== -1) {
-    newOrder.splice(targetIndex, 0, sourceId);
-  } else {
-    newOrder.push(sourceId);
-  }
-
-  settings.setCustomGroupOrder(newOrder);
+  moveInCustomOrder(draggedGroupId.value, targetGroup.id);
   draggedGroupId.value = null;
-}
-
-function isBrowserGroup(group: Group): boolean {
-  return group.clients.some((c) => c.config.name === "SnapCtrl");
 }
 
 function handleMainDragEnd() {
   draggedGroupId.value = null;
+  handleDragEnd();
 }
 
-function handleDragStart(index: number, event: DragEvent) {
-  draggedIndex.value = index;
-  if (event.dataTransfer) {
-    event.dataTransfer.effectAllowed = "move";
-  }
-}
-
-function handleDragOver(index: number, event: DragEvent) {
-  event.preventDefault();
-  dragOverIndex.value = index;
-  if (event.dataTransfer) {
-    event.dataTransfer.dropEffect = "move";
-  }
-}
-
-function handleDrop(index: number, event: DragEvent) {
-  event.preventDefault();
-  if (draggedIndex.value === null || draggedIndex.value === index) return;
-
-  const groups = [...orderedGroupsForFilter.value];
-  const draggedGroup = groups[draggedIndex.value];
-
-  // Safety check
-  if (!draggedGroup) {
-    draggedIndex.value = null;
-    dragOverIndex.value = null;
-    return;
-  }
-
-  // Don't allow reordering browser player group
-  if (draggedGroup.clients.some((c) => c.config.name === "SnapCtrl")) {
-    draggedIndex.value = null;
-    dragOverIndex.value = null;
-    return;
-  }
-
-  // Remove dragged item and insert at new position
-  groups.splice(draggedIndex.value, 1);
-  groups.splice(index, 0, draggedGroup);
-
-  // Filter out browser player group before updating custom order
-  const newOrder = groups
-    .filter((g) => !g.clients.some((c) => c.config.name === "SnapCtrl"))
-    .map((g) => g.id);
-
-  settings.setCustomGroupOrder(newOrder);
-  draggedIndex.value = null;
-  dragOverIndex.value = null;
-}
-
-function handleDragEnd() {
-  draggedIndex.value = null;
-  dragOverIndex.value = null;
-}
+const draggedGroupId = ref<string | null>(null);
 
 const appVersion = computed(() => pkg.version || "0.0.0");
-
-const toggleGroupVisibility = (groupId: string) => {
-  const index = settings.hiddenGroups.indexOf(groupId);
-  if (index === -1) {
-    settings.hiddenGroups.push(groupId);
-  } else {
-    settings.hiddenGroups.splice(index, 1);
-  }
-};
 
 const getGroupColor = (groupId: string) => {
   const colors = [
