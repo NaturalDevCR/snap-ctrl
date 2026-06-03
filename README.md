@@ -34,6 +34,14 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
 
 > **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
 
+### v0.3.0
+
+- **Refactored**: `App.vue` decomposed from 2 521 to 1 460 lines (–42%). Five inline modals extracted into standalone components (`GroupFilterModal`, `ClientDetailsModal`, `ClientSettingsModal`, `AppSettingsModal`, `CreateGroupModal`). Drag-and-drop / custom ordering / visibility / browser-player filtering logic moved into a reusable `useZoneOrder` composable. The `formatLastSeen` helper moved to `src/utils/last-seen.ts` and is now covered by unit tests.
+- **Performance**: WASM audio decoders (FLAC, Opus, Vorbis) are now loaded via dynamic `import()` so they ship as separate chunks. The initial JS bundle dropped from 787 kB to 81 kB; FLAC, Opus, and Vorbis are only fetched when a stream of that codec actually plays.
+- **Addon**: `nginx.conf` now gzips `application/wasm`, `font/woff`, and `font/woff2` in addition to text/JSON/SVG.
+- **CI**: Release workflow pins the lockfile (`--frozen-lockfile`) and the GitHub action versions are bumped. A new `ci.yml` runs `vue-tsc` and `vitest` on every PR.
+- **Docs**: The changelog gap between v0.1.20 and v0.1.37 was reconstructed from `git log` and committed (this used to live in `build.yaml`, removed earlier).
+
 ### v0.2.0
 
 - **Fixed**: `Server.OnUpdate` notifications are now handled. The app no longer relies on periodic polling to stay in sync with other control clients. With multiple devices connected, this eliminates the O(N²) fan-out traffic that `Server.GetStatus` triggered.
