@@ -32,6 +32,21 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
 
 ## Changelog
 
+### v0.2.0
+
+- **Fixed**: `Server.OnUpdate` notifications are now handled. The app no longer relies on periodic polling to stay in sync with other control clients. With multiple devices connected, this eliminates the O(N²) fan-out traffic that `Server.GetStatus` triggered.
+- **Fixed**: `sendRequest` could leak a `message` listener on a 5s timeout; it now cleans up correctly.
+- **Fixed**: Refresh / delete / create-group responses are no longer silently dropped — they used to require `data.id === 1` which only the first request ever matched.
+- **Changed**: Browser Player now uses a crypto-secure `clientId` and a sync (`sendBeacon` / sync XHR) cleanup on `beforeunload` so the temporary client is removed from Snapcast when the tab closes.
+- **Changed**: Browser Player stream WebSocket now auto-reconnects with exponential backoff instead of requiring a manual play after a drop.
+- **Security**: Strict CSP, `Permissions-Policy` and `Referrer-Policy` headers.
+- **Security**: Passcode is now stored as a PBKDF2-SHA256 (100k iterations) hash. The insecure `djb2` fallback has been removed; the app refuses to set a passcode over an insecure origin.
+- **Security**: A `Security Notes` section in the README documents that the passcode is a UX guard, not real authentication, and recommends running Snapcast behind a reverse proxy with auth for real access control.
+- **Refactored**: `getStreamName` and `getGroupDisplayName` extracted to `src/utils/` (removed three duplicates).
+- **Testing**: Added Vitest with 21 unit tests covering the snapcast store (no-polling, `Server.OnUpdate`, `Client.OnConnect` local patch, response id matching, listener cleanup on timeout), the auth store (PBKDF2 hashing) and the extracted utilities.
+- **UX**: `prefers-reduced-motion` is respected globally; volume `+`/`-`/mute buttons are now 44×44 px touch targets; `aria-label` and `aria-pressed` on icon-only controls; mutations that fail now show a toast.
+- **PWA**: Update prompt is an in-app toast (5s auto-reload) instead of a native `confirm()`.
+
 ### v0.1.20
 
 - **Optimized**: **Connection Efficiency**. Eliminated unnecessary periodic polling. The app now relies entirely on Snapcast's real-time push notifications for state updates (volume, mute, streams, client connections). This significantly reduces server load and network traffic, especially in multi-client environments.
@@ -152,6 +167,17 @@ To create a new release:
     git push origin v1.0.0
     ```
 3.  GitHub Actions will automatically build the project and create a release with a `dist.zip` file attached.
+
+## Security Notes
+
+The optional passcode is a **client-side UX guard**, not a real authentication layer:
+
+- It is stored as a salted PBKDF2-SHA256 hash in `localStorage`. Anyone with access to the browser can clear `localStorage` and bypass it.
+- The granular permissions (`canAdjustVolumes`, `canRenameGroups`, etc.) are enforced only inside the UI. A user that reaches the Snapcast JSON-RPC endpoint directly (default `ws://<host>:1780/jsonrpc`) can issue any `Client.SetVolume` / `Group.SetStream` etc. without going through the SnapCtrl checks.
+
+For real access control, place Snapcast behind a reverse proxy that enforces authentication (e.g. nginx with `auth_basic` or Caddy with `basicauth`), or run snap-ctrl in a network you trust. SnapCtrl will use the same credentials transparently.
+
+`window.crypto.subtle` is required (HTTPS or `localhost`). The app will refuse to set a passcode over an insecure origin.
 
 ## Support This Project
 

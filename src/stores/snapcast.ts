@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { useAuthStore } from "./auth";
 import { useSettingsStore } from "./settings";
+import { useNotificationStore } from "./notification";
 
 export interface Client {
   id: string;
@@ -98,6 +99,12 @@ export const useSnapcastStore = defineStore(
     // Get auth store for permission checks
     const auth = useAuthStore();
     const settings = useSettingsStore();
+    const notify = useNotificationStore();
+
+    function notifyError(action: string, error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      notify.error(`${action}: ${message}`);
+    }
 
     // Filtered entities based on permissions
     const filteredGroups = computed(() => {
@@ -119,27 +126,6 @@ export const useSnapcastStore = defineStore(
     const maxReconnectDelay = 30000; // 30 seconds
     let reconnectTimeout: number | null = null;
     let manualDisconnect = false;
-
-    // Heartbeat to keep WebSocket connection alive
-    const heartbeatInterval = 30000; // 30 seconds
-    let heartbeatTimer: number | null = null;
-
-    function startHeartbeat() {
-      stopHeartbeat();
-      heartbeatTimer = window.setInterval(() => {
-        if (websocket.value?.readyState === WebSocket.OPEN) {
-          // Refresh server status to keep connection alive AND sync state
-          getServerStatus();
-        }
-      }, heartbeatInterval);
-    }
-
-    function stopHeartbeat() {
-      if (heartbeatTimer) {
-        clearInterval(heartbeatTimer);
-        heartbeatTimer = null;
-      }
-    }
 
     const allClients = computed(() => {
       if (!serverStatus.value) return [];
@@ -249,12 +235,10 @@ export const useSnapcastStore = defineStore(
         reconnectAttempts.value = 0; // Reset on successful connection
         console.log("Connected to Snapcast server");
         getServerStatus();
-        startHeartbeat(); // Start heartbeat to keep connection alive
       };
 
       websocket.value.onclose = (event) => {
         clearTimeout(connectionTimeout);
-        stopHeartbeat(); // Stop heartbeat on disconnect
         isConnected.value = false;
         isConnecting.value = false;
 
@@ -293,8 +277,6 @@ export const useSnapcastStore = defineStore(
       manualDisconnect = true;
       reconnectAttempts.value = 0;
 
-      stopHeartbeat(); // Stop heartbeat on manual disconnect
-
       if (reconnectTimeout) {
         clearTimeout(reconnectTimeout);
         reconnectTimeout = null;
@@ -325,7 +307,13 @@ export const useSnapcastStore = defineStore(
           ...(params && { params }),
         };
 
+        const cleanup = () => {
+          websocket.value?.removeEventListener("message", messageHandler);
+          clearTimeout(timeout);
+        };
+
         const timeout = setTimeout(() => {
+          cleanup();
           reject(new Error("Request timeout"));
         }, 5000);
 
@@ -333,8 +321,7 @@ export const useSnapcastStore = defineStore(
           try {
             const data = JSON.parse(event.data);
             if (data.id === id) {
-              websocket.value?.removeEventListener("message", messageHandler);
-              clearTimeout(timeout);
+              cleanup();
               if (data.error) {
                 reject(new Error(data.error.message));
               } else {
@@ -352,77 +339,79 @@ export const useSnapcastStore = defineStore(
     }
 
     function handleMessage(data: any) {
-      if (data.method) {
-        // Handle notifications
-        switch (data.method) {
-          case "Client.OnVolumeChanged":
-            if (data.params && data.params.id && data.params.volume) {
-              const client = findClientById(data.params.id);
-              if (client) {
-                // Update specific client volume directly
-                // This ensures real-time updates without full server refresh
-                client.config.volume = data.params.volume;
-              }
+      if (!data.method) return;
+      switch (data.method) {
+        case "Server.OnUpdate":
+          if (data.params?.server) {
+            serverStatus.value = { server: data.params.server };
+            updateLocalState();
+          }
+          break;
+        case "Client.OnVolumeChanged":
+          if (data.params && data.params.id && data.params.volume) {
+            const client = findClientById(data.params.id);
+            if (client) {
+              client.config.volume = data.params.volume;
             }
-            break;
-          case "Client.OnLatencyChanged":
-            if (data.params?.id && data.params.latency !== undefined) {
-              const client = findClientById(data.params.id);
-              if (client) client.config.latency = data.params.latency;
-            }
-            break;
-          case "Client.OnNameChanged":
-            if (data.params?.id && data.params.name !== undefined) {
-              const client = findClientById(data.params.id);
-              if (client) client.config.name = data.params.name;
-            }
-            break;
-          case "Group.OnMute":
-            if (data.params?.id && data.params.mute !== undefined) {
-              const group = groups.value.find((g) => g.id === data.params.id);
-              if (group) group.muted = data.params.mute;
-            }
-            break;
-          case "Group.OnStreamChanged":
-            if (data.params?.id && data.params.stream_id !== undefined) {
-              const group = groups.value.find((g) => g.id === data.params.id);
-              if (group) group.stream_id = data.params.stream_id;
-            }
-            break;
-          case "Group.OnNameChanged":
-            if (data.params?.id && data.params.name !== undefined) {
-              const group = groups.value.find((g) => g.id === data.params.id);
-              if (group) group.name = data.params.name;
-            }
-            break;
-          case "Client.OnConnect":
-          case "Client.OnDisconnect":
-            // Refresh server status when clients connection status changes
-            // as this affects which groups they belong to / visibility
-            getServerStatus();
-            break;
-          case "Stream.OnUpdate":
-            // Update specific stream
-            if (data.params?.stream) {
-              const updatedStream = data.params.stream;
-              const index = streams.value.findIndex(
-                (s) => s.id === updatedStream.id
-              );
-              if (index !== -1) {
-                streams.value[index] = updatedStream;
-              } else {
-                streams.value.push(updatedStream);
-              }
-            }
-            break;
+          }
+          break;
+        case "Client.OnLatencyChanged":
+          if (data.params?.id && data.params.latency !== undefined) {
+            const client = findClientById(data.params.id);
+            if (client) client.config.latency = data.params.latency;
+          }
+          break;
+        case "Client.OnNameChanged":
+          if (data.params?.id && data.params.name !== undefined) {
+            const client = findClientById(data.params.id);
+            if (client) client.config.name = data.params.name;
+          }
+          break;
+        case "Client.OnConnect":
+        case "Client.OnDisconnect": {
+          if (!data.params?.client) break;
+          const newClient = data.params.client;
+          const existing = findClientById(newClient.id);
+          if (existing) {
+            existing.connected = newClient.connected;
+            existing.lastSeen = newClient.lastSeen;
+            existing.config = newClient.config;
+          }
+          break;
         }
-      } else if (data.result) {
-        // Handle responses
-        if (data.id === 1) {
-          // Server.GetStatus response
-          serverStatus.value = data.result;
-          updateLocalState();
-        }
+        case "Group.OnMute":
+          if (data.params?.id && data.params.mute !== undefined) {
+            const group = groups.value.find((g) => g.id === data.params.id);
+            if (group) group.muted = data.params.mute;
+          }
+          break;
+        case "Group.OnStreamChanged":
+          if (data.params?.id && data.params.stream_id !== undefined) {
+            const group = groups.value.find((g) => g.id === data.params.id);
+            if (group) group.stream_id = data.params.stream_id;
+          }
+          break;
+        case "Group.OnNameChanged":
+          if (data.params?.id && data.params.name !== undefined) {
+            const group = groups.value.find((g) => g.id === data.params.id);
+            if (group) group.name = data.params.name;
+          }
+          break;
+        case "Stream.OnUpdate":
+          if (data.params?.stream) {
+            const updatedStream = data.params.stream;
+            const index = streams.value.findIndex(
+              (s) => s.id === updatedStream.id
+            );
+            if (index !== -1) {
+              streams.value[index] = updatedStream;
+            } else {
+              streams.value.push(updatedStream);
+            }
+          }
+          break;
+        case "Stream.OnProperties":
+          break;
       }
     }
 
@@ -506,6 +495,7 @@ export const useSnapcastStore = defineStore(
         if (cl && previous) {
           cl.config.volume = previous;
         }
+        notifyError("Volume change", error);
       }
     }
 
@@ -532,6 +522,7 @@ export const useSnapcastStore = defineStore(
       } catch (error) {
         console.error("Failed to set client name:", error);
         if (cl && prev !== null) cl.config.name = prev;
+        notifyError("Rename client", error);
       }
     }
 
@@ -634,6 +625,7 @@ export const useSnapcastStore = defineStore(
       } catch (error) {
         console.error("Failed to set group stream:", error);
         if (g && prev !== null) g.stream_id = prev;
+        notifyError("Switch stream", error);
       }
     }
 
@@ -698,10 +690,9 @@ export const useSnapcastStore = defineStore(
           id: clientId,
         });
         console.log(`Client ${clientId} deleted successfully`);
-        // Refresh server status after deletion
-        await getServerStatus();
       } catch (error) {
         console.error("Failed to delete client:", error);
+        notifyError("Delete client", error);
         throw error;
       }
     }

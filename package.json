@@ -1,6 +1,6 @@
 {
   "name": "snapcast-vue",
-  "version": "0.1.37",
+  "version": "0.2.0",
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild"
@@ -19,7 +19,9 @@
     "preview": "vite preview",
     "build-only": "vite build",
     "build-only:ha": "vite build --config vite.config.ha.ts",
-    "type-check": "vue-tsc --build"
+    "type-check": "vue-tsc --build",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
@@ -41,6 +43,7 @@
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/tsconfig": "^0.8.1",
     "autoprefixer": "^10.4.22",
+    "jsdom": "^29.1.1",
     "npm-run-all2": "^8.0.4",
     "path-browserify": "^1.0.1",
     "postcss": "^8.5.6",
@@ -49,6 +52,7 @@
     "vite": "^7.1.11",
     "vite-plugin-pwa": "^1.1.0",
     "vite-plugin-vue-devtools": "^8.0.3",
+    "vitest": "^4.1.8",
     "vue-tsc": "^3.1.1"
   }
 }

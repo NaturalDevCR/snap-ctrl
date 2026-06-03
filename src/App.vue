@@ -1862,30 +1862,6 @@ function getDisplayClients(group: Group): Client[] {
  * Derive a human-friendly stream name from Snapcast stream URI.
  * Handles both string URIs and parsed URI objects returned by Server.GetStatus.
  */
-function getStreamName(stream: any): string {
-  const uri = stream?.uri;
-  if (!uri) return stream?.id ?? "Unknown Stream";
-
-  if (typeof uri === "string") {
-    const q = uri.split("?")[1] || "";
-    const params = new URLSearchParams(q);
-    return params.get("name") || uri;
-  }
-
-  if (typeof uri === "object") {
-    const query = (uri as any).query;
-    if (typeof query === "string") {
-      const params = new URLSearchParams(query);
-      return params.get("name") || (uri.path ?? stream.id);
-    }
-    if (query && typeof query === "object") {
-      return query.name || (uri.path ?? stream.id);
-    }
-    return uri.path ?? stream.id;
-  }
-  return stream?.id ?? "Unknown Stream";
-}
-
 function getStreamStatus(streamId: string): string {
   const stream = snapcast.streams.find((s) => s.id === streamId);
   return stream?.status || "unknown";
@@ -1927,23 +1903,7 @@ const displayStreams = computed(() => {
  * description based on client names.
  */
 function getGroupName(group: Group): string {
-  // Prioritize custom name if set
-  if (group.name && group.name.trim().length > 0) return group.name;
-
-  // Try to use stream name
-  const stream = snapcast.streams.find(
-    (s) => s.id === (group as any).stream_id
-  );
-  const streamName = stream ? getStreamName(stream) : null;
-  if (streamName) return streamName;
-
-  // Fall back to first client name or client count
-  if (group.clients && group.clients.length > 0) {
-    const first = group.clients[0];
-    if (first?.config?.name) return `${first.config.name} Group`;
-    return `${group.clients.length} Clients`;
-  }
-  return "Unnamed Group";
+  return getGroupDisplayName(group, snapcast.streams);
 }
 
 function updateHost() {
@@ -2416,6 +2376,8 @@ function applyAppSettings() {
 }
 
 import Tooltip from "@/components/Tooltip.vue";
+import { getStreamName } from "@/utils/stream-name";
+import { getGroupDisplayName } from "@/utils/group-name";
 
 // Authentication handlers
 async function handlePasscodeSetup(passcode: string) {
@@ -2462,20 +2424,11 @@ const updateIsMobile = () => {
 
 onMounted(async () => {
   window.addEventListener("resize", updateIsMobile);
-  // Check if we have a saved host
-  const savedHost = localStorage.getItem("snapcast_host");
-  if (savedHost) {
-    hostInput.value = savedHost;
-    updateHost();
-  }
 
-  // Only auto-connect if authenticated
+  // host is already hydrated by pinia-plugin-persistedstate from snapcast.host
   if (auth.isAuthenticated && !auth.isLocked && settings.autoConnect) {
     snapcast.connect();
   }
-
-  // No periodic polling needed - Snapcast server pushes real-time notifications
-  // for all state changes (volume, mute, stream, client connect/disconnect)
 });
 
 onUnmounted(() => {

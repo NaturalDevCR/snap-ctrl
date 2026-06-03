@@ -298,7 +298,7 @@
                     class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                   />
                   <span class="text-sm text-gray-900 dark:text-white">{{
-                    getGroupDisplayName(group)
+                    getGroupName(group)
                   }}</span>
                 </label>
                 <div
@@ -411,6 +411,8 @@
 import { ref, computed } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import type { AuthPermissions } from "@/stores/auth";
+import { getStreamName } from "@/utils/stream-name";
+import { getGroupDisplayName } from "@/utils/group-name";
 
 const props = defineProps<{
   initialPermissions: AuthPermissions;
@@ -448,78 +450,14 @@ const availableClients = computed(() => {
   }));
 });
 
-function getSourceName(source: { uri: any; id: string }): string {
-  const uri = source.uri;
-  if (!uri) return source.id;
-
-  if (typeof uri === "string") {
-    const q = uri.split("?")[1] || "";
-    const params = new URLSearchParams(q);
-    return params.get("name") || uri;
-  }
-
-  if (typeof uri === "object") {
-    const query = uri.query;
-    if (typeof query === "string") {
-      const params = new URLSearchParams(query);
-      return params.get("name") || (uri.path ?? source.id);
-    }
-    if (query && typeof query === "object") {
-      return query.name || (uri.path ?? source.id);
-    }
-    return uri.path ?? source.id;
-  }
-  return source.id;
+function getSourceName(source: { uri: unknown; id: string }): string {
+  return getStreamName(source);
 }
 
-// Calculate group display name (same logic as main UI)
-function getGroupDisplayName(group: { id: string; name: string }): string {
-  // Prioritize custom name if set
-  if (group.name && group.name.trim().length > 0) return group.name;
-
-  // Find the group in snapcast store to get stream info
+function getGroupName(group: { id: string; name: string }): string {
   const fullGroup = snapcast.groups.find((g) => g.id === group.id);
   if (!fullGroup) return `Group ${group.id.substring(0, 8)}`;
-
-  // Try to use stream name
-  const stream = snapcast.streams.find((s) => s.id === fullGroup.stream_id);
-  if (stream) {
-    const streamName = getStreamName(stream);
-    if (streamName) return streamName;
-  }
-
-  // Fall back to first client name or client count
-  if (fullGroup.clients && fullGroup.clients.length > 0) {
-    const first = fullGroup.clients[0];
-    if (first?.config?.name) return `${first.config.name} Group`;
-    return `${fullGroup.clients.length} Clients`;
-  }
-
-  return `Group ${group.id.substring(0, 8)}`;
-}
-
-function getStreamName(stream: { id: string; uri: any }): string {
-  const uri = stream.uri;
-  if (!uri) return stream.id;
-
-  if (typeof uri === "string") {
-    const q = uri.split("?")[1] || "";
-    const params = new URLSearchParams(q);
-    return params.get("name") || uri;
-  }
-
-  if (typeof uri === "object") {
-    const query = uri.query;
-    if (typeof query === "string") {
-      const params = new URLSearchParams(query);
-      return params.get("name") || (uri.path ?? stream.id);
-    }
-    if (query && typeof query === "object") {
-      return query.name || (uri.path ?? stream.id);
-    }
-    return uri.path ?? stream.id;
-  }
-  return stream.id;
+  return getGroupDisplayName(fullGroup, snapcast.streams);
 }
 
 function handleSave() {

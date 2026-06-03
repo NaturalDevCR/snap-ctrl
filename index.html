@@ -1,10 +1,13 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Snap-CTRL</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' blob:; connect-src 'self' ws: wss:; worker-src 'self' blob:; child-src 'self' blob:; frame-ancestors 'self';" />
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), usb=(), serial=(), bluetooth=(), midi=(), payment=(), accelerometer=(), gyroscope=(), magnetometer=()" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <title>SnapCtrl</title>
   </head>
   <body>
     <div id="app"></div>

@@ -25,18 +25,30 @@ export function useSnapStream() {
   const connected = ref(false);
   const connecting = ref(false);
   const error = ref<string>("");
+  const streamReconnectAttempts = ref(0);
+  const maxStreamReconnectAttempts = 5;
+  let streamReconnectTimeout: number | null = null;
+  let manualStreamDisconnect = false;
+  let lastConnectedHost = "";
   // Get or generate persistent Client ID immediately
   let storedId = localStorage.getItem("snapcast-client-id");
   if (!storedId) {
-    // Generate a random MAC address-like string
-    storedId = Array.from({ length: 6 }, () =>
-      Math.floor(Math.random() * 256)
-        .toString(16)
-        .padStart(2, "0")
-    ).join(":");
+    storedId = generateSecureMacLikeId();
     localStorage.setItem("snapcast-client-id", storedId);
   }
   const clientId = ref<string>(storedId);
+
+  function generateSecureMacLikeId(): string {
+    const bytes = new Uint8Array(6);
+    if (window.crypto && window.crypto.getRandomValues) {
+      window.crypto.getRandomValues(bytes);
+    } else {
+      for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+    }
+    return Array.from(bytes)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join(":");
+  }
 
   // Audio state
   const codec = ref<string>("");
@@ -273,6 +285,9 @@ export function useSnapStream() {
   async function connect(host: string): Promise<void> {
     if (connected.value || connecting.value) return;
 
+    manualStreamDisconnect = false;
+    streamReconnectAttempts.value = 0;
+    lastConnectedHost = host;
     connecting.value = true;
     error.value = "";
 
@@ -344,6 +359,9 @@ export function useSnapStream() {
         cleanup();
         connected.value = false;
         connecting.value = false;
+        if (!manualStreamDisconnect) {
+          scheduleStreamReconnect(host);
+        }
       };
 
       ws.value.onerror = (err) => {
@@ -384,10 +402,40 @@ export function useSnapStream() {
     window.addEventListener("focus", handleFocus);
   }
 
+  function scheduleStreamReconnect(host: string) {
+    if (streamReconnectTimeout) {
+      clearTimeout(streamReconnectTimeout);
+      streamReconnectTimeout = null;
+    }
+    if (
+      manualStreamDisconnect ||
+      streamReconnectAttempts.value >= maxStreamReconnectAttempts
+    ) {
+      if (streamReconnectAttempts.value >= maxStreamReconnectAttempts) {
+        error.value = "Audio stream disconnected. Tap play to retry.";
+      }
+      return;
+    }
+    const delay = Math.min(
+      1000 * Math.pow(2, streamReconnectAttempts.value),
+      15000
+    );
+    streamReconnectAttempts.value++;
+    streamReconnectTimeout = window.setTimeout(() => {
+      streamReconnectTimeout = null;
+      connect(host);
+    }, delay);
+  }
+
   /**
    * Disconnect from stream
    */
   async function disconnect(): Promise<void> {
+    manualStreamDisconnect = true;
+    if (streamReconnectTimeout) {
+      clearTimeout(streamReconnectTimeout);
+      streamReconnectTimeout = null;
+    }
     // Store clientId before cleanup
     const clientToDelete = clientId.value;
 
@@ -419,6 +467,35 @@ export function useSnapStream() {
 
     // Clear clientId after cleanup attempt
     clientId.value = "";
+  }
+
+  function deleteClientSync(clientIdToDelete: string, host: string) {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsBase = `${protocol}//${host}`;
+    const url = `${wsBase}/jsonrpc`;
+    const httpBase = `${window.location.protocol}//${host}/jsonrpc`;
+    const body = JSON.stringify({
+      id: 1,
+      jsonrpc: "2.0",
+      method: "Server.DeleteClient",
+      params: { id: clientIdToDelete },
+    });
+    try {
+      if (navigator.sendBeacon) {
+        const blob = new Blob([body], { type: "application/json" });
+        if (navigator.sendBeacon(httpBase, blob)) return;
+      }
+    } catch {
+      // fall through
+    }
+    try {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", httpBase, false);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.send(body);
+    } catch {
+      // give up
+    }
   }
 
   /**
@@ -626,13 +703,21 @@ export function useSnapStream() {
     disconnect();
   });
 
-  // Also cleanup on page unload (tab close, navigation, etc.)
-  // This ensures cleanup even if onUnmounted doesn't complete
+  // Sync cleanup on page unload — must not be async
   if (typeof window !== "undefined") {
     window.addEventListener("beforeunload", () => {
-      // Call disconnect synchronously
-      // Note: The async cleanup in disconnect() will do its best before the page closes
-      disconnect();
+      const clientToDelete = clientId.value;
+      if (ws.value) {
+        try {
+          ws.value.close();
+        } catch {
+          // ignore
+        }
+        ws.value = null;
+      }
+      if (clientToDelete && lastConnectedHost) {
+        deleteClientSync(clientToDelete, lastConnectedHost);
+      }
     });
   }
 

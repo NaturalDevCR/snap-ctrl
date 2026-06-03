@@ -8,6 +8,8 @@ import { createPinia } from "pinia";
 import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
 
 import App from "./App.vue";
+import { useNotificationStore } from "./stores/notification";
+
 const app = createApp(App);
 
 const pinia = createPinia();
@@ -21,12 +23,12 @@ import { registerSW } from "virtual:pwa-register";
 
 const updateSW = registerSW({
   onNeedRefresh() {
-    // Show a prompt to user
-    if (confirm("New content available. Reload?")) {
-      updateSW(true);
-    }
+    const notify = useNotificationStore();
+    notify.info("New content available. Reloading in 5s…", 5000);
+    window.setTimeout(() => updateSW(true), 5000);
   },
   onOfflineReady() {
-    console.log("App ready to work offline");
+    const notify = useNotificationStore();
+    notify.success("App ready to work offline");
   },
 });

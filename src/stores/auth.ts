@@ -51,27 +51,34 @@ export const useAuthStore = defineStore(
     const isAuthenticated = computed(() => passcodeHash.value !== null);
     const requiresSetup = computed(() => passcodeHash.value === null);
 
-    // Hash passcode using SHA-256
-    // Hash passcode using SHA-256 (or fallback for insecure contexts)
     async function hashPasscode(passcode: string): Promise<string> {
-      if (window.crypto && window.crypto.subtle) {
-        try {
-          const encoder = new TextEncoder();
-          const data = encoder.encode(passcode);
-          const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-          const hashArray = Array.from(new Uint8Array(hashBuffer));
-          return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-        } catch (e) {
-          console.warn("Crypto API failed, using fallback:", e);
-        }
+      if (!window.crypto || !window.crypto.subtle) {
+        throw new Error(
+          "Web Crypto API unavailable. The passcode feature requires a secure context (HTTPS or localhost)."
+        );
       }
-
-      // Fallback hash for insecure contexts (HTTP)
-      let hash = 5381;
-      for (let i = 0; i < passcode.length; i++) {
-        hash = (hash * 33) ^ passcode.charCodeAt(i);
-      }
-      return (hash >>> 0).toString(16);
+      const encoder = new TextEncoder();
+      const data = encoder.encode(passcode);
+      const salt = encoder.encode("snapctrl.passcode.v1");
+      const keyMaterial = await crypto.subtle.importKey(
+        "raw",
+        data,
+        { name: "PBKDF2" },
+        false,
+        ["deriveBits"]
+      );
+      const bits = await crypto.subtle.deriveBits(
+        {
+          name: "PBKDF2",
+          salt,
+          iterations: 100000,
+          hash: "SHA-256",
+        },
+        keyMaterial,
+        256
+      );
+      const hashArray = Array.from(new Uint8Array(bits));
+      return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
     }
 
     // Set new passcode (for initial setup or change)

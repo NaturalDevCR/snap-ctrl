@@ -6,8 +6,10 @@
         <button
           type="button"
           @click="toggleMute"
-          class="shrink-0 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          class="shrink-0 min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           :class="muted ? 'text-red-500 dark:text-red-400' : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'"
+          :aria-label="muted ? 'Unmute' : 'Mute'"
+          :aria-pressed="muted"
         >
           <span class="mdi text-xl" :class="muted ? 'mdi-volume-off' : 'mdi-volume-high'"></span>
         </button>
@@ -18,8 +20,9 @@
         <button
           type="button"
           @click="adjustVolume(-1)"
-          class="shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer"
+          class="shrink-0 min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-full text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer"
           :disabled="volume <= 0"
+          aria-label="Decrease volume"
         >
           <span class="mdi mdi-minus text-xl"></span>
         </button>
@@ -45,8 +48,9 @@
         <button
           type="button"
           @click="adjustVolume(1)"
-          class="shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer"
+          class="shrink-0 min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-full text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer"
           :disabled="volume >= 100"
+          aria-label="Increase volume"
         >
           <span class="mdi mdi-plus text-xl"></span>
         </button>
