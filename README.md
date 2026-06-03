@@ -32,6 +32,8 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
 
 ## Changelog
 
+> **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
+
 ### v0.2.0
 
 - **Fixed**: `Server.OnUpdate` notifications are now handled. The app no longer relies on periodic polling to stay in sync with other control clients. With multiple devices connected, this eliminates the O(N²) fan-out traffic that `Server.GetStatus` triggered.
@@ -46,6 +48,18 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
 - **Testing**: Added Vitest with 21 unit tests covering the snapcast store (no-polling, `Server.OnUpdate`, `Client.OnConnect` local patch, response id matching, listener cleanup on timeout), the auth store (PBKDF2 hashing) and the extracted utilities.
 - **UX**: `prefers-reduced-motion` is respected globally; volume `+`/`-`/mute buttons are now 44×44 px touch targets; `aria-label` and `aria-pressed` on icon-only controls; mutations that fail now show a toast.
 - **PWA**: Update prompt is an in-app toast (5s auto-reload) instead of a native `confirm()`.
+
+### v0.1.21 .. v0.1.37
+
+Backfill of the period that wasn't documented in this file (the v0.1.20 entry was the last one). Highlights reconstructed from `git log v0.1.20..v0.1.37`:
+
+- **Added**: WebSocket heartbeat (later removed in v0.2.0 once push notifications were wired up properly).
+- **Added**: Browser player stream pre-selection and mute-on-stream-sync.
+- **Added**: Home Assistant addon support (`addon/`) with nginx proxy in front of the Snapcast control port to avoid WSS→WS mixed-content.
+- **Added**: `repository.json` for the HA addon store to discover the build.
+- **Added**: Nonlinear volume curve (with a fix to eliminate round-trip drift and honor the user-configurable `volumeStep` on `+`/`-` buttons).
+- **Fixed**: HA addon builds: `__HA_SNAPCAST_HOST__` detection, build context, configurable UI port, websocket proxy, ensuring `/var/www/html` exists before copy.
+- **Removed**: `build.yaml` (release workflow simplified to a single matrix-free `release.yml`).
 
 ### v0.1.20
 
