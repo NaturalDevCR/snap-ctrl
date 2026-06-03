@@ -1,19 +1,31 @@
 /**
- * Opus audio decoder using opus-decoder
+ * Opus audio decoder using opus-decoder.
+ * The WASM dependency is lazy-loaded inside `init()` so the main
+ * bundle stays small until an Opus stream is actually played.
  */
 
-import { OpusDecoder as OpusDecoderLib } from "opus-decoder";
 import { type Timestamp, type SampleFormat } from "../message-protocol";
 import { type AudioDecoder, type DecodedAudio } from "./types";
 
+type OpusDecoderLibInstance = any;
+
+let opusModulePromise: Promise<{ OpusDecoder: new (opts: any) => OpusDecoderLibInstance }> | null = null;
+function loadOpusModule() {
+  if (!opusModulePromise) {
+    opusModulePromise = import("opus-decoder");
+  }
+  return opusModulePromise;
+}
+
 export class OpusDecoder implements AudioDecoder {
-  private decoder: any | null = null;
+  private decoder: OpusDecoderLibInstance | null = null;
   private sampleRate = 48000;
   private channels = 2;
   private isInitialized = false;
 
   async init(header: Uint8Array): Promise<void> {
     try {
+      const { OpusDecoder: OpusDecoderLib } = await loadOpusModule();
       // Parse Opus header from Ogg container if present
       // Opus in Ogg starts with "OpusHead"
       if (header.length >= 19) {

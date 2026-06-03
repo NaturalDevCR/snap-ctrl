@@ -1,19 +1,31 @@
 /**
- * Vorbis audio decoder using @wasm-audio-decoders/ogg-vorbis
+ * Vorbis audio decoder using @wasm-audio-decoders/ogg-vorbis.
+ * The WASM dependency is lazy-loaded inside `init()` so the main
+ * bundle stays small until a Vorbis stream is actually played.
  */
 
-import { OggVorbisDecoder } from "@wasm-audio-decoders/ogg-vorbis";
 import { type Timestamp, type SampleFormat } from "../message-protocol";
 import { type AudioDecoder, type DecodedAudio } from "./types";
 
+type OggVorbisDecoderInstance = any;
+
+let vorbisModulePromise: Promise<{ OggVorbisDecoder: new () => OggVorbisDecoderInstance }> | null = null;
+function loadVorbisModule() {
+  if (!vorbisModulePromise) {
+    vorbisModulePromise = import("@wasm-audio-decoders/ogg-vorbis");
+  }
+  return vorbisModulePromise;
+}
+
 export class VorbisDecoder implements AudioDecoder {
-  private decoder: any | null = null;
+  private decoder: OggVorbisDecoderInstance | null = null;
   private sampleRate = 48000;
   private channels = 2;
   private isInitialized = false;
 
   async init(header: Uint8Array): Promise<void> {
     try {
+      const { OggVorbisDecoder } = await loadVorbisModule();
       // Initialize the decoder
       this.decoder = new OggVorbisDecoder();
       

@@ -1,88 +1,107 @@
 /**
- * FLAC audio decoder using libflacjs
+ * FLAC audio decoder using libflacjs.
+ * The WASM dependency is lazy-loaded inside `init()` so the main
+ * bundle stays small until a FLAC stream is actually played.
  */
 
-import Flac from "libflacjs/dist/libflac.js";
 import { type Timestamp, type SampleFormat } from "../message-protocol";
 import { type AudioDecoder, type DecodedAudio } from "./types";
 
+type FlacModule = {
+  create_libflac_decoder: (isOgg: boolean) => any;
+  init_decoder_stream: (
+    decoder: any,
+    read: any,
+    write: any,
+    error: any,
+    meta: any,
+    isOgg: boolean
+  ) => number;
+  setOptions: (decoder: any, opts: any) => void;
+  FLAC__stream_decoder_process_until_end_of_metadata: (decoder: any) => void;
+  FLAC__stream_decoder_process_single: (decoder: any) => boolean;
+  FLAC__stream_decoder_finish: (decoder: any) => void;
+  FLAC__stream_decoder_delete: (decoder: any) => void;
+};
+
+let flacModulePromise: Promise<FlacModule> | null = null;
+function loadFlacModule(): Promise<FlacModule> {
+  if (!flacModulePromise) {
+    flacModulePromise = import("libflacjs/dist/libflac.js").then(
+      (m) => (m as any).default ?? (m as any)
+    ) as Promise<FlacModule>;
+  }
+  return flacModulePromise;
+}
+
 export class FlacDecoder implements AudioDecoder {
+  private Flac: FlacModule | null = null;
   private decoder: any = null;
   private sampleRate = 48000;
   private channels = 2;
   private bitsPerSample = 16;
   private isInitialized = false;
 
-  // Buffers for callbacks
   private header: Uint8Array | null = null;
   private flacChunk: Uint8Array | null = null;
   private currentDecodedSamples: Float32Array[] = [];
 
-  constructor() {
-    this.initDecoder();
+  private async ensureDecoder(): Promise<FlacModule | null> {
+    if (this.Flac) return this.Flac;
+    try {
+      this.Flac = await loadFlacModule();
+    } catch (e) {
+      console.error("Failed to load FLAC module:", e);
+      return null;
+    }
+    return this.Flac;
   }
 
-  private initDecoder() {
-    try {
-      // @ts-ignore
-      this.decoder = Flac.create_libflac_decoder(true);
+  async init(header: Uint8Array): Promise<void> {
+    if (!this.Flac) {
+      this.Flac = await this.ensureDecoder();
+    }
+    if (!this.Flac) return;
 
+    if (!this.decoder) {
+      this.decoder = this.Flac.create_libflac_decoder(true);
       if (this.decoder) {
-        // @ts-ignore
-        const init_status = (Flac as any).init_decoder_stream(
+        const init_status = this.Flac.init_decoder_stream(
           this.decoder,
           this.readCallback.bind(this),
           this.writeCallback.bind(this),
           this.errorCallback.bind(this),
           this.metadataCallback.bind(this),
-          false // is_ogg
+          false
         );
         console.log("Flac init status:", init_status);
-
-        // @ts-ignore
-        (Flac as any).setOptions(this.decoder, {
+        this.Flac.setOptions(this.decoder, {
           analyseSubframes: true,
           analyseResiduals: true,
         });
-
         this.isInitialized = init_status === 0;
       }
-    } catch (e) {
-      console.error("Failed to create FLAC decoder:", e);
-    }
-  }
-
-  async init(header: Uint8Array): Promise<void> {
-    if (!this.decoder) {
-      this.initDecoder();
     }
 
     if (this.decoder && header && header.length > 0) {
       this.header = header;
-
-      // Debug header
       const magic = String.fromCharCode(...header.slice(0, 4));
       const bytes = Array.from(header.slice(0, 4))
         .map((b) => b.toString(16))
         .join(" ");
       console.log(`FLAC Header magic: ${magic} (${bytes})`);
-
-      // @ts-ignore
-      (Flac as any).FLAC__stream_decoder_process_until_end_of_metadata(
+      this.Flac.FLAC__stream_decoder_process_until_end_of_metadata(
         this.decoder
       );
-      // Header is consumed by readCallback
     }
   }
 
   private readCallback(bufferSize: number): any {
     if (this.header) {
-      // console.log("Serving header:", this.header.length);
       const data = this.header;
       this.header = null;
       return { buffer: data, readDataLength: data.length, error: false };
     } else if (this.flacChunk && this.flacChunk.length > 0) {
-      // console.log("Serving chunk:", this.flacChunk.length);
       const len = Math.min(bufferSize, this.flacChunk.length);
       const data = this.flacChunk.slice(0, len);
       this.flacChunk = this.flacChunk.slice(len);
@@ -101,19 +120,16 @@ export class FlacDecoder implements AudioDecoder {
     const channels = frame.channels;
     const samplesPerChannel = blocksize;
 
-    // Ensure currentDecodedSamples has arrays for each channel
     for (let ch = 0; ch < channels; ch++) {
       if (!this.currentDecodedSamples[ch]) {
         this.currentDecodedSamples[ch] = new Float32Array(0);
       }
     }
 
-    // Convert samples from each channel (matching snapweb implementation)
     for (let ch = 0; ch < channels; ch++) {
       const channelData = new Float32Array(samplesPerChannel);
       const byteBuffer = buffer[ch];
 
-      // Validate byteBuffer
       if (!byteBuffer || !byteBuffer.buffer) {
         console.warn(
           `FLAC writeCallback: invalid byteBuffer for channel ${ch}`
@@ -146,7 +162,6 @@ export class FlacDecoder implements AudioDecoder {
         channelData[i] = sample / divisor;
       }
 
-      // Append to currentDecodedSamples[ch]
       const oldBuffer = this.currentDecodedSamples[ch] || new Float32Array(0);
       const newBuffer = new Float32Array(oldBuffer.length + channelData.length);
       newBuffer.set(oldBuffer);
@@ -157,7 +172,6 @@ export class FlacDecoder implements AudioDecoder {
 
   private metadataCallback(decoder: any, metadata: any): void {
     if (metadata.type === 0) {
-      // STREAMINFO block
       this.sampleRate = metadata.data.sampleRate;
       this.channels = metadata.data.channels;
       this.bitsPerSample = metadata.data.bitsPerSample;
@@ -176,7 +190,7 @@ export class FlacDecoder implements AudioDecoder {
     data: Uint8Array,
     timestamp?: Timestamp
   ): Promise<DecodedAudio | null> {
-    if (!this.decoder || !this.isInitialized) {
+    if (!this.decoder || !this.isInitialized || !this.Flac) {
       console.warn("FLAC decoder not initialized");
       return null;
     }
@@ -185,15 +199,10 @@ export class FlacDecoder implements AudioDecoder {
 
     return new Promise((resolve) => {
       this.flacChunk = data;
-      this.currentDecodedSamples = []; // Reset for this chunk
+      this.currentDecodedSamples = [];
 
-      // Initialize channel buffers if needed (though writeCallback handles it)
-      // We rely on writeCallback to populate currentDecodedSamples
-
-      // Loop until all data is processed
       while (this.flacChunk && this.flacChunk.length > 0) {
-        // @ts-ignore
-        const status = (Flac as any).FLAC__stream_decoder_process_single(
+        const status = this.Flac!.FLAC__stream_decoder_process_single(
           this.decoder
         );
         if (!status) {
@@ -232,12 +241,10 @@ export class FlacDecoder implements AudioDecoder {
   }
 
   close(): void {
-    if (this.decoder) {
+    if (this.decoder && this.Flac) {
       try {
-        // @ts-ignore
-        (Flac as any).FLAC__stream_decoder_finish(this.decoder);
-        // @ts-ignore
-        (Flac as any).FLAC__stream_decoder_delete(this.decoder);
+        this.Flac.FLAC__stream_decoder_finish(this.decoder);
+        this.Flac.FLAC__stream_decoder_delete(this.decoder);
       } catch (error) {
         console.error("Error closing FLAC decoder:", error);
       }
