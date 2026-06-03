@@ -535,7 +535,7 @@ export function useSnapStream() {
     }
 
     // Create new decoder
-    decoder = createDecoder(codecMsg.codec);
+    decoder = await createDecoder(codecMsg.codec);
 
     try {
       // Initialize decoder with header payload
