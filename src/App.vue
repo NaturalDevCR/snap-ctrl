@@ -764,758 +764,33 @@
       </Transition>
 
       <!-- Group Filter Modal -->
-      <div
-        v-if="showGroupFilter"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm"
-        @click.self="showGroupFilter = false"
-      >
-        <div
-          class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 w-full max-w-md overflow-hidden"
-        >
-          <div
-            class="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between"
-          >
-            <h3 class="font-bold text-lg text-gray-900 dark:text-white">
-              Manage Groups
-            </h3>
-            <button
-              @click="showGroupFilter = false"
-              class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              <span class="mdi mdi-close text-xl"></span>
-            </button>
-          </div>
-          <div class="p-2 max-h-[60vh] overflow-y-auto custom-scrollbar">
-            <div
-              v-if="snapcast.groups.length === 0"
-              class="p-4 text-center text-gray-500 dark:text-gray-400"
-            >
-              No groups available
-            </div>
-            <div
-              v-for="(group, index) in orderedGroupsForFilter"
-              :key="group.id"
-              draggable="true"
-              @dragstart="handleDragStart(index, $event)"
-              @dragover.prevent="handleDragOver(index, $event)"
-              @drop="handleDrop(index, $event)"
-              @dragend="handleDragEnd"
-              class="flex items-center justify-between p-3 mb-2 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700/50 rounded-xl cursor-move transition-colors border border-gray-200 dark:border-gray-700"
-              :class="{ 'opacity-50': draggedIndex === index }"
-            >
-              <div class="flex items-center gap-3">
-                <span class="mdi mdi-drag-vertical text-gray-400"></span>
-                <span
-                  class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                  :class="getGroupColor(group.id)"
-                >
-                  {{ getGroupName(group).charAt(0).toUpperCase() }}
-                </span>
-                <span class="font-medium text-gray-900 dark:text-white">{{
-                  getGroupName(group)
-                }}</span>
-              </div>
-              <div
-                class="w-6 h-6 rounded-full border flex items-center justify-center transition-colors"
-                :class="
-                  !settings.hiddenGroups.includes(group.id)
-                    ? 'bg-blue-500 border-blue-500 text-white'
-                    : 'border-gray-300 dark:border-gray-600'
-                "
-                @click.stop="toggleGroupVisibility(group.id)"
-              >
-                <span
-                  v-if="!settings.hiddenGroups.includes(group.id)"
-                  class="mdi mdi-check text-sm"
-                ></span>
-              </div>
-            </div>
-          </div>
-          <div
-            class="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-slate-800/50 flex justify-end"
-          >
-            <button
-              @click="showGroupFilter = false"
-              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-            >
-              Done
-            </button>
-          </div>
-        </div>
-      </div>
+      <GroupFilterModal :open="showGroupFilter" @close="showGroupFilter = false" />
       <!-- Client Details Modal -->
-      <Transition
-        enter-active-class="transition duration-200 ease-out"
-        enter-from-class="opacity-0"
-        enter-to-class="opacity-100"
-        leave-active-class="transition duration-150 ease-in"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
-      >
-        <div
-          v-if="clientDetailsModal.open && clientDetailsModal.client"
-          class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          @click.self="closeClientDetails"
-        >
-          <div
-            class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 dark:border-gray-800 transform transition-all"
-            @click.stop
-          >
-            <div
-              class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between"
-            >
-              <h3
-                class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2"
-              >
-                <span class="mdi mdi-information-outline text-blue-500"></span>
-                Client Details
-              </h3>
-              <button
-                @click="closeClientDetails"
-                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-              >
-                <span class="mdi mdi-close text-xl"></span>
-              </button>
-            </div>
-
-            <div class="p-6">
-              <div class="space-y-4">
-                <div
-                  class="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-gray-800"
-                >
-                  <div
-                    class="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400"
-                  >
-                    <span class="mdi mdi-monitor-speaker text-2xl"></span>
-                  </div>
-                  <div class="min-w-0">
-                    <h4
-                      class="font-bold text-lg text-gray-900 dark:text-white truncate"
-                    >
-                      {{
-                        clientDetailsModal.client.config.name ||
-                        clientDetailsModal.client.host.name
-                      }}
-                    </h4>
-                    <p
-                      class="text-sm text-gray-500 dark:text-gray-400 font-mono truncate"
-                    >
-                      {{ clientDetailsModal.client.id }}
-                    </p>
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
-                      >Status</label
-                    >
-                    <div class="flex items-center gap-2">
-                      <span
-                        class="w-2 h-2 rounded-full"
-                        :class="
-                          clientDetailsModal.client.connected
-                            ? 'bg-green-500'
-                            : 'bg-red-500'
-                        "
-                      ></span>
-                      <span
-                        class="text-sm font-medium text-gray-900 dark:text-white"
-                      >
-                        {{
-                          clientDetailsModal.client.connected
-                            ? "Connected"
-                            : "Disconnected"
-                        }}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label
-                      class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
-                      >Last Seen</label
-                    >
-                    <p
-                      class="text-sm font-medium text-gray-900 dark:text-white"
-                    >
-                      {{
-                        formatLastSeen(clientDetailsModal.client.lastSeen.sec)
-                      }}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label
-                      class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
-                      >IP Address</label
-                    >
-                    <p
-                      class="text-sm font-medium text-gray-900 dark:text-white font-mono"
-                    >
-                      {{ clientDetailsModal.client.host.ip }}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label
-                      class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
-                      >MAC Address</label
-                    >
-                    <p
-                      class="text-sm font-medium text-gray-900 dark:text-white font-mono"
-                    >
-                      {{ clientDetailsModal.client.host.mac }}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label
-                      class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
-                      >Host Name</label
-                    >
-                    <p
-                      class="text-sm font-medium text-gray-900 dark:text-white truncate"
-                    >
-                      {{ clientDetailsModal.client.host.name }}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label
-                      class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
-                      >OS / Arch</label
-                    >
-                    <p
-                      class="text-sm font-medium text-gray-900 dark:text-white"
-                    >
-                      {{ clientDetailsModal.client.host.os }} /
-                      {{ clientDetailsModal.client.host.arch }}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label
-                      class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
-                      >Version</label
-                    >
-                    <p
-                      class="text-sm font-medium text-gray-900 dark:text-white"
-                    >
-                      {{ clientDetailsModal.client.snapclient.version }}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label
-                      class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
-                      >Latency</label
-                    >
-                    <p
-                      class="text-sm font-medium text-gray-900 dark:text-white"
-                    >
-                      {{ clientDetailsModal.client.config.latency }} ms
-                    </p>
-                  </div>
-
-                  <div>
-                    <label
-                      class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1"
-                      >Instance</label
-                    >
-                    <p
-                      class="text-sm font-medium text-gray-900 dark:text-white"
-                    >
-                      {{ clientDetailsModal.client.config.instance }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="px-6 py-4 bg-gray-50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-gray-800 flex justify-end"
-            >
-              <button
-                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
-                @click="closeClientDetails"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      </Transition>
+      <ClientDetailsModal
+        :open="clientDetailsModal.open"
+        :client="clientDetailsModal.client"
+        @close="closeClientDetails"
+      />
 
       <!-- Client Settings Modal -->
-      <Transition
-        enter-active-class="transition duration-200 ease-out"
-        enter-from-class="opacity-0"
-        enter-to-class="opacity-100"
-        leave-active-class="transition duration-150 ease-in"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
-      >
-        <div
-          v-if="clientModal.open"
-          class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          @click.self="closeClientSettings"
-        >
-          <div
-            class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 dark:border-gray-800 transform transition-all"
-            @click.stop
-          >
-            <div
-              class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between"
-            >
-              <h3 class="text-lg font-bold text-gray-900 dark:text-white">
-                Client Settings
-              </h3>
-              <button
-                @click="closeClientSettings"
-                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-              >
-                <span class="mdi mdi-close text-xl"></span>
-              </button>
-            </div>
-
-            <div class="p-6 space-y-6">
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >Name</label
-                >
-                <input
-                  class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 dark:disabled:bg-slate-800/50"
-                  v-model.trim="clientModal.name"
-                  :disabled="!auth.permissions.canRenameClients"
-                />
-              </div>
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >Latency (ms)</label
-                >
-                <input
-                  type="number"
-                  min="0"
-                  class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-gray-900 dark:text-white"
-                  v-model.number="clientModal.latency"
-                />
-              </div>
-            </div>
-
-            <!-- Delete Section (only for offline clients) -->
-            <div
-              v-if="
-                clientModal.clientId && !isClientConnected(clientModal.clientId)
-              "
-              class="px-6 py-4 bg-red-50 dark:bg-red-900/20 border-t border-red-100 dark:border-red-800"
-            >
-              <button
-                @click="deleteClientFromModal"
-                class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                <span class="mdi mdi-delete"></span>
-                Delete Offline Client
-              </button>
-              <p
-                class="mt-2 text-xs text-red-600 dark:text-red-400 text-center"
-              >
-                ⚠️ This action cannot be undone
-              </p>
-            </div>
-
-            <div
-              class="px-6 py-4 bg-gray-50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-2"
-            >
-              <Tooltip text="Cancel">
-                  <button
-                    class="w-10 h-10 flex items-center justify-center rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-                    @click="closeClientSettings"
-                  >
-                    <span class="mdi mdi-close text-xl"></span>
-                  </button>
-              </Tooltip>
-              <Tooltip text="Save Changes">
-                  <button
-                    class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors"
-                    @click="applyClientSettings"
-                  >
-                    <span class="mdi mdi-check text-xl"></span>
-                  </button>
-              </Tooltip>
-            </div>
-          </div>
-        </div>
-      </Transition>
+      <ClientSettingsModal
+        :open="clientModal.open"
+        :client="clientModal.client"
+        @close="closeClientSettings"
+      />
 
       <!-- App Settings Modal -->
-      <Transition
-        enter-active-class="transition duration-200 ease-out"
-        enter-from-class="opacity-0"
-        enter-to-class="opacity-100"
-        leave-active-class="transition duration-150 ease-in"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
-      >
-        <div
-          v-if="appModal.open"
-          class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          @click.self="closeAppSettings"
-        >
-          <div
-            class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 dark:border-gray-800 transform transition-all"
-            @click.stop
-          >
-            <div
-              class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between"
-            >
-              <h3 class="text-lg font-bold text-gray-900 dark:text-white">
-                Application Settings
-              </h3>
-              <button
-                @click="closeAppSettings"
-                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-              >
-                <span class="mdi mdi-close text-xl"></span>
-              </button>
-            </div>
-
-            <div class="p-6 space-y-6">
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >Server Host</label
-                >
-                <input
-                  class="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-gray-900 dark:text-white"
-                  v-model="hostInput"
-                  placeholder="localhost:1780"
-                />
-              </div>
-
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >Theme</label
-                >
-                <div
-                  class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700"
-                >
-                  <div class="flex items-center gap-2">
-                    <span
-                      class="mdi mdi-white-balance-sunny text-yellow-500"
-                      v-if="settings.theme === 'light'"
-                    ></span>
-                    <span
-                      class="mdi mdi-weather-night text-blue-400"
-                      v-else
-                    ></span>
-                    <span
-                      class="font-medium text-gray-900 dark:text-white capitalize"
-                      >{{ settings.theme }} Mode</span
-                    >
-                  </div>
-                  <label
-                    class="relative inline-flex items-center cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      :checked="settings.theme === 'dark'"
-                      @change="
-                        settings.setTheme(
-                          ($event.target as HTMLInputElement).checked
-                            ? 'dark'
-                            : 'light'
-                        )
-                      "
-                      class="sr-only peer"
-                    />
-                    <div
-                      class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
-                    ></div>
-                  </label>
-                </div>
-              </div>
-
-              <div class="space-y-3">
-                <label
-                  class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer"
-                >
-                  <span class="font-medium text-gray-900 dark:text-white"
-                    >Auto Connect</span
-                  >
-                  <div class="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      v-model="settings.autoConnect"
-                      class="sr-only peer"
-                    />
-                    <div
-                      class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
-                    ></div>
-                  </div>
-                </label>
-
-                <label
-                  class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer"
-                >
-                  <span class="font-medium text-gray-900 dark:text-white"
-                    >Show Empty Groups</span
-                  >
-                  <div class="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      v-model="settings.showEmptyGroups"
-                      class="sr-only peer"
-                    />
-                    <div
-                      class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
-                    ></div>
-                  </div>
-                </label>
-
-              </div>
-
-              <!-- Global Volume Settings -->
-              <div class="pt-4 border-t border-gray-100 dark:border-gray-800">
-                <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Volume Control</h4>
-                
-                <div class="space-y-3">
-                   <label class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
-                      <div>
-                        <span class="block font-medium text-gray-900 dark:text-white">Control Mode</span>
-                        <span class="text-xs text-gray-500 dark:text-gray-400">Global default for volume sliders</span>
-                      </div>
-                      <div class="relative inline-flex items-center cursor-pointer">
-                        <select 
-                            v-model="settings.globalVolumeControlMode"
-                            class="bg-transparent border-none text-right focus:ring-0 text-sm font-medium text-blue-600 dark:text-blue-400 cursor-pointer outline-none"
-                        >
-                            <option value="linear">Linear</option>
-                            <option value="nonlinear">Non-Linear</option>
-                        </select>
-                      </div>
-                   </label>
-
-                   <div v-if="settings.globalVolumeControlMode === 'nonlinear'" class="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                      <div class="flex items-center justify-between mb-2">
-                        <span class="font-medium text-gray-900 dark:text-white text-sm">Control Curve (Exponent)</span>
-                        <span class="text-xs font-mono bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded text-gray-700 dark:text-gray-300">
-                          {{ settings.globalVolumeExponent }}
-                        </span>
-                      </div>
-                      <input 
-                        type="range"
-                        v-model.number="settings.globalVolumeExponent"
-                        min="1.0"
-                        max="5.0"
-                        step="0.1"
-                        class="w-full h-2 bg-gray-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                      />
-                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                         Higher values provide more precision at low volumes.
-                       </p>
-                   </div>
-                </div>
-              </div>
-
-              <!-- Support Section -->
-              <div class="pt-4 border-t border-gray-100 dark:border-gray-800">
-                <a
-                  href="https://paypal.me/NaturalCloud"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="w-full flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg shadow-sm transition-all font-medium"
-                >
-                  <span class="mdi mdi-heart"></span>
-                  <span>Support Development</span>
-                </a>
-                <p
-                  class="mt-2 text-xs text-center text-gray-500 dark:text-gray-400"
-                >
-                  Help keep this project alive with a donation
-                </p>
-              </div>
-
-              <!-- Permissions Section -->
-              <div class="pt-4 border-t border-gray-100 dark:border-gray-800">
-                <button
-                  @click="promptForPermissionsChange"
-                  class="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-                >
-                  <div class="flex items-center gap-2">
-                    <span class="mdi mdi-shield-lock-outline text-lg"></span>
-                    <span class="font-medium text-gray-900 dark:text-white"
-                      >Change Permissions</span
-                    >
-                  </div>
-                  <span class="mdi mdi-chevron-right text-gray-400"></span>
-                </button>
-                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  Configure access controls and feature permissions
-                </p>
-              </div>
-            </div>
-
-            <div
-              class="px-6 py-4 bg-gray-50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3"
-            >
-              <button
-                class="px-4 py-2 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                @click="closeAppSettings"
-              >
-                Cancel
-              </button>
-              <button
-                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
-                @click="applyAppSettings"
-              >
-                Apply
-              </button>
-            </div>
-          </div>
-        </div>
-      </Transition>
+      <AppSettingsModal
+        :open="appModal.open"
+        @close="closeAppSettings"
+        @change-permissions="promptForPermissionsChange"
+      />
 
       <!-- Create Group Modal -->
-      <Transition
-        enter-active-class="transition duration-200 ease-out"
-        enter-from-class="opacity-0"
-        enter-to-class="opacity-100"
-        leave-active-class="transition duration-150 ease-in"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
-      >
-        <div
-          v-if="createGroupModal.open"
-          class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          @click.self="closeCreateGroup"
-        >
-          <div
-            class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-200 dark:border-gray-800 transform transition-all"
-            @click.stop
-          >
-            <div
-              class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between"
-            >
-              <h3 class="text-lg font-bold text-gray-900 dark:text-white">
-                Create New Group
-              </h3>
-              <button
-                @click="closeCreateGroup"
-                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-              >
-                <span class="mdi mdi-close text-xl"></span>
-              </button>
-            </div>
-
-            <div class="p-6 space-y-6">
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >Stream</label
-                >
-                <div class="relative">
-                  <select
-                    v-model="createGroupModal.streamId"
-                    class="w-full pl-4 pr-10 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-gray-900 dark:text-white"
-                  >
-                    <option
-                      v-for="s in snapcast.filteredStreams"
-                      :key="s.id"
-                      :value="s.id"
-                    >
-                      {{ getStreamName(s) }}
-                    </option>
-                  </select>
-                  <span
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                  >
-                    <span class="mdi mdi-chevron-down"></span>
-                  </span>
-                </div>
-              </div>
-
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >Select Clients</label
-                >
-                <div class="max-h-48 overflow-y-auto space-y-2 p-1">
-                  <label
-                    v-for="c in availableClientsForNewGroup"
-                    :key="c.id"
-                    class="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer transition-colors"
-                  >
-                    <div class="flex items-center gap-2 flex-1">
-                      <!-- Online/Offline Indicator -->
-                      <span
-                        class="w-2 h-2 rounded-full flex-shrink-0"
-                        :class="
-                          c.connected
-                            ? 'bg-green-500'
-                            : 'bg-gray-400 dark:bg-gray-600'
-                        "
-                      ></span>
-                      <span
-                        class="font-medium text-gray-700 dark:text-gray-200 truncate"
-                        >{{ c.config.name || c.host.name }}</span
-                      >
-                      <span
-                        v-if="!c.connected"
-                        class="px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded flex-shrink-0"
-                      >
-                        Offline
-                      </span>
-                    </div>
-                    <div
-                      class="relative inline-flex items-center cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        :value="c.id"
-                        v-model="createGroupModal.clientIds"
-                        class="sr-only peer"
-                      />
-                      <div
-                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
-                      ></div>
-                    </div>
-                  </label>
-                </div>
-                <p
-                  v-if="availableClientsForNewGroup.length === 0"
-                  class="mt-3 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-900/30"
-                >
-                  All clients are already assigned to groups. You can move
-                  clients between groups using group settings.
-                </p>
-              </div>
-            </div>
-
-            <div
-              class="px-6 py-4 bg-gray-50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3"
-            >
-              <button
-                class="px-4 py-2 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                @click="closeCreateGroup"
-              >
-                Cancel
-              </button>
-              <button
-                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                @click="createNewGroup"
-                :disabled="createGroupModal.clientIds.length === 0"
-              >
-                Create Group
-              </button>
-            </div>
-          </div>
-        </div>
-      </Transition>
+      <CreateGroupModal
+        :open="createGroupModal.open"
+        @close="closeCreateGroup"
+      />
     </template>
 
     <!-- Server Info Modal -->
@@ -1535,6 +810,7 @@ import { useSnapcastStore } from "./stores/snapcast";
 import { useSettingsStore } from "./stores/settings"; // Force reload
 import { useSnapStream } from "@/composables/useSnapStream";
 import { useAuthStore } from "./stores/auth";
+import { useZoneOrder } from "@/composables/useZoneOrder";
 import type { Client, Group } from "./stores/snapcast";
 import type { AuthPermissions } from "./stores/auth";
 import BrowserPlayer from "@/components/BrowserPlayer.vue";
@@ -1542,6 +818,11 @@ import Toast from "@/components/Toast.vue";
 import LoadingSpinner from "@/components/LoadingSpinner.vue";
 import VolumeControl from "@/components/VolumeControl.vue";
 import ZoneControlModal from "@/components/ZoneControlModal.vue";
+import GroupFilterModal from "@/components/GroupFilterModal.vue";
+import ClientDetailsModal from "@/components/ClientDetailsModal.vue";
+import ClientSettingsModal from "@/components/ClientSettingsModal.vue";
+import AppSettingsModal from "@/components/AppSettingsModal.vue";
+import CreateGroupModal from "@/components/CreateGroupModal.vue";
 
 // Zone Control Modal State
 // Zone Control Modal State
@@ -1595,90 +876,23 @@ const showingUnlockForPermissions = ref(false);
 
 // Client ordering helpers
 const showGroupFilter = ref(false);
-const draggedIndex = ref<number | null>(null);
-const dragOverIndex = ref<number | null>(null);
 
-const sortedGroups = computed(() => {
-  let groups = [...snapcast.filteredGroups];
-
-  // Filter out hidden groups
-  groups = groups.filter((g) => !settings.hiddenGroups.includes(g.id));
-
-  if (!settings.showEmptyGroups) {
-    groups = groups.filter((g) => g.clients.length > 0);
-  }
-
-  // Filter out the group that contains the browser player client
-  // We now show this in the BrowserPlayer component instead
-  if (snapcast.browserPlayerId) {
-    groups = groups.filter(
-      (g) => !g.clients.some((c) => c.id === snapcast.browserPlayerId)
-    );
-  }
-
-  return groups.sort((a, b) => {
-    // 0. Browser Player Group always last (identified by client name "SnapCtrl")
-    const isBrowserA = a.clients.some((c) => c.config.name === "SnapCtrl");
-    const isBrowserB = b.clients.some((c) => c.config.name === "SnapCtrl");
-
-    if (isBrowserA && !isBrowserB) return 1;
-    if (!isBrowserA && isBrowserB) return -1;
-
-    // 1. Custom order
-    const indexA = settings.customGroupOrder.indexOf(a.id);
-    const indexB = settings.customGroupOrder.indexOf(b.id);
-
-    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-    if (indexA !== -1) return -1;
-    if (indexB !== -1) return 1;
-
-
-
-    // 3. Name
-    return a.name.localeCompare(b.name);
-  });
+const {
+  sortedZones: sortedGroups,
+  moveInCustomOrder,
+  isBrowserZone: isBrowserGroup,
+} = useZoneOrder(computed(() => snapcast.filteredGroups), {
+  hiddenZoneIds: computed(() => settings.hiddenGroups),
+  showEmptyZones: computed(() => settings.showEmptyGroups),
+  browserPlayerId: computed(() => snapcast.browserPlayerId),
 });
-
-// Groups ordered for filter modal (respects custom order)
-const orderedGroupsForFilter = computed(() => {
-  const allGroups = [...snapcast.filteredGroups];
-
-  // Separate browser player group
-  const browserGroup = allGroups.find((g) =>
-    g.clients.some((c) => c.config.name === "SnapCtrl")
-  );
-  const regularGroups = allGroups.filter(
-    (g) => !g.clients.some((c) => c.config.name === "SnapCtrl")
-  );
-
-  // Sort regular groups by custom order
-  const sorted = regularGroups.sort((a, b) => {
-    const indexA = settings.customGroupOrder.indexOf(a.id);
-    const indexB = settings.customGroupOrder.indexOf(b.id);
-
-    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-    if (indexA !== -1) return -1;
-    if (indexB !== -1) return 1;
-    return a.name.localeCompare(b.name);
-  });
-
-  // Add browser group at the end if it exists
-  if (browserGroup) {
-    sorted.push(browserGroup);
-  }
-
-  return sorted;
-});
-
-// Drag & drop handlers
-const draggedGroupId = ref<string | null>(null);
 
 function handleMainDragStart(group: Group, event: DragEvent) {
-  draggedGroupId.value = group.id;
   if (event.dataTransfer) {
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", group.id);
   }
+  draggedGroupId.value = group.id;
 }
 
 function handleMainDragOver(group: Group, event: DragEvent) {
@@ -1693,141 +907,17 @@ function handleMainDragOver(group: Group, event: DragEvent) {
 function handleMainDrop(targetGroup: Group, event: DragEvent) {
   event.preventDefault();
   if (!draggedGroupId.value || draggedGroupId.value === targetGroup.id) return;
-
-  const sourceId = draggedGroupId.value;
-  const targetId = targetGroup.id;
-
-  // Prevent moving the browser player group if strictly enforced,
-  // but the sort logic puts it at the end anyway.
-  // The existing filter modal prevents it, so we should too for consistency.
-  const sourceGroup = snapcast.groups.find((g) => g.id === sourceId);
-  if (
-    sourceGroup &&
-    sourceGroup.clients.some((c) => c.config.name === "SnapCtrl")
-  ) {
-    return;
-  }
-
-  let newOrder = [...settings.customGroupOrder];
-
-  // If order is empty, initialize it with current sorted view to avoid jumping
-  if (newOrder.length === 0) {
-    newOrder = sortedGroups.value
-      .filter((g) => !g.clients.some((c) => c.config.name === "SnapCtrl"))
-      .map((g) => g.id);
-  }
-
-  // Ensure IDs exist in the list (if they were missing for some reason)
-  if (!newOrder.includes(sourceId)) newOrder.push(sourceId);
-  if (!newOrder.includes(targetId)) newOrder.push(targetId);
-
-  // Remove source
-  newOrder = newOrder.filter((id) => id !== sourceId);
-
-  // Insert before target
-  const targetIndex = newOrder.indexOf(targetId);
-  if (targetIndex !== -1) {
-    newOrder.splice(targetIndex, 0, sourceId);
-  } else {
-    newOrder.push(sourceId);
-  }
-
-  settings.setCustomGroupOrder(newOrder);
+  moveInCustomOrder(draggedGroupId.value, targetGroup.id);
   draggedGroupId.value = null;
-}
-
-function isBrowserGroup(group: Group): boolean {
-  return group.clients.some((c) => c.config.name === "SnapCtrl");
 }
 
 function handleMainDragEnd() {
   draggedGroupId.value = null;
 }
 
-function handleDragStart(index: number, event: DragEvent) {
-  draggedIndex.value = index;
-  if (event.dataTransfer) {
-    event.dataTransfer.effectAllowed = "move";
-  }
-}
-
-function handleDragOver(index: number, event: DragEvent) {
-  event.preventDefault();
-  dragOverIndex.value = index;
-  if (event.dataTransfer) {
-    event.dataTransfer.dropEffect = "move";
-  }
-}
-
-function handleDrop(index: number, event: DragEvent) {
-  event.preventDefault();
-  if (draggedIndex.value === null || draggedIndex.value === index) return;
-
-  const groups = [...orderedGroupsForFilter.value];
-  const draggedGroup = groups[draggedIndex.value];
-
-  // Safety check
-  if (!draggedGroup) {
-    draggedIndex.value = null;
-    dragOverIndex.value = null;
-    return;
-  }
-
-  // Don't allow reordering browser player group
-  if (draggedGroup.clients.some((c) => c.config.name === "SnapCtrl")) {
-    draggedIndex.value = null;
-    dragOverIndex.value = null;
-    return;
-  }
-
-  // Remove dragged item and insert at new position
-  groups.splice(draggedIndex.value, 1);
-  groups.splice(index, 0, draggedGroup);
-
-  // Filter out browser player group before updating custom order
-  const newOrder = groups
-    .filter((g) => !g.clients.some((c) => c.config.name === "SnapCtrl"))
-    .map((g) => g.id);
-
-  settings.setCustomGroupOrder(newOrder);
-  draggedIndex.value = null;
-  dragOverIndex.value = null;
-}
-
-function handleDragEnd() {
-  draggedIndex.value = null;
-  dragOverIndex.value = null;
-}
+const draggedGroupId = ref<string | null>(null);
 
 const appVersion = computed(() => pkg.version || "0.0.0");
-
-const toggleGroupVisibility = (groupId: string) => {
-  const index = settings.hiddenGroups.indexOf(groupId);
-  if (index === -1) {
-    settings.hiddenGroups.push(groupId);
-  } else {
-    settings.hiddenGroups.splice(index, 1);
-  }
-};
-
-const getGroupColor = (groupId: string) => {
-  const colors = [
-    "bg-red-500",
-    "bg-blue-500",
-    "bg-green-500",
-    "bg-yellow-500",
-    "bg-purple-500",
-    "bg-pink-500",
-    "bg-indigo-500",
-    "bg-teal-500",
-  ];
-  let hash = 0;
-  for (let i = 0; i < groupId.length; i++) {
-    hash = groupId.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const index = Math.abs(hash) % colors.length;
-  return colors[index];
-};
 
 function getDisplayClients(group: Group): Client[] {
   // Filter clients based on permissions
@@ -2210,63 +1300,19 @@ async function removeOfflineClients() {
   }
 }
 
-// Delete client from client modal
-async function deleteClientFromModal() {
-  if (!clientModal.value.clientId) return;
-
-  const clientId = clientModal.value.clientId;
-  const clientName = clientModal.value.name || clientId;
-
-  if (
-    confirm(
-      `Are you sure you want to delete "${clientName}"? This action cannot be undone.`
-    )
-  ) {
-    try {
-      await snapcast.deleteClient(clientId);
-      closeClientSettings();
-    } catch (error) {
-      console.error(`Failed to delete client ${clientId}:`, error);
-      alert(`Failed to delete client: ${error}`);
-    }
-  }
-}
-
 // Client modal state
 const clientModal = ref<{
   open: boolean;
-  clientId: string | null;
-  name: string;
-  latency: number;
-}>({ open: false, clientId: null, name: "", latency: 0 });
+  client: Client | null;
+}>({ open: false, client: null });
 function openClientSettings(client: Client) {
   clientModal.value = {
     open: true,
-    clientId: client.id,
-    name: client.config.name,
-    latency: client.config.latency,
+    client,
   };
 }
 function closeClientSettings() {
   clientModal.value.open = false;
-}
-async function applyClientSettings() {
-  if (!clientModal.value.clientId) return;
-  await snapcast.setClientName(
-    clientModal.value.clientId,
-    clientModal.value.name
-  );
-  await snapcast.setClientLatency(
-    clientModal.value.clientId,
-    clientModal.value.latency
-  );
-  closeClientSettings();
-}
-
-// Helper to format last seen timestamp
-function formatLastSeen(sec: number): string {
-  if (!sec) return "Never";
-  return new Date(sec * 1000).toLocaleString();
 }
 
 // Client Details Modal
@@ -2287,70 +1333,14 @@ function closeClientDetails() {
 }
 
 // Create group modal state
-const createGroupModal = ref<{
-  open: boolean;
-  clientIds: string[];
-  streamId: string | null;
-}>({
-  open: false,
-  clientIds: [],
-  streamId: null,
-});
-
-const availableClientsForNewGroup = computed(() => {
-  // Return all clients - user can create groups with any clients
-  // Snapcast will handle moving clients between groups
-  return snapcast.filteredClients;
-});
+const createGroupModal = ref<{ open: boolean }>({ open: false });
 
 function openCreateGroup() {
-  // Pre-select first stream if available
-  createGroupModal.value = {
-    open: true,
-    clientIds: [],
-    streamId:
-      snapcast.filteredStreams.length > 0
-        ? snapcast.filteredStreams[0]?.id ?? null
-        : null,
-  };
+  createGroupModal.value.open = true;
 }
 
 function closeCreateGroup() {
   createGroupModal.value.open = false;
-}
-
-async function createNewGroup() {
-  if (createGroupModal.value.clientIds.length === 0) return;
-  if (!createGroupModal.value.streamId) return;
-
-  try {
-    // Create group by setting clients
-
-    const firstClientId = createGroupModal.value.clientIds[0];
-
-    // Find an empty group or the system will create one
-    // Set the stream for the new group
-    await snapcast.setGroupClients("", createGroupModal.value.clientIds);
-
-    // Refresh to get the new group ID and then set its stream
-    await snapcast.getServerStatus();
-
-    // Find the group that has our clients
-    const newGroup = snapcast.groups.find((g) =>
-      g.clients.some((c) => createGroupModal.value.clientIds.includes(c.id))
-    );
-
-    if (newGroup && createGroupModal.value.streamId) {
-      await snapcast.setGroupStream(
-        newGroup.id,
-        createGroupModal.value.streamId
-      );
-    }
-
-    closeCreateGroup();
-  } catch (error) {
-    console.error("Failed to create group:", error);
-  }
 }
 
 async function refreshStatus() {
@@ -2369,10 +1359,6 @@ function openAppSettings() {
 }
 function closeAppSettings() {
   appModal.value.open = false;
-}
-function applyAppSettings() {
-  updateHost();
-  closeAppSettings();
 }
 
 import Tooltip from "@/components/Tooltip.vue";
