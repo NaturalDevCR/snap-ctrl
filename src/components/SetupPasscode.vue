@@ -1,6 +1,7 @@
 <template>
   <div
     class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-gradient-to-br from-blue-600 to-indigo-700"
+    @click.self="handleCancel"
   >
     <div
       class="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 p-8"
@@ -12,10 +13,10 @@
           <span class="mdi mdi-lock-outline text-4xl"></span>
         </div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          Setup Passcode
+          {{ title }}
         </h1>
         <p class="text-gray-500 dark:text-gray-400">
-          Create a passcode to secure your Snapcast control
+          {{ description }}
         </p>
       </div>
 
@@ -84,7 +85,16 @@
           type="submit"
           class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900"
         >
-          Continue to Permissions
+          {{ submitLabel }}
+        </button>
+
+        <button
+          v-if="canCancel"
+          type="button"
+          class="w-full py-3 px-4 text-gray-600 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+          @click="handleCancel"
+        >
+          Cancel
         </button>
       </form>
     </div>
@@ -94,8 +104,24 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
+const props = withDefaults(
+  defineProps<{
+    title?: string;
+    description?: string;
+    submitLabel?: string;
+    canCancel?: boolean;
+  }>(),
+  {
+    title: "Setup Passcode",
+    description: "Create a passcode to secure your Snapcast control",
+    submitLabel: "Continue to Permissions",
+    canCancel: false,
+  }
+);
+
 const emit = defineEmits<{
   complete: [passcode: string];
+  cancel: [];
 }>();
 
 const passcode = ref("");
@@ -116,5 +142,14 @@ function handleSubmit() {
   }
 
   emit("complete", passcode.value);
+}
+
+function handleCancel() {
+  if (!props.canCancel) return;
+
+  passcode.value = "";
+  confirmPasscode.value = "";
+  error.value = "";
+  emit("cancel");
 }
 </script>

@@ -7,8 +7,20 @@
 
     <!-- Setup Passcode Flow -->
     <SetupPasscode
-      v-if="auth.requiresSetup && !showingPermissionsSetup"
+      v-if="showingPasscodeSetup || (auth.requiresSetup && !showingPermissionsSetup)"
+      title="Enable Authentication"
+      description="Create a passcode to protect settings and permissions."
+      submit-label="Enable Authentication"
+      :can-cancel="!auth.requiresSetup"
       @complete="handlePasscodeSetup"
+      @cancel="handlePasscodeSetupCancel"
+    />
+
+    <!-- Unlock Prompt (when locked) -->
+    <UnlockPrompt
+      v-if="auth.isAuthEnabled && auth.isLocked && !auth.requiresSetup"
+      :can-cancel="false"
+      @unlock="auth.unlock()"
     />
 
     <!-- Main App UI (only shown when authenticated and unlocked) -->
@@ -20,13 +32,6 @@
         :initial-permissions="auth.permissions"
         @save="handleInitialPermissionsSetup"
         @cancel="() => {}"
-      />
-
-      <!-- Unlock Prompt (when locked) -->
-      <UnlockPrompt
-        v-if="auth.isLocked && !auth.requiresSetup"
-        :can-cancel="false"
-        @unlock="auth.unlock()"
       />
 
       <!-- Change Permissions Modal -->
@@ -78,12 +83,10 @@
                     snapcast.isConnected,
                   'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-900/30':
                     snapcast.isConnecting,
-                  'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/30':
-                    snapcast.connectionError,
+                  'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-900/30':
+                    connectionStatus === 'setup',
                   'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700':
-                    !snapcast.isConnected &&
-                    !snapcast.isConnecting &&
-                    !snapcast.connectionError,
+                    connectionStatus === 'disconnected',
                 }"
               >
                 <span class="relative flex h-2 w-2">
@@ -95,9 +98,9 @@
                     class="relative inline-flex rounded-full h-2 w-2 bg-current"
                   ></span>
                 </span>
-                <span v-if="snapcast.isConnecting">Connecting...</span>
-                <span v-else-if="snapcast.isConnected">Connected</span>
-                <span v-else-if="snapcast.connectionError">Error</span>
+                <span v-if="connectionStatus === 'connecting'">Connecting...</span>
+                <span v-else-if="connectionStatus === 'connected'">Connected</span>
+                <span v-else-if="connectionStatus === 'setup'">Setup needed</span>
                 <span v-else>Disconnected</span>
               </div>
             </div>
@@ -138,90 +141,228 @@
         </div>
       </header>
 
-      <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
         <div
           v-if="!snapcast.isConnected && !snapcast.isConnecting"
-          class="flex flex-col items-center justify-center min-h-[60vh]"
+          class="grid min-h-[60vh] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]"
         >
-          <div
-            class="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 p-8 text-center"
+          <section
+            class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
           >
-            <div
-              class="mb-6 inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-            >
-              <span class="mdi mdi-cast-audio text-3xl"></span>
-            </div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Connect to Server
-            </h2>
-            <p class="text-gray-500 dark:text-gray-400 mb-8">
-              Enter your Snapcast server address to start controlling your
-              multiroom audio system.
-            </p>
-
-            <!-- Initial Setup Info -->
-            <div
-              v-if="showingPermissionsSetup"
-              class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/30 rounded-lg"
-            >
-              <div class="flex items-start gap-3">
-                <span
-                  class="mdi mdi-information-outline text-blue-600 dark:text-blue-400 text-xl shrink-0"
-                ></span>
-                <div>
-                  <p
-                    class="text-sm font-medium text-blue-900 dark:text-blue-300 mb-1"
-                  >
-                    Initial Setup
-                  </p>
-                  <p class="text-sm text-blue-700 dark:text-blue-400">
-                    Connect to your server to load groups, sources, and clients.
-                    You'll configure permissions after connecting.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div
-              v-if="snapcast.connectionError"
-              class="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/30 text-red-700 dark:text-red-400 text-sm text-left flex items-start gap-3"
-            >
-              <span class="mdi mdi-alert-circle text-lg shrink-0"></span>
-              <span>{{ snapcast.connectionError }}</span>
-            </div>
-
-            <div class="flex flex-col gap-4">
-              <!-- HA addon mode: show read-only Snapcast info, no manual host entry -->
-              <div v-if="haSnapcastInfo" class="relative">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  <span class="mdi mdi-home-assistant"></span>
-                </span>
-                <div class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-500 dark:text-gray-400 text-sm">
-                  Snapcast: <span class="font-mono text-gray-700 dark:text-gray-200">{{ haSnapcastInfo }}</span>
-                  <span class="ml-2 text-xs text-gray-400">(via addon proxy)</span>
-                </div>
-              </div>
-              <div v-else class="relative">
-                <span
-                  class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            <div class="border-b border-gray-100 p-6 dark:border-slate-800 sm:p-8">
+              <div class="mb-6 flex items-center gap-3">
+                <div
+                  class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300"
                 >
-                  <span class="mdi mdi-server"></span>
-                </span>
-                <input
-                  v-model="hostInput"
-                  @keyup.enter="updateHost"
-                  placeholder="localhost:1780"
-                  class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400"
-                />
+                  <span class="mdi mdi-cast-audio text-2xl"></span>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-cyan-700 dark:text-cyan-300">
+                    Snapcast server
+                  </p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    Default target: localhost:1780
+                  </p>
+                </div>
               </div>
-              <button
-                @click="updateHost"
-                class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900"
+
+              <h2
+                class="max-w-2xl text-3xl font-bold leading-tight text-gray-950 dark:text-white sm:text-4xl"
               >
-                Connect
-              </button>
+                {{ connectionPanelTitle }}
+              </h2>
+              <p class="mt-3 max-w-2xl text-base leading-7 text-gray-600 dark:text-gray-300">
+                {{ connectionPanelDescription }}
+              </p>
             </div>
-          </div>
+
+            <div class="p-6 sm:p-8">
+              <!-- Initial Setup Info -->
+              <div
+                v-if="showingPermissionsSetup"
+                class="mb-6 rounded-xl border border-cyan-200 bg-cyan-50 p-4 text-cyan-800 dark:border-cyan-900/50 dark:bg-cyan-950/30 dark:text-cyan-200"
+              >
+                <div class="flex items-start gap-3">
+                  <span
+                    class="mdi mdi-information-outline shrink-0 text-xl"
+                  ></span>
+                  <div>
+                    <p class="text-sm font-semibold">Initial setup</p>
+                    <p class="mt-1 text-sm leading-6">
+                      Connect to your server to load groups, sources, and
+                      clients. You'll configure permissions after connecting.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                v-if="connectionFormMessage"
+                class="mb-6 rounded-xl border p-4 text-sm"
+                :class="
+                  connectionFormTone === 'error'
+                    ? 'border-red-200 bg-red-50 text-red-800 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-200'
+                    : 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200'
+                "
+                aria-live="polite"
+              >
+                <div class="flex items-start gap-3">
+                  <span
+                    class="mdi shrink-0 text-lg"
+                    :class="
+                      connectionFormTone === 'error'
+                        ? 'mdi-alert-circle-outline'
+                        : 'mdi-map-marker-question-outline'
+                    "
+                  ></span>
+                  <span>{{ connectionFormMessage }}</span>
+                </div>
+              </div>
+
+              <form class="space-y-5" @submit.prevent="updateHost">
+                <!-- HA addon mode: show read-only Snapcast info, no manual host entry -->
+                <div v-if="haSnapcastInfo">
+                  <label
+                    class="mb-2 block text-sm font-semibold text-gray-800 dark:text-gray-200"
+                  >
+                    Home Assistant proxy
+                  </label>
+                  <div
+                    class="flex min-h-12 items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300"
+                  >
+                    <span class="mdi mdi-home-assistant text-lg text-cyan-600 dark:text-cyan-300"></span>
+                    <span>
+                      Snapcast:
+                      <span class="font-mono text-gray-900 dark:text-white">
+                        {{ haSnapcastInfo }}
+                      </span>
+                      <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                        via addon proxy
+                      </span>
+                    </span>
+                  </div>
+                </div>
+
+                <div v-else>
+                  <label
+                    for="snapcast-host"
+                    class="mb-2 block text-sm font-semibold text-gray-800 dark:text-gray-200"
+                  >
+                    IP address or hostname
+                  </label>
+                  <div class="relative">
+                    <span
+                      class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                    >
+                      <span class="mdi mdi-server-network"></span>
+                    </span>
+                    <input
+                      id="snapcast-host"
+                      v-model="hostInput"
+                      name="snapcast-host"
+                      type="text"
+                      inputmode="url"
+                      autocomplete="off"
+                      enterkeyhint="go"
+                      aria-describedby="snapcast-host-help snapcast-host-error"
+                      placeholder="192.168.1.42:1780 or snapcast.local:1780"
+                      class="min-h-12 w-full rounded-xl border border-gray-300 bg-white py-3 pl-11 pr-4 text-base text-gray-950 outline-none transition-all placeholder:text-gray-400 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-cyan-400"
+                      @input="connectHostError = ''"
+                    />
+                  </div>
+                  <p
+                    id="snapcast-host-help"
+                    class="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400"
+                  >
+                    Include the Snapcast JSON-RPC port. The default is
+                    <span class="font-mono text-gray-700 dark:text-gray-200">
+                      1780
+                    </span>.
+                  </p>
+                  <p
+                    v-if="connectHostError"
+                    id="snapcast-host-error"
+                    class="mt-2 text-sm font-medium text-red-700 dark:text-red-300"
+                  >
+                    {{ connectHostError }}
+                  </p>
+                </div>
+
+                <div
+                  v-if="hostSuggestions.length > 0 && !haSnapcastInfo"
+                  class="flex flex-wrap gap-2"
+                >
+                  <button
+                    v-for="suggestion in hostSuggestions"
+                    :key="suggestion"
+                    type="button"
+                    class="rounded-lg border px-3 py-2 text-sm font-medium transition-all active:scale-[0.98]"
+                    :class="
+                      hostInput === suggestion
+                        ? 'border-cyan-300 bg-cyan-50 text-cyan-800 dark:border-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-200'
+                        : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300 hover:bg-gray-100 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 dark:hover:bg-slate-700'
+                    "
+                    @click="useHostSuggestion(suggestion)"
+                  >
+                    {{ suggestion }}
+                  </button>
+                </div>
+
+                <button
+                  type="submit"
+                  class="min-h-12 w-full rounded-xl bg-cyan-600 px-4 py-3 font-semibold text-white shadow-sm shadow-cyan-950/10 transition-all hover:bg-cyan-500 active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-cyan-500/25 dark:bg-cyan-500 dark:hover:bg-cyan-400"
+                >
+                  Connect to Snapcast
+                </button>
+              </form>
+            </div>
+          </section>
+
+          <aside
+            class="rounded-2xl border border-gray-200 bg-gray-50 p-6 dark:border-slate-800 dark:bg-slate-900/60"
+          >
+            <h3 class="text-base font-semibold text-gray-950 dark:text-white">
+              Where is Snapcast running?
+            </h3>
+            <div class="mt-5 space-y-4">
+              <div class="flex gap-3">
+                <span
+                  class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-sm font-semibold text-cyan-700 dark:bg-slate-800 dark:text-cyan-300"
+                >
+                  1
+                </span>
+                <p class="text-sm leading-6 text-gray-600 dark:text-gray-300">
+                  If this UI is installed on the same machine as Snapcast, keep
+                  <span class="font-mono text-gray-800 dark:text-gray-100">
+                    localhost:1780
+                  </span>.
+                </p>
+              </div>
+              <div class="flex gap-3">
+                <span
+                  class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-sm font-semibold text-cyan-700 dark:bg-slate-800 dark:text-cyan-300"
+                >
+                  2
+                </span>
+                <p class="text-sm leading-6 text-gray-600 dark:text-gray-300">
+                  If Snapcast is on another device, use that device's LAN IP or
+                  hostname.
+                </p>
+              </div>
+              <div class="flex gap-3">
+                <span
+                  class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-sm font-semibold text-cyan-700 dark:bg-slate-800 dark:text-cyan-300"
+                >
+                  3
+                </span>
+                <p class="text-sm leading-6 text-gray-600 dark:text-gray-300">
+                  Make sure port
+                  <span class="font-mono text-gray-800 dark:text-gray-100">1780</span>
+                  is reachable from this browser.
+                </p>
+              </div>
+            </div>
+          </aside>
         </div>
 
         <div
@@ -391,7 +532,7 @@
           </div>
 
           <div
-            v-if="snapcast.groups.length === 0"
+            v-if="snapcast.isConnected && snapcast.groups.length === 0"
             class="flex flex-col items-center justify-center py-16 px-4 text-center border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50/50 dark:bg-slate-900/50"
           >
             <div
@@ -783,6 +924,8 @@
       <AppSettingsModal
         :open="appModal.open"
         @close="closeAppSettings"
+        @enable-authentication="handleEnableAuthentication"
+        @disable-authentication="handleDisableAuthentication"
         @change-permissions="promptForPermissionsChange"
       />
 
@@ -862,6 +1005,7 @@ const { clientId: browserClientId } = useSnapStream();
 
 const hostInput = ref(snapcast.host);
 const haSnapcastInfo = (window as any).__HA_SNAPCAST_INFO__ as string | undefined;
+const connectHostError = ref("");
 const refreshing = ref(false);
 
 
@@ -869,6 +1013,7 @@ const refreshing = ref(false);
 const showServerInfo = ref(false);
 
 // Setup flow state
+const showingPasscodeSetup = ref(false);
 const showingPermissionsSetup = ref(false);
 const tempPasscode = ref("");
 const showingPermissionsChange = ref(false);
@@ -918,6 +1063,79 @@ function handleMainDragEnd() {
 const draggedGroupId = ref<string | null>(null);
 
 const appVersion = computed(() => pkg.version || "0.0.0");
+const connectionStatus = computed(() => {
+  if (snapcast.isConnected) return "connected";
+  if (snapcast.isConnecting) return "connecting";
+  if (snapcast.connectionError) return "setup";
+  return "disconnected";
+});
+
+const isLoopbackTarget = computed(() => isLoopbackHost(snapcast.host));
+
+const connectionPanelTitle = computed(() => {
+  if (!snapcast.connectionError) return "Connect to Snapcast";
+  if (haSnapcastInfo) return "Check the Home Assistant proxy";
+  return "Tell SnapCtrl where your server is";
+});
+
+const connectionPanelDescription = computed(() => {
+  if (haSnapcastInfo) {
+    return "SnapCtrl is using the Home Assistant add-on proxy. If this fails, check the add-on configuration and Snapcast service.";
+  }
+
+  if (snapcast.connectionError && isLoopbackTarget.value) {
+    return "We tried localhost first. If Snapcast runs on another device, enter that device's IP address or hostname below.";
+  }
+
+  if (snapcast.connectionError) {
+    return "We could not reach the saved server address. Check the host, port, and network access, then try again.";
+  }
+
+  return "SnapCtrl will try the local server first. If Snapcast is on another device, use its LAN IP address or hostname.";
+});
+
+const connectionFormTone = computed<"warning" | "error">(() => {
+  if (connectHostError.value) return "error";
+  return "warning";
+});
+
+const connectionFormMessage = computed(() => {
+  if (connectHostError.value) return connectHostError.value;
+  if (!snapcast.connectionError) return "";
+  if (haSnapcastInfo) {
+    return "The add-on proxy could not reach Snapcast. Confirm the add-on host and port settings.";
+  }
+  if (isLoopbackTarget.value) {
+    return "Snapcast did not answer on localhost:1780. Enter the IP or hostname of the machine running Snapcast.";
+  }
+  return `Snapcast did not answer on ${snapcast.host}. Try another address or confirm port 1780 is open.`;
+});
+
+const hostSuggestions = computed(() => {
+  const suggestions = new Set<string>();
+  const pageHostname = window.location.hostname;
+
+  if (pageHostname && !isLoopbackHost(pageHostname)) {
+    suggestions.add(`${pageHostname}:1780`);
+  }
+
+  suggestions.add("localhost:1780");
+  suggestions.add("snapcast.local:1780");
+
+  return Array.from(suggestions);
+});
+
+function isLoopbackHost(value: string): boolean {
+  const host = value.trim().toLowerCase();
+  return (
+    host === "localhost" ||
+    host.startsWith("localhost:") ||
+    host === "127.0.0.1" ||
+    host.startsWith("127.0.0.1:") ||
+    host === "[::1]" ||
+    host.startsWith("[::1]:")
+  );
+}
 
 function getDisplayClients(group: Group): Client[] {
   // Filter clients based on permissions
@@ -997,9 +1215,22 @@ function getGroupName(group: Group): string {
 }
 
 function updateHost() {
-  snapcast.setHost(hostInput.value);
+  const nextHost = hostInput.value.trim();
+
+  if (!haSnapcastInfo && !nextHost) {
+    connectHostError.value = "Enter an IP address or hostname to continue.";
+    return;
+  }
+
+  connectHostError.value = "";
+  snapcast.setHost(nextHost);
   snapcast.disconnect();
   snapcast.connect();
+}
+
+function useHostSuggestion(host: string) {
+  hostInput.value = host;
+  connectHostError.value = "";
 }
 
 function toggleGroupMute(group: Group) {
@@ -1369,8 +1600,16 @@ import { getGroupDisplayName } from "@/utils/group-name";
 async function handlePasscodeSetup(passcode: string) {
   tempPasscode.value = passcode;
   await auth.setPasscode(passcode);
+  showingPasscodeSetup.value = false;
   // Set flag to show permissions config after connecting to server
   showingPermissionsSetup.value = true;
+}
+
+function handlePasscodeSetupCancel() {
+  showingPasscodeSetup.value = false;
+  if (auth.requiresSetup) {
+    auth.disableAuthentication();
+  }
 }
 
 function handleInitialPermissionsSetup(permissions: AuthPermissions) {
@@ -1389,8 +1628,28 @@ async function handlePermissionsChange(permissions: AuthPermissions) {
 }
 
 function promptForPermissionsChange() {
+  if (!auth.isAuthEnabled) {
+    handleEnableAuthentication();
+    return;
+  }
+
   // Show unlock prompt first
   showingUnlockForPermissions.value = true;
+}
+
+function handleEnableAuthentication() {
+  closeAppSettings();
+  showingPasscodeSetup.value = true;
+}
+
+function handleDisableAuthentication() {
+  auth.disableAuthentication();
+  showingPasscodeSetup.value = false;
+  showingPermissionsSetup.value = false;
+  showingPermissionsChange.value = false;
+  showingUnlockForPermissions.value = false;
+  tempPasscode.value = "";
+  closeAppSettings();
 }
 
 function handleUnlockForPermissions() {

@@ -185,6 +185,41 @@ describe("snapcast store — PR 1 network hygiene", () => {
     expect(statusCallsLater).toBe(statusCallsAtStart);
   });
 
+  it("does not retry forever after the first connection attempt fails", async () => {
+    vi.useFakeTimers();
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const store = useSnapcastStore();
+    useAuthStore();
+
+    store.connect();
+    const ws = FakeWebSocket.instances[0]!;
+    ws.onerror?.({});
+    ws.onclose?.({ wasClean: false, code: 1006, reason: "" });
+
+    vi.advanceTimersByTime(60_000);
+
+    expect(FakeWebSocket.instances).toHaveLength(1);
+    expect(store.isConnected).toBe(false);
+    expect(store.isConnecting).toBe(false);
+    errSpy.mockRestore();
+  });
+
+  it("keeps reconnecting after a previously working connection drops", async () => {
+    vi.useFakeTimers();
+    const store = useSnapcastStore();
+    useAuthStore();
+
+    store.connect();
+    const ws = FakeWebSocket.instances[0]!;
+    ws.open();
+    await Promise.resolve();
+
+    ws.close();
+    vi.advanceTimersByTime(1000);
+
+    expect(FakeWebSocket.instances).toHaveLength(2);
+  });
+
   it("processes responses for any id, not just id=1", async () => {
     const store = useSnapcastStore();
     useAuthStore();

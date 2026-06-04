@@ -2,6 +2,7 @@
 import { ref, watch } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useSettingsStore } from "@/stores/settings";
+import { useAuthStore } from "@/stores/auth";
 
 const props = defineProps<{
   open: boolean;
@@ -10,10 +11,13 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "close"): void;
   (e: "changePermissions"): void;
+  (e: "enableAuthentication"): void;
+  (e: "disableAuthentication"): void;
 }>();
 
 const snapcast = useSnapcastStore();
 const settings = useSettingsStore();
+const auth = useAuthStore();
 
 const hostInput = ref("");
 
@@ -29,6 +33,16 @@ watch(
 function apply() {
   snapcast.setHost(hostInput.value);
   emit("close");
+}
+
+function handleAuthenticationToggle(event: Event) {
+  const enabled = (event.target as HTMLInputElement).checked;
+
+  if (enabled) {
+    emit("enableAuthentication");
+  } else {
+    emit("disableAuthentication");
+  }
 }
 </script>
 
@@ -220,12 +234,47 @@ function apply() {
           </div>
 
           <div class="pt-4 border-t border-gray-100 dark:border-gray-800">
+            <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">
+              Authentication
+            </h4>
+
+            <label
+              class="flex items-center justify-between gap-4 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer"
+            >
+              <div class="flex items-start gap-2">
+                <span
+                  class="mdi mdi-shield-lock-outline text-lg text-gray-500 dark:text-gray-400"
+                ></span>
+                <div>
+                  <span class="block font-medium text-gray-900 dark:text-white">
+                    Require Passcode
+                  </span>
+                  <span class="block text-xs text-gray-500 dark:text-gray-400">
+                    Off by default. Enable it to protect settings and
+                    permissions.
+                  </span>
+                </div>
+              </div>
+              <div class="relative inline-flex items-center cursor-pointer shrink-0">
+                <input
+                  type="checkbox"
+                  :checked="auth.isAuthEnabled"
+                  class="sr-only peer"
+                  @change="handleAuthenticationToggle"
+                />
+                <div
+                  class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
+                ></div>
+              </div>
+            </label>
+
             <button
+              v-if="auth.isAuthEnabled"
               @click="emit('changePermissions')"
-              class="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              class="mt-3 w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
             >
               <div class="flex items-center gap-2">
-                <span class="mdi mdi-shield-lock-outline text-lg"></span>
+                <span class="mdi mdi-tune-variant text-lg"></span>
                 <span class="font-medium text-gray-900 dark:text-white"
                   >Change Permissions</span
                 >
@@ -233,7 +282,11 @@ function apply() {
               <span class="mdi mdi-chevron-right text-gray-400"></span>
             </button>
             <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-              Configure access controls and feature permissions
+              {{
+                auth.isAuthEnabled
+                  ? "Configure access controls and feature permissions"
+                  : "When authentication is off, all controls are available."
+              }}
             </p>
           </div>
         </div>

@@ -90,6 +90,7 @@ export const useSnapcastStore = defineStore(
     const streams = ref<Stream[]>([]);
     const websocket = ref<WebSocket | null>(null);
     const requestId = ref(1);
+    const hasConnectedSuccessfully = ref(false);
 
     // Track the browser player's ID to hide its temporary group
     const browserPlayerId = ref<string | null>(
@@ -143,6 +144,14 @@ export const useSnapcastStore = defineStore(
         .replace(/^https?:\/\//, "")
         .replace(/^wss?:\/\//, "")
         .replace(/\/$/, "");
+      if (cleanHost !== host.value) {
+        hasConnectedSuccessfully.value = false;
+        reconnectAttempts.value = 0;
+        if (reconnectTimeout) {
+          clearTimeout(reconnectTimeout);
+          reconnectTimeout = null;
+        }
+      }
       host.value = cleanHost;
     }
 
@@ -156,6 +165,14 @@ export const useSnapcastStore = defineStore(
     }
 
     function scheduleReconnect() {
+      if (!hasConnectedSuccessfully.value) {
+        return;
+      }
+
+      if (reconnectTimeout) {
+        return;
+      }
+
       if (manualDisconnect || reconnectAttempts.value >= maxReconnectAttempts) {
         if (reconnectAttempts.value >= maxReconnectAttempts) {
           connectionError.value =
@@ -232,6 +249,7 @@ export const useSnapcastStore = defineStore(
         isConnected.value = true;
         isConnecting.value = false;
         connectionError.value = null;
+        hasConnectedSuccessfully.value = true;
         reconnectAttempts.value = 0; // Reset on successful connection
         console.log("Connected to Snapcast server");
         getServerStatus();

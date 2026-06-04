@@ -27,6 +27,7 @@ export interface AuthPermissions {
 export const useAuthStore = defineStore(
   "auth",
   () => {
+    const authEnabled = ref(false);
     const passcodeHash = ref<string | null>(null);
     const isLocked = ref(false);
     const permissions = ref<AuthPermissions>({
@@ -48,8 +49,15 @@ export const useAuthStore = defineStore(
     });
 
     // Computed properties
-    const isAuthenticated = computed(() => passcodeHash.value !== null);
-    const requiresSetup = computed(() => passcodeHash.value === null);
+    const isAuthEnabled = computed(
+      () => authEnabled.value || passcodeHash.value !== null
+    );
+    const isAuthenticated = computed(
+      () => !isAuthEnabled.value || passcodeHash.value !== null
+    );
+    const requiresSetup = computed(
+      () => authEnabled.value && passcodeHash.value === null
+    );
 
     async function hashPasscode(passcode: string): Promise<string> {
       if (!window.crypto || !window.crypto.subtle) {
@@ -84,6 +92,7 @@ export const useAuthStore = defineStore(
     // Set new passcode (for initial setup or change)
     async function setPasscode(passcode: string): Promise<void> {
       const hash = await hashPasscode(passcode);
+      authEnabled.value = true;
       passcodeHash.value = hash;
       isLocked.value = false;
     }
@@ -113,6 +122,7 @@ export const useAuthStore = defineStore(
         | "canLinkClients"
       >
     ): boolean {
+      if (!isAuthEnabled.value) return true;
       return permissions.value[feature];
     }
 
@@ -121,6 +131,8 @@ export const useAuthStore = defineStore(
       type: "group" | "source" | "client",
       id: string
     ): boolean {
+      if (!isAuthEnabled.value) return true;
+
       const allowedKey =
         type === "group"
           ? "allowedGroups"
@@ -138,6 +150,8 @@ export const useAuthStore = defineStore(
       type: "group" | "source" | "client",
       entities: T[]
     ): T[] {
+      if (!isAuthEnabled.value) return entities;
+
       const allowedKey =
         type === "group"
           ? "allowedGroups"
@@ -153,6 +167,7 @@ export const useAuthStore = defineStore(
 
     // Lock the app (require passcode to unlock)
     function lock(): void {
+      if (!isAuthEnabled.value || !passcodeHash.value) return;
       isLocked.value = true;
     }
 
@@ -161,10 +176,7 @@ export const useAuthStore = defineStore(
       isLocked.value = false;
     }
 
-    // Reset all auth data (clear passcode and permissions)
-    function resetAuth(): void {
-      passcodeHash.value = null;
-      isLocked.value = false;
+    function resetPermissions(): void {
       permissions.value = {
         canAdjustVolumes: true,
         canRenameGroups: true,
@@ -184,17 +196,38 @@ export const useAuthStore = defineStore(
       };
     }
 
+    function enableAuthentication(): void {
+      authEnabled.value = true;
+      isLocked.value = false;
+    }
+
+    function disableAuthentication(): void {
+      authEnabled.value = false;
+      passcodeHash.value = null;
+      isLocked.value = false;
+      resetPermissions();
+    }
+
+    // Reset all auth data (clear passcode and permissions)
+    function resetAuth(): void {
+      disableAuthentication();
+    }
+
     return {
       // State
+      authEnabled,
       passcodeHash,
       isLocked,
       permissions,
 
       // Computed
+      isAuthEnabled,
       isAuthenticated,
       requiresSetup,
 
       // Methods
+      enableAuthentication,
+      disableAuthentication,
       setPasscode,
       verifyPasscode,
       updatePermissions,
@@ -209,7 +242,7 @@ export const useAuthStore = defineStore(
   {
     persist: {
       key: "snapcast-auth",
-      pick: ["passcodeHash", "isLocked", "permissions"],
+      pick: ["authEnabled", "passcodeHash", "isLocked", "permissions"],
     },
   }
 );

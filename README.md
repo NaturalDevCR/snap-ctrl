@@ -34,6 +34,12 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
 
 > **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
 
+### v0.3.2
+
+- **Changed**: Passcode authentication is now opt-in. Fresh installs open directly to the app, and users can enable `Require Passcode` from Application Settings when they want local access controls.
+- **Improved**: The first connection screen now treats `localhost:1780` as a default guess, then asks for the Snapcast server IP address or hostname if that guess fails. The screen includes clearer guidance, host suggestions, and no longer shows the disconnected `No groups found` empty state.
+- **Fixed**: Initial connection failures no longer trigger the reconnect loop. Automatic reconnect still works after a connection has succeeded at least once, but setup failures now wait for the user to correct the host.
+
 ### v0.3.1
 
 - **Security**: `Content-Security-Policy` is now sent as a response header from the HA addon nginx (and should be configured the same way in any other reverse proxy). The CSP via `<meta>` is kept as a fallback for direct static hosting, but `frame-ancestors` has been removed from the meta tag because per the CSP spec it is silently ignored there. The bundled `addon/nginx.conf` now emits the full policy (including `frame-ancestors 'self'`), plus `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, and `Referrer-Policy: strict-origin-when-cross-origin`. The README's Security Notes section documents the deployment-time requirement.
