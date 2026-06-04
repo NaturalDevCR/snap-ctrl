@@ -34,6 +34,10 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
 
 > **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
 
+### v0.3.3
+
+- **Fixed**: Browser Player cleanup now survives closed tabs and interrupted control WebSockets. Pending cleanup is retried after reconnect, duplicate cleanup instances are avoided, and stale temporary browser-player groups can be cleared from the UI even when Snapcast rejects `Server.DeleteClient` with an internal error.
+
 ### v0.3.2
 
 - **Changed**: Passcode authentication is now opt-in. Fresh installs open directly to the app, and users can enable `Require Passcode` from Application Settings when they want local access controls.

@@ -3,7 +3,7 @@
  * Orchestrates WebSocket connection, decoding, time sync, and playback
  */
 
-import { ref, computed, onUnmounted } from "vue";
+import { ref, computed, getCurrentInstance, onUnmounted } from "vue";
 import {
   parseMessage,
   parseCodecHeader,
@@ -19,6 +19,9 @@ import { createDecoder, type AudioDecoder } from "@/services/audio/decoders";
 import { TimeProvider } from "@/services/audio/time-provider";
 import { AudioStream } from "@/services/audio/audio-stream";
 
+const CLIENT_ID_STORAGE_KEY = "snapcast-client-id";
+const PENDING_CLIENT_CLEANUP_KEY = "snapcast-pending-client-cleanup";
+
 export function useSnapStream() {
   // Connection state
   const ws = ref<WebSocket | null>(null);
@@ -31,10 +34,10 @@ export function useSnapStream() {
   let manualStreamDisconnect = false;
   let lastConnectedHost = "";
   // Get or generate persistent Client ID immediately
-  let storedId = localStorage.getItem("snapcast-client-id");
+  let storedId = localStorage.getItem(CLIENT_ID_STORAGE_KEY);
   if (!storedId) {
     storedId = generateSecureMacLikeId();
-    localStorage.setItem("snapcast-client-id", storedId);
+    localStorage.setItem(CLIENT_ID_STORAGE_KEY, storedId);
   }
   const clientId = ref<string>(storedId);
 
@@ -48,6 +51,42 @@ export function useSnapStream() {
     return Array.from(bytes)
       .map((b) => b.toString(16).padStart(2, "0"))
       .join(":");
+  }
+
+  function readPendingClientCleanupIds(): string[] {
+    try {
+      const raw = localStorage.getItem(PENDING_CLIENT_CLEANUP_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((id): id is string => typeof id === "string" && id.length > 0);
+    } catch {
+      return [];
+    }
+  }
+
+  function writePendingClientCleanupIds(ids: string[]) {
+    const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+    if (uniqueIds.length === 0) {
+      localStorage.removeItem(PENDING_CLIENT_CLEANUP_KEY);
+      return;
+    }
+    localStorage.setItem(PENDING_CLIENT_CLEANUP_KEY, JSON.stringify(uniqueIds));
+  }
+
+  function queueClientCleanup(id: string) {
+    writePendingClientCleanupIds([...readPendingClientCleanupIds(), id]);
+  }
+
+  function clearQueuedClientCleanup(id: string) {
+    writePendingClientCleanupIds(
+      readPendingClientCleanupIds().filter((pendingId) => pendingId !== id)
+    );
+  }
+
+  function shouldRetryClientCleanup(error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return !/internal error|not found|no such client/i.test(message);
   }
 
   // Audio state
@@ -86,6 +125,7 @@ export function useSnapStream() {
   // Event handlers for AudioContext resume
   let handleVisibilityChange: (() => void) | null = null;
   let handleFocus: (() => void) | null = null;
+  let handleBeforeUnload: (() => void) | null = null;
 
   /**
    * Update gain node based on volume and mute states
@@ -430,7 +470,7 @@ export function useSnapStream() {
   /**
    * Disconnect from stream
    */
-  async function disconnect(): Promise<void> {
+  async function disconnect(): Promise<boolean> {
     manualStreamDisconnect = true;
     if (streamReconnectTimeout) {
       clearTimeout(streamReconnectTimeout);
@@ -451,22 +491,39 @@ export function useSnapStream() {
 
     // Clean up the browser player client from the server
     // This will automatically remove the orphaned group if it becomes empty
-    if (clientToDelete) {
-      try {
-        // Import snapcast store dynamically to avoid circular dependency
-        const { useSnapcastStore } = await import("@/stores/snapcast");
-        const snapcast = useSnapcastStore();
+    if (!clientToDelete) return true;
+    return cleanupBrowserClient(clientToDelete);
+  }
 
-        console.log(`Cleaning up browser player client: ${clientToDelete}`);
-        await snapcast.deleteClient(clientToDelete);
-      } catch (error) {
-        console.warn("Failed to cleanup browser player client:", error);
-        // Don't throw - cleanup failure shouldn't prevent disconnection
+  async function cleanupBrowserClient(clientIdToDelete = clientId.value) {
+    if (!clientIdToDelete) return true;
+
+    try {
+      // Import snapcast store dynamically to avoid circular dependency
+      const { useSnapcastStore } = await import("@/stores/snapcast");
+      const snapcast = useSnapcastStore();
+
+      console.log(`Cleaning up browser player client: ${clientIdToDelete}`);
+      await snapcast.deleteClient(clientIdToDelete);
+      clearQueuedClientCleanup(clientIdToDelete);
+      return true;
+    } catch (error) {
+      if (shouldRetryClientCleanup(error)) {
+        queueClientCleanup(clientIdToDelete);
+      } else {
+        clearQueuedClientCleanup(clientIdToDelete);
       }
+      console.warn("Failed to cleanup browser player client:", error);
+      return false;
     }
+  }
 
-    // Clear clientId after cleanup attempt
-    clientId.value = "";
+  async function retryPendingClientCleanups() {
+    const pendingClientIds = readPendingClientCleanupIds();
+    for (const pendingClientId of pendingClientIds) {
+      if (pendingClientId === clientId.value && connected.value) continue;
+      await cleanupBrowserClient(pendingClientId);
+    }
   }
 
   function deleteClientSync(clientIdToDelete: string, host: string) {
@@ -698,14 +755,21 @@ export function useSnapStream() {
     }
   }
 
-  // Cleanup on unmount
-  onUnmounted(() => {
-    disconnect();
-  });
+  // Cleanup on component unmount. Guarded so store/composable unit tests can
+  // instantiate the composable outside a component setup context.
+  if (getCurrentInstance()) {
+    onUnmounted(() => {
+      disconnect();
+      if (handleBeforeUnload) {
+        window.removeEventListener("beforeunload", handleBeforeUnload);
+        handleBeforeUnload = null;
+      }
+    });
+  }
 
   // Sync cleanup on page unload — must not be async
   if (typeof window !== "undefined") {
-    window.addEventListener("beforeunload", () => {
+    handleBeforeUnload = () => {
       const clientToDelete = clientId.value;
       if (ws.value) {
         try {
@@ -716,9 +780,11 @@ export function useSnapStream() {
         ws.value = null;
       }
       if (clientToDelete && lastConnectedHost) {
+        queueClientCleanup(clientToDelete);
         deleteClientSync(clientToDelete, lastConnectedHost);
       }
-    });
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
   }
 
   return {
@@ -745,6 +811,8 @@ export function useSnapStream() {
     setVolume,
     setAdditionalLatency,
     setInternalMute,
+    cleanupBrowserClient,
+    retryPendingClientCleanups,
     clientId,
   };
 }

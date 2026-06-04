@@ -951,7 +951,6 @@
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useSnapcastStore } from "./stores/snapcast";
 import { useSettingsStore } from "./stores/settings"; // Force reload
-import { useSnapStream } from "@/composables/useSnapStream";
 import { useAuthStore } from "./stores/auth";
 import { useZoneOrder } from "@/composables/useZoneOrder";
 import type { Client, Group } from "./stores/snapcast";
@@ -1001,7 +1000,6 @@ import pkg from "../package.json";
 const snapcast = useSnapcastStore();
 const settings = useSettingsStore();
 const auth = useAuthStore();
-const { clientId: browserClientId } = useSnapStream();
 
 const hostInput = ref(snapcast.host);
 const haSnapcastInfo = (window as any).__HA_SNAPCAST_INFO__ as string | undefined;

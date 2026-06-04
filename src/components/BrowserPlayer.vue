@@ -168,7 +168,7 @@
     leave-to-class="opacity-0 -translate-y-2"
   >
     <div
-      v-if="connected && currentGroup"
+      v-if="currentGroup"
       class="mt-2 mx-1 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-900/30 rounded-lg px-3 py-2 flex items-center justify-between shadow-sm"
     >
       <div class="flex items-center gap-2 min-w-0">
@@ -182,7 +182,7 @@
             {{ currentGroup.name }}
           </p>
           <p class="text-[10px] text-gray-500 dark:text-gray-400 truncate">
-            Temporary Audio Group
+            {{ connected ? "Temporary Audio Group" : "Stale Browser Player" }}
           </p>
         </div>
       </div>
@@ -231,6 +231,8 @@ const {
   setAdditionalLatency,
   clientId,
   setInternalMute,
+  cleanupBrowserClient,
+  retryPendingClientCleanups,
 } = useSnapStream();
 
 // Buffer Settings
@@ -347,6 +349,16 @@ watch(connected, (isConnected) => {
   }
 });
 
+watch(
+  () => snapcast.isConnected,
+  (isConnected) => {
+    if (isConnected) {
+      retryPendingClientCleanups();
+    }
+  },
+  { immediate: true }
+);
+
 async function handleConnect() {
   if (connected.value) {
     await disconnect();
@@ -357,16 +369,29 @@ async function handleConnect() {
 
 async function cleanTemporaryGroup() {
   const idToDelete = clientId.value;
+  const groupToClean = currentGroup.value;
   if (idToDelete) {
     try {
-      if (connected.value) {
-        // disconnect() handles cleaning up the client from the server
-        await disconnect();
-      } else {
-        // If not connected, we need to manually clean up
-        await snapcast.deleteClient(idToDelete);
+      let cleaned = connected.value
+        ? await disconnect()
+        : await cleanupBrowserClient(idToDelete);
+
+      if (
+        !cleaned &&
+        groupToClean &&
+        groupToClean.clients.length === 1 &&
+        groupToClean.clients[0]?.id === idToDelete
+      ) {
+        await snapcast.setGroupClients(groupToClean.id, []);
+        await snapcast.getServerStatus();
+        cleaned = true;
       }
-      notifications.success("Temporary group cleaned up");
+
+      if (cleaned) {
+        notifications.success("Temporary group cleaned up");
+      } else {
+        notifications.error("Cleanup failed. The client may already be gone.");
+      }
     } catch (e) {
       console.error("Failed to clean up group:", e);
       notifications.error("Failed to clean up group");
