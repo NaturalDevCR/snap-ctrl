@@ -350,9 +350,9 @@ watch(connected, (isConnected) => {
 });
 
 watch(
-  () => snapcast.isConnected,
-  (isConnected) => {
-    if (isConnected) {
+  () => snapcast.isConnected && snapcast.groups.length > 0,
+  (ready) => {
+    if (ready) {
       retryPendingClientCleanups();
     }
   },
@@ -372,9 +372,18 @@ async function cleanTemporaryGroup() {
   const groupToClean = currentGroup.value;
   if (idToDelete) {
     try {
-      let cleaned = connected.value
-        ? await disconnect()
-        : await cleanupBrowserClient(idToDelete);
+      const clientExistsOnServer = snapcast.clients.some(
+        (c) => c.id === idToDelete
+      );
+
+      let cleaned = false;
+      if (clientExistsOnServer) {
+        cleaned = connected.value
+          ? await disconnect()
+          : await cleanupBrowserClient(idToDelete);
+      } else {
+        cleaned = true;
+      }
 
       if (
         !cleaned &&

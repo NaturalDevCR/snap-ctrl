@@ -21,6 +21,8 @@ import { AudioStream } from "@/services/audio/audio-stream";
 
 const CLIENT_ID_STORAGE_KEY = "snapcast-client-id";
 const PENDING_CLIENT_CLEANUP_KEY = "snapcast-pending-client-cleanup";
+const CLEANUP_RETRY_COUNT_KEY = "snapcast-pending-client-cleanup-retries";
+const MAX_CLEANUP_RETRIES = 2;
 
 export function useSnapStream() {
   // Connection state
@@ -86,7 +88,45 @@ export function useSnapStream() {
 
   function shouldRetryClientCleanup(error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
-    return !/internal error|not found|no such client/i.test(message);
+    return !/not found|no such client/i.test(message);
+  }
+
+  function getCleanupRetryCount(id: string): number {
+    try {
+      const raw = localStorage.getItem(CLEANUP_RETRY_COUNT_KEY);
+      if (!raw) return 0;
+      const parsed = JSON.parse(raw);
+      return typeof parsed === "object" && parsed !== null ? Number(parsed[id]) || 0 : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  function incrementCleanupRetryCount(id: string): number {
+    try {
+      const raw = localStorage.getItem(CLEANUP_RETRY_COUNT_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      if (typeof parsed !== "object" || parsed === null) return 1;
+      const count = (Number(parsed[id]) || 0) + 1;
+      parsed[id] = count;
+      localStorage.setItem(CLEANUP_RETRY_COUNT_KEY, JSON.stringify(parsed));
+      return count;
+    } catch {
+      return 1;
+    }
+  }
+
+  function resetCleanupRetryCount(id: string) {
+    try {
+      const raw = localStorage.getItem(CLEANUP_RETRY_COUNT_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (typeof parsed !== "object" || parsed === null) return;
+      delete parsed[id];
+      localStorage.setItem(CLEANUP_RETRY_COUNT_KEY, JSON.stringify(parsed));
+    } catch {
+      // ignore
+    }
   }
 
   // Audio state
@@ -495,8 +535,12 @@ export function useSnapStream() {
     return cleanupBrowserClient(clientToDelete);
   }
 
+  const cleanupInFlight = new Set<string>();
+
   async function cleanupBrowserClient(clientIdToDelete = clientId.value) {
     if (!clientIdToDelete) return true;
+    if (cleanupInFlight.has(clientIdToDelete)) return false;
+    cleanupInFlight.add(clientIdToDelete);
 
     try {
       // Import snapcast store dynamically to avoid circular dependency
@@ -506,22 +550,48 @@ export function useSnapStream() {
       console.log(`Cleaning up browser player client: ${clientIdToDelete}`);
       await snapcast.deleteClient(clientIdToDelete);
       clearQueuedClientCleanup(clientIdToDelete);
+      resetCleanupRetryCount(clientIdToDelete);
       return true;
     } catch (error) {
-      if (shouldRetryClientCleanup(error)) {
-        queueClientCleanup(clientIdToDelete);
-      } else {
+      if (!shouldRetryClientCleanup(error)) {
         clearQueuedClientCleanup(clientIdToDelete);
+        resetCleanupRetryCount(clientIdToDelete);
+      } else {
+        const retryCount = incrementCleanupRetryCount(clientIdToDelete);
+        if (retryCount > MAX_CLEANUP_RETRIES) {
+          clearQueuedClientCleanup(clientIdToDelete);
+          resetCleanupRetryCount(clientIdToDelete);
+        } else {
+          queueClientCleanup(clientIdToDelete);
+        }
       }
       console.warn("Failed to cleanup browser player client:", error);
       return false;
+    } finally {
+      cleanupInFlight.delete(clientIdToDelete);
     }
   }
 
-  async function retryPendingClientCleanups() {
+  async function retryPendingClientCleanups(skipExistenceCheck = false) {
     const pendingClientIds = readPendingClientCleanupIds();
+    if (pendingClientIds.length === 0) return;
+
+    const { useSnapcastStore } = await import("@/stores/snapcast");
+    const snapcast = useSnapcastStore();
+
+    if (!snapcast.isConnected) return;
+
+    const existingClientIds = skipExistenceCheck
+      ? null
+      : new Set(snapcast.clients.map((c) => c.id));
+
     for (const pendingClientId of pendingClientIds) {
       if (pendingClientId === clientId.value && connected.value) continue;
+      if (existingClientIds && !existingClientIds.has(pendingClientId)) {
+        clearQueuedClientCleanup(pendingClientId);
+        resetCleanupRetryCount(pendingClientId);
+        continue;
+      }
       await cleanupBrowserClient(pendingClientId);
     }
   }

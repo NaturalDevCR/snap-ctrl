@@ -56,6 +56,22 @@ beforeEach(() => {
   localStorage.clear();
 });
 
+function getLatestDeleteRequest(ws: FakeWebSocket): any {
+  const requests = ws.sent.filter(
+    (m: any) => m.method === "Server.DeleteClient"
+  );
+  return requests[requests.length - 1];
+}
+
+async function waitForDeleteRequest(ws: FakeWebSocket): Promise<any> {
+  for (let i = 0; i < 10; i++) {
+    const req = getLatestDeleteRequest(ws);
+    if (req) return req;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  return getLatestDeleteRequest(ws);
+}
+
 describe("useSnapStream cleanup", () => {
   it("keeps the browser client id and queues cleanup when control websocket is unavailable", async () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -82,21 +98,18 @@ describe("useSnapStream cleanup", () => {
     ws.open();
     await Promise.resolve();
 
+    // Respond to the auto-sent Server.GetStatus so it doesn't linger
+    const statusReq = ws.sent.find((m: any) => m.method === "Server.GetStatus");
+    if (statusReq) {
+      ws.emit({ id: statusReq.id, jsonrpc: "2.0", result: { server: { groups: [], streams: [] } } });
+    }
+
     const stream = useSnapStream();
     const id = stream.clientId.value;
     localStorage.setItem("snapcast-pending-client-cleanup", JSON.stringify([id]));
 
-    const cleanupPromise = stream.retryPendingClientCleanups();
-    let deleteRequest = ws.sent.find(
-      (message: any) => message.method === "Server.DeleteClient"
-    );
-    for (let i = 0; i < 5 && !deleteRequest; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-      deleteRequest = ws.sent.find(
-        (message: any) => message.method === "Server.DeleteClient"
-      );
-    }
-
+    const cleanupPromise = stream.retryPendingClientCleanups(true);
+    const deleteRequest = await waitForDeleteRequest(ws);
     expect(deleteRequest?.params).toEqual({ id });
 
     ws.emit({
@@ -109,7 +122,7 @@ describe("useSnapStream cleanup", () => {
     expect(localStorage.getItem("snapcast-pending-client-cleanup")).toBeNull();
   });
 
-  it("drops non-retryable cleanup failures instead of retrying forever", async () => {
+  it("drops non-retryable cleanup failures immediately", async () => {
     useAuthStore();
     const snapcast = useSnapcastStore();
     snapcast.connect();
@@ -117,26 +130,24 @@ describe("useSnapStream cleanup", () => {
     ws.open();
     await Promise.resolve();
 
+    // Respond to the auto-sent Server.GetStatus
+    const statusReq = ws.sent.find((m: any) => m.method === "Server.GetStatus");
+    if (statusReq) {
+      ws.emit({ id: statusReq.id, jsonrpc: "2.0", result: { server: { groups: [], streams: [] } } });
+    }
+
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     const stream = useSnapStream();
     const id = stream.clientId.value;
     localStorage.setItem("snapcast-pending-client-cleanup", JSON.stringify([id]));
 
-    const cleanupPromise = stream.retryPendingClientCleanups();
-    let deleteRequest = ws.sent.find(
-      (message: any) => message.method === "Server.DeleteClient"
-    );
-    for (let i = 0; i < 5 && !deleteRequest; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-      deleteRequest = ws.sent.find(
-        (message: any) => message.method === "Server.DeleteClient"
-      );
-    }
+    const cleanupPromise = stream.retryPendingClientCleanups(true);
+    const deleteRequest = await waitForDeleteRequest(ws);
 
     ws.emit({
       id: deleteRequest.id,
       jsonrpc: "2.0",
-      error: { code: -32603, message: "Internal error" },
+      error: { code: -32603, message: "Client not found" },
     });
     await cleanupPromise;
 
