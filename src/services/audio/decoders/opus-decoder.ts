@@ -6,6 +6,7 @@
 
 import { type Timestamp, type SampleFormat } from "../message-protocol";
 import { type AudioDecoder, type DecodedAudio } from "./types";
+import { logger } from "@/utils/logger";
 
 type OpusDecoderLibInstance = any;
 
@@ -55,7 +56,7 @@ export class OpusDecoder implements AudioDecoder {
           // Opus always decodes at 48kHz
           this.sampleRate = 48000;
 
-          console.log(
+          logger.debug(
             `Opus header parsed: ${this.sampleRate}Hz, ${this.channels}ch`
           );
         }
@@ -76,7 +77,7 @@ export class OpusDecoder implements AudioDecoder {
 
       this.isInitialized = true;
 
-      console.log(`Opus initialized: ${this.sampleRate}Hz, ${this.channels}ch`);
+      logger.debug(`Opus initialized: ${this.sampleRate}Hz, ${this.channels}ch`);
     } catch (error) {
       console.error("Failed to initialize Opus decoder:", error);
       throw error;

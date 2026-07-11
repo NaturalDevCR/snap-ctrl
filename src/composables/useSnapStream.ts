@@ -18,6 +18,7 @@ import {
 import { createDecoder, type AudioDecoder } from "@/services/audio/decoders";
 import { TimeProvider } from "@/services/audio/time-provider";
 import { AudioStream } from "@/services/audio/audio-stream";
+import { logger } from "@/utils/logger";
 
 const CLIENT_ID_STORAGE_KEY = "snapcast-client-id";
 const PENDING_CLIENT_CLEANUP_KEY = "snapcast-pending-client-cleanup";
@@ -334,7 +335,7 @@ export function useSnapStream() {
    * Handle time message (sync response)
    */
   function handleTimeMessage(msg: any): void {
-    // console.log("Received TimeMessage", msg);
+    // logger.debug("Received TimeMessage", msg);
 
     if (!timeProvider) return;
 
@@ -388,7 +389,7 @@ export function useSnapStream() {
 
       nextPlayTime = audioCtx.currentTime;
 
-      console.log("Audio context created");
+      logger.debug("Audio context created");
     } catch (err) {
       console.error("Failed to create AudioContext:", err);
       error.value = "Failed to initialize audio system";
@@ -399,14 +400,14 @@ export function useSnapStream() {
     // Connect WebSocket to /stream endpoint
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const url = `${protocol}//${host}/stream`;
-    console.log(`Connecting to ${url}...`);
+    logger.debug(`Connecting to ${url}...`);
 
     try {
       ws.value = new WebSocket(url);
       ws.value.binaryType = "arraybuffer";
 
       ws.value.onopen = async () => {
-        console.log("WebSocket connected");
+        logger.debug("WebSocket connected");
 
         // Sync client ID to store for group filtering
         try {
@@ -426,7 +427,7 @@ export function useSnapStream() {
 
 
         ws.value?.send(helloMsg);
-        console.log("Hello message sent");
+        logger.debug("Hello message sent");
 
         connected.value = true;
         connecting.value = false;
@@ -435,7 +436,7 @@ export function useSnapStream() {
       ws.value.onmessage = (event) => handleMessage(event.data as ArrayBuffer);
 
       ws.value.onclose = () => {
-        console.log("WebSocket closed");
+        logger.debug("WebSocket closed");
         cleanup();
         connected.value = false;
         connecting.value = false;
@@ -462,7 +463,7 @@ export function useSnapStream() {
     // Resume audio context when tab becomes visible/focused again
     handleVisibilityChange = () => {
       if (audioCtx && audioCtx.state === "suspended" && !document.hidden) {
-        console.log("Resuming AudioContext after visibility change");
+        logger.debug("Resuming AudioContext after visibility change");
         audioCtx.resume().catch((err) => {
           console.error("Failed to resume AudioContext:", err);
         });
@@ -471,7 +472,7 @@ export function useSnapStream() {
 
     handleFocus = () => {
       if (audioCtx && audioCtx.state === "suspended") {
-        console.log("Resuming AudioContext after focus");
+        logger.debug("Resuming AudioContext after focus");
         audioCtx.resume().catch((err) => {
           console.error("Failed to resume AudioContext:", err);
         });
@@ -547,7 +548,7 @@ export function useSnapStream() {
       const { useSnapcastStore } = await import("@/stores/snapcast");
       const snapcast = useSnapcastStore();
 
-      console.log(`Cleaning up browser player client: ${clientIdToDelete}`);
+      logger.debug(`Cleaning up browser player client: ${clientIdToDelete}`);
       await snapcast.deleteClient(clientIdToDelete);
       clearQueuedClientCleanup(clientIdToDelete);
       resetCleanupRetryCount(clientIdToDelete);
@@ -654,7 +655,7 @@ export function useSnapStream() {
     const codecMsg = parseCodecHeader(msg);
     codec.value = codecMsg.codec;
 
-    console.log(`Codec: ${codecMsg.codec}`);
+    logger.debug(`Codec: ${codecMsg.codec}`);
 
     // Close old decoder if exists
     if (decoder) {
@@ -668,7 +669,7 @@ export function useSnapStream() {
       // Initialize decoder with header payload
       await decoder.init(codecMsg.payload);
       sampleFormat.value = decoder.getSampleFormat();
-      console.log("Decoder initialized:", codecMsg.codec);
+      logger.debug("Decoder initialized:", codecMsg.codec);
 
       // Create time provider with AudioContext
       if (!timeProvider && audioCtx) {
@@ -676,13 +677,13 @@ export function useSnapStream() {
         timeProvider.start((msg) => {
           ws.value?.send(msg);
         });
-        console.log("Time provider started");
+        logger.debug("Time provider started");
       }
 
       // Create audio stream
       if (!audioStream && audioCtx && timeProvider) {
         audioStream = new AudioStream(timeProvider, decoder.getSampleRate());
-        console.log("Audio stream created");
+        logger.debug("Audio stream created");
 
         // Start playback loop via Worker
         if (schedulerWorker) {
@@ -728,7 +729,7 @@ export function useSnapStream() {
   function handleServerSettings(msg: any): void {
     const settings = parseServerSettings(msg);
 
-    console.log("Server settings:", settings);
+    logger.debug("Server settings:", settings);
 
     bufferMs.value = settings.bufferMs;
     latency.value = settings.latency;

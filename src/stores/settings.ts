@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, watch } from "vue";
+import { logger } from "@/utils/logger";
 
 // Force HMR reload
 
@@ -107,7 +108,7 @@ export const useSettingsStore = defineStore(
       streamId: string,
       volume: number
     ) {
-      console.log(`[Settings] saveClientVolume: Client=${clientId}, Stream=${streamId}, Vol=${volume}`);
+      logger.debug(`[Settings] saveClientVolume: Client=${clientId}, Stream=${streamId}, Vol=${volume}`);
       if (!clientSourceVolumes.value[clientId]) {
         clientSourceVolumes.value[clientId] = {};
       }

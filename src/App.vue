@@ -948,6 +948,7 @@
 </template>
 
 <script setup lang="ts">
+import { logger } from "@/utils/logger";
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useSnapcastStore } from "./stores/snapcast";
 import { useSettingsStore } from "./stores/settings"; // Force reload
@@ -1421,7 +1422,7 @@ async function applyGroupSettings() {
     );
   } catch (error) {
     // Suppress errors - group might have been auto-deleted if emptied
-    console.log("Group clients update skipped (group may have been deleted)");
+    logger.debug("Group clients update skipped (group may have been deleted)");
   }
 
   // Save custom name
@@ -1432,7 +1433,7 @@ async function applyGroupSettings() {
     );
   } catch (error) {
     // Suppress errors - group might have been auto-deleted
-    console.log("Group name update skipped (group may have been deleted)");
+    logger.debug("Group name update skipped (group may have been deleted)");
   }
 
   // Calculate reference volumes for linked clients

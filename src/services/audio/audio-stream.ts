@@ -6,6 +6,7 @@
 import { type DecodedAudio } from "./decoders";
 import { type Timestamp, timestampToMs } from "./message-protocol";
 import { TimeProvider } from "./time-provider";
+import { logger } from "@/utils/logger";
 
 interface AudioChunk {
   audio: DecodedAudio;
@@ -152,7 +153,7 @@ export class AudioStream {
 
       if (framesToDiscard >= firstChannel.length) {
         // Discard entire chunk
-        console.log(
+        logger.debug(
           `Hard sync: discarding entire chunk (${timeDiff.toFixed(2)}ms ahead)`
         );
         return {
@@ -161,7 +162,7 @@ export class AudioStream {
         };
       }
 
-      // console.log(
+      // logger.debug(
       //   `Hard sync: discarding ${framesToDiscard} frames (${timeDiff.toFixed(
       //     2
       //   )}ms ahead, now=${this.timeProvider.now().toFixed(0)}, chunk=${
@@ -184,7 +185,7 @@ export class AudioStream {
          return audio;
       }
       
-      console.log(
+      logger.debug(
         `Hard sync: inserting ${framesToAdjust} silent frames (${Math.abs(
           timeDiff
         ).toFixed(2)}ms behind)`

@@ -5,6 +5,7 @@
 
 import { type Timestamp, type SampleFormat } from "../message-protocol";
 import { type AudioDecoder, type DecodedAudio } from "./types";
+import { logger } from "@/utils/logger";
 
 export class PcmDecoder implements AudioDecoder {
   private sampleRate = 48000;
@@ -33,7 +34,7 @@ export class PcmDecoder implements AudioDecoder {
         this.sampleRate = dv.getUint32(24, true);
         this.bitsPerSample = dv.getUint16(34, true);
 
-        console.log(
+        logger.debug(
           `PCM initialized: ${this.sampleRate}Hz, ${this.channels}ch, ${this.bitsPerSample}bit`
         );
       }

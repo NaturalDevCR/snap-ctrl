@@ -200,6 +200,7 @@
 
 
 <script setup lang="ts">
+import { logger } from "@/utils/logger";
 import { watch, computed, ref } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useNotificationStore } from "@/stores/notification";
@@ -284,7 +285,7 @@ watch(
     if (selected) {
       // If group info is missing OR stream doesn't match -> MUTE
       if (!groupStreamId || groupStreamId !== selected) {
-        console.log(`Muting browser player: stream sync pending (${groupStreamId} -> ${selected})`);
+        logger.debug(`Muting browser player: stream sync pending (${groupStreamId} -> ${selected})`);
         setInternalMute(true);
         return;
       }
@@ -331,7 +332,7 @@ const currentStreamId = computed({
 watch([connected, currentGroup], ([isConnected, group]) => {
   if (isConnected && group && selectedStreamId.value) {
     if (group.stream_id !== selectedStreamId.value) {
-      console.log(`Syncing browser player stream to preferred: ${selectedStreamId.value}`);
+      logger.debug(`Syncing browser player stream to preferred: ${selectedStreamId.value}`);
       snapcast.setGroupStream(group.id, selectedStreamId.value);
     }
   }

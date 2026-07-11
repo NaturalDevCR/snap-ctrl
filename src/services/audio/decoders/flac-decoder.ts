@@ -6,6 +6,7 @@
 
 import { type Timestamp, type SampleFormat } from "../message-protocol";
 import { type AudioDecoder, type DecodedAudio } from "./types";
+import { logger } from "@/utils/logger";
 
 type FlacModule = {
   create_libflac_decoder: (isOgg: boolean) => any;
@@ -74,7 +75,7 @@ export class FlacDecoder implements AudioDecoder {
           this.metadataCallback.bind(this),
           false
         );
-        console.log("Flac init status:", init_status);
+        logger.debug("Flac init status:", init_status);
         this.Flac.setOptions(this.decoder, {
           analyseSubframes: true,
           analyseResiduals: true,
@@ -89,7 +90,7 @@ export class FlacDecoder implements AudioDecoder {
       const bytes = Array.from(header.slice(0, 4))
         .map((b) => b.toString(16))
         .join(" ");
-      console.log(`FLAC Header magic: ${magic} (${bytes})`);
+      logger.debug(`FLAC Header magic: ${magic} (${bytes})`);
       this.Flac.FLAC__stream_decoder_process_until_end_of_metadata(
         this.decoder
       );
@@ -176,7 +177,7 @@ export class FlacDecoder implements AudioDecoder {
       this.channels = metadata.data.channels;
       this.bitsPerSample = metadata.data.bitsPerSample;
 
-      console.log(
+      logger.debug(
         `FLAC initialized: ${this.sampleRate}Hz, ${this.channels}ch, ${this.bitsPerSample}bit`
       );
     }

@@ -6,6 +6,7 @@
 
 import { type Timestamp, type SampleFormat } from "../message-protocol";
 import { type AudioDecoder, type DecodedAudio } from "./types";
+import { logger } from "@/utils/logger";
 
 type OggVorbisDecoderInstance = any;
 
@@ -46,7 +47,7 @@ export class VorbisDecoder implements AudioDecoder {
         }
       }
       
-      console.log(`Vorbis decoder initialized: ${this.sampleRate}Hz, ${this.channels}ch`);
+      logger.debug(`Vorbis decoder initialized: ${this.sampleRate}Hz, ${this.channels}ch`);
     } catch (error) {
       console.error("Failed to initialize Vorbis decoder:", error);
       throw error;

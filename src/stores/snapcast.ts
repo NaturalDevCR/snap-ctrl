@@ -3,6 +3,14 @@ import { ref, computed } from "vue";
 import { useAuthStore } from "./auth";
 import { useSettingsStore } from "./settings";
 import { useNotificationStore } from "./notification";
+import { logger } from "@/utils/logger";
+import type {
+  ServerStatusResult,
+  SnapcastInboundMessage,
+} from "@/types/snapcast-rpc";
+
+/** Default time to wait for a JSON-RPC response before giving up. */
+export const DEFAULT_REQUEST_TIMEOUT_MS = 10_000;
 
 export interface Client {
   id: string;
@@ -182,7 +190,7 @@ export const useSnapcastStore = defineStore(
       }
 
       const delay = getReconnectDelay();
-      console.log(
+      logger.debug(
         `Reconnecting in ${delay}ms (attempt ${
           reconnectAttempts.value + 1
         }/${maxReconnectAttempts})...`
@@ -221,7 +229,7 @@ export const useSnapcastStore = defineStore(
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
         wsUrl = `${protocol}//${host.value}/jsonrpc`;
       }
-      console.log(`Connecting to ${wsUrl}...`);
+      logger.debug(`Connecting to ${wsUrl}...`);
 
       try {
         websocket.value = new WebSocket(wsUrl);
@@ -251,7 +259,7 @@ export const useSnapcastStore = defineStore(
         connectionError.value = null;
         hasConnectedSuccessfully.value = true;
         reconnectAttempts.value = 0; // Reset on successful connection
-        console.log("Connected to Snapcast server");
+        logger.debug("Connected to Snapcast server");
         getServerStatus();
       };
 
@@ -264,7 +272,7 @@ export const useSnapcastStore = defineStore(
         const code = event.code;
         const reason = event.reason || "Unknown reason";
 
-        console.log(
+        logger.debug(
           `Disconnected from Snapcast server (clean: ${wasClean}, code: ${code}, reason: ${reason})`
         );
 
@@ -310,7 +318,11 @@ export const useSnapcastStore = defineStore(
       connectionError.value = null;
     }
 
-    function sendRequest(method: string, params?: any): Promise<any> {
+    function sendRequest(
+      method: string,
+      params?: Record<string, unknown>,
+      timeoutMs: number = DEFAULT_REQUEST_TIMEOUT_MS
+    ): Promise<any> {
       return new Promise((resolve, reject) => {
         if (!websocket.value || websocket.value.readyState !== WebSocket.OPEN) {
           reject(new Error("WebSocket not connected"));
@@ -333,7 +345,7 @@ export const useSnapcastStore = defineStore(
         const timeout = setTimeout(() => {
           cleanup();
           reject(new Error("Request timeout"));
-        }, 5000);
+        }, timeoutMs);
 
         const messageHandler = (event: MessageEvent) => {
           try {
@@ -356,8 +368,8 @@ export const useSnapcastStore = defineStore(
       });
     }
 
-    function handleMessage(data: any) {
-      if (!data.method) return;
+    function handleMessage(data: SnapcastInboundMessage) {
+      if (!("method" in data)) return;
       switch (data.method) {
         case "Server.OnUpdate":
           if (data.params?.server) {
@@ -366,7 +378,7 @@ export const useSnapcastStore = defineStore(
           }
           break;
         case "Client.OnVolumeChanged":
-          if (data.params && data.params.id && data.params.volume) {
+          if (data.params?.id && data.params.volume) {
             const client = findClientById(data.params.id);
             if (client) {
               client.config.volume = data.params.volume;
@@ -452,7 +464,7 @@ export const useSnapcastStore = defineStore(
      * Server.OnUpdate back to the session that made the request, so the
      * response payload is the only way to stay in sync without a reload.
      */
-    function applyServerResult(result: any) {
+    function applyServerResult(result: ServerStatusResult | undefined) {
       if (result?.server?.groups) {
         serverStatus.value = { server: result.server };
         updateLocalState();
@@ -611,7 +623,7 @@ export const useSnapcastStore = defineStore(
       if (!g) return;
 
       const isEnabled = settings.isPerSourceVolumeEnabled(groupId);
-      console.log(
+      logger.debug(
         `[SnapCtrl] Switching Group ${g.name} stream: ${prev} -> ${streamId}. PSV Enabled: ${isEnabled}`
       );
 
@@ -636,7 +648,7 @@ export const useSnapcastStore = defineStore(
               
               if (savedVolume !== undefined) {
                 // Restore saved volume
-                console.log(
+                logger.debug(
                   `[SnapCtrl] Restoring volume: Client=${client.id}, Vol=${savedVolume}%`
                 );
                 await setClientVolume(
@@ -646,7 +658,7 @@ export const useSnapcastStore = defineStore(
                 );
               } else {
                 // FORK: No saved volume for this stream, save current volume as new baseline
-                console.log(
+                logger.debug(
                   `[SnapCtrl] Forking volume: Client=${client.id}, Stream=${streamId}, Vol=${client.config.volume.percent}%`
                 );
                 settings.saveClientVolume(
@@ -728,14 +740,14 @@ export const useSnapcastStore = defineStore(
           id: clientId,
         });
         applyServerResult(result);
-        console.log(`Client ${clientId} deleted successfully`);
+        logger.debug(`Client ${clientId} deleted successfully`);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         if (/not found|no such client/i.test(message)) {
           // The client is already gone on the server (deleted by another
           // session or a previous cleanup attempt). Treat as success and
           // refresh so any stale local entry disappears.
-          console.log(`Client ${clientId} already deleted on server`);
+          logger.debug(`Client ${clientId} already deleted on server`);
           getServerStatus();
           return;
         }

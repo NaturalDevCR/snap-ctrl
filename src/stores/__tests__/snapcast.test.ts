@@ -283,7 +283,7 @@ describe("snapcast store — PR 1 network hygiene", () => {
     const afterAdd = (ws as any).listeners.size;
     expect(afterAdd).toBe(beforeCount + 1);
 
-    vi.advanceTimersByTime(5000);
+    vi.advanceTimersByTime(10_000);
     const afterTimeout = (ws as any).listeners.size;
     expect(afterTimeout).toBe(afterAdd - 1);
     errSpy.mockRestore();

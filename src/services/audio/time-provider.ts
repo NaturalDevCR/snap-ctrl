@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 /**
  * Time synchronization provider
  * Synchronizes local time with Snapserver time using periodic TimeMessage exchanges
@@ -83,7 +84,7 @@ export class TimeProvider {
     const now = msToTimestamp(sentTime);
     const message = buildTimeMessage(latency, now, id);
 
-    // console.log(
+    // logger.debug(
     //   `Sending TimeMessage id=${id}, sentTime=${sentTime.toFixed(2)}`
     // );
     this.sendCallback(message);

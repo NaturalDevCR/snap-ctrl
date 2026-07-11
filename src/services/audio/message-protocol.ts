@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 /**
  * Binary message protocol for Snapserver stream endpoint
  * Based on Snapweb's implementation
@@ -295,7 +296,7 @@ export function buildHelloMessage(
 
   const payload = new Uint8Array(payloadBuffer);
 
-  console.log("Sending Hello Payload (with prefix):", helloPayload);
+  logger.debug("Sending Hello Payload (with prefix):", helloPayload);
   return buildMessage(MessageType.Hello, payload);
 }
 
