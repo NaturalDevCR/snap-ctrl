@@ -1485,8 +1485,14 @@ async function deleteCurrentGroup() {
     }
   }
 
-  // Empty the group of remaining clients
-  await snapcast.setGroupClients(groupModal.value.groupId, []);
+  // Empty the group of remaining clients. Skip if the server already
+  // removed the group after its last client was deleted above.
+  const stillExists = snapcast.groups.some(
+    (g) => g.id === groupModal.value.groupId
+  );
+  if (stillExists) {
+    await snapcast.setGroupClients(groupModal.value.groupId, []);
+  }
 
   closeGroupSettings();
 }

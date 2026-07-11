@@ -732,15 +732,12 @@ export function useSnapStream() {
 
     bufferMs.value = settings.bufferMs;
     latency.value = settings.latency;
-    bufferMs.value = settings.bufferMs;
 
     if (!isMuted.value) {
       volume.value = settings.volume;
       updateGain();
     }
   }
-
-  // ... (omitted same content)
 
   /**
    * Toggle mute

@@ -394,6 +394,11 @@ export const useSnapcastStore = defineStore(
             existing.connected = newClient.connected;
             existing.lastSeen = newClient.lastSeen;
             existing.config = newClient.config;
+          } else if (data.method === "Client.OnConnect") {
+            // Unknown client (brand new, or server regrouped it) — the
+            // notification doesn't carry group placement, so refresh the
+            // full status to make it appear without a manual reload.
+            getServerStatus();
           }
           break;
         }
@@ -438,6 +443,19 @@ export const useSnapcastStore = defineStore(
         groups.value = serverStatus.value.server.groups;
         streams.value = serverStatus.value.server.streams;
         clients.value = allClients.value;
+      }
+    }
+
+    /**
+     * Apply the full server status returned by mutating RPCs
+     * (Server.DeleteClient, Group.SetClients). Snapserver does NOT send
+     * Server.OnUpdate back to the session that made the request, so the
+     * response payload is the only way to stay in sync without a reload.
+     */
+    function applyServerResult(result: any) {
+      if (result?.server?.groups) {
+        serverStatus.value = { server: result.server };
+        updateLocalState();
       }
     }
 
@@ -662,13 +680,15 @@ export const useSnapcastStore = defineStore(
           .filter(Boolean) as Client[];
       }
       try {
-        await sendRequest("Group.SetClients", {
+        const result = await sendRequest("Group.SetClients", {
           id: groupId,
           clients: clientIds,
         });
+        applyServerResult(result);
       } catch (error) {
         console.error("Failed to set group clients:", error);
         if (g && prevClients) g.clients = prevClients;
+        notifyError("Update group clients", error);
       }
     }
 
@@ -704,11 +724,21 @@ export const useSnapcastStore = defineStore(
      */
     async function deleteClient(clientId: string) {
       try {
-        await sendRequest("Server.DeleteClient", {
+        const result = await sendRequest("Server.DeleteClient", {
           id: clientId,
         });
+        applyServerResult(result);
         console.log(`Client ${clientId} deleted successfully`);
       } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (/not found|no such client/i.test(message)) {
+          // The client is already gone on the server (deleted by another
+          // session or a previous cleanup attempt). Treat as success and
+          // refresh so any stale local entry disappears.
+          console.log(`Client ${clientId} already deleted on server`);
+          getServerStatus();
+          return;
+        }
         console.error("Failed to delete client:", error);
         notifyError("Delete client", error);
         throw error;
