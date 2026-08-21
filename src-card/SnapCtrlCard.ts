@@ -52,6 +52,12 @@ export class SnapCtrlCard extends HTMLElement {
   }
 
   disconnectedCallback() {
+    // Tear down the live WebSocket connection before unmounting — without
+    // this, the socket and its reconnect machinery keep running even
+    // though the card is detached (e.g. HA's Lovelace masonry view
+    // re-laying-out columns on resize triggers detach/reattach, not
+    // destroy), leaking a connection on every relayout.
+    this.rootRef?.teardown();
     this.app?.unmount();
     this.app = null;
     this.rootRef = null;
@@ -70,10 +76,13 @@ export class SnapCtrlCard extends HTMLElement {
           ? config.zone_filter
           : undefined,
     };
+    // Always keep pendingConfig current, whether or not the element is
+    // currently mounted — connectedCallback() re-applies it on reattach,
+    // so a stale value here would resurrect an old config after a
+    // detach/reattach cycle (e.g. a Lovelace masonry relayout).
+    this.pendingConfig = normalized;
     if (this.rootRef) {
       this.rootRef.setConfig(normalized);
-    } else {
-      this.pendingConfig = normalized;
     }
   }
 

@@ -38,7 +38,11 @@ function retry() {
   connection.value?.retry();
 }
 
-defineExpose({ setConfig, setHass });
+function teardown() {
+  connection.value?.disconnect();
+}
+
+defineExpose({ setConfig, setHass, teardown });
 </script>
 
 <template>
