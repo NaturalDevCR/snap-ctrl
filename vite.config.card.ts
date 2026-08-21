@@ -2,8 +2,10 @@ import { fileURLToPath, URL } from "node:url";
 import { defineConfig, type Plugin } from "vite";
 import vue from "@vitejs/plugin-vue";
 
-// Inlines any emitted CSS asset(s) into the JS chunk as a <style> element
-// appended to document.head at module load, then removes the separate CSS
+// Inlines any emitted CSS asset(s) into the JS chunk as a global the custom
+// element reads and injects into its own shadow root (SnapCtrlCard renders
+// inside a shadow root, so a document.head <style> would never reach it —
+// see SnapCtrlCard.ts's connectedCallback()). Also removes the separate CSS
 // asset(s) from the bundle. Keeps the card a single self-contained file a
 // user can drop into HA's www/ folder — see
 // docs/superpowers/specs/2026-08-21-lovelace-card-design.md.
@@ -24,9 +26,9 @@ function inlineCss(): Plugin {
       }
       if (!css) return;
 
-      const injection = `(function(){var d=document,s=d.createElement("style");s.textContent=${JSON.stringify(
+      const injection = `(function(){window.__SNAP_CTRL_CARD_CSS__=${JSON.stringify(
         css
-      )};d.head.appendChild(s);})();`;
+      )};})();`;
 
       for (const asset of Object.values(bundle)) {
         if (asset.type === "chunk" && asset.isEntry) {

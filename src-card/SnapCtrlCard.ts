@@ -1,9 +1,19 @@
 import { createApp, type App } from "vue";
 import CardRoot, { type CardConfig } from "./components/CardRoot.vue";
 
+// Set by vite.config.card.ts's inline-css plugin: the concatenated scoped
+// CSS from every src-card/components/*.vue SFC, as a single string. May be
+// absent (e.g. in a test environment, or a build with no component styles).
+declare global {
+  interface Window {
+    __SNAP_CTRL_CARD_CSS__?: string;
+  }
+}
+
 export class SnapCtrlCard extends HTMLElement {
   private app: App | null = null;
   private mountPoint: HTMLDivElement | null = null;
+  private styleTag: HTMLStyleElement | null = null;
   private rootRef: InstanceType<typeof CardRoot> | null = null;
   private pendingConfig: CardConfig | null = null;
   private pendingHass: unknown = null;
@@ -13,9 +23,19 @@ export class SnapCtrlCard extends HTMLElement {
     // The host may be disconnected and reconnected without being destroyed
     // (e.g. HA's Lovelace masonry view re-laying-out columns on resize).
     // attachShadow() throws if a shadow root already exists on this host,
-    // so reuse it — and the mount point div inside it — instead of
-    // recreating either on every reconnect.
+    // so reuse it — and the style tag and mount point inside it — instead
+    // of recreating any of them on every reconnect.
     const shadow = this.shadowRoot ?? this.attachShadow({ mode: "open" });
+    // Standard Shadow DOM encapsulation means an outer-document <style>
+    // (e.g. one appended to document.head) never reaches shadow-tree
+    // content, and every component here uses <style scoped>. So the bundled
+    // CSS text must be injected as a <style> child of this element's own
+    // shadow root, not of document.head.
+    if (!this.styleTag && window.__SNAP_CTRL_CARD_CSS__) {
+      this.styleTag = document.createElement("style");
+      this.styleTag.textContent = window.__SNAP_CTRL_CARD_CSS__;
+      shadow.appendChild(this.styleTag);
+    }
     if (!this.mountPoint) {
       this.mountPoint = document.createElement("div");
       shadow.appendChild(this.mountPoint);
