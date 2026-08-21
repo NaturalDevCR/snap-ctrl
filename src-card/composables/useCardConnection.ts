@@ -81,9 +81,16 @@ export function useCardConnection(
     status.value = next;
     error.value = err;
     if (next === "connected") {
-      client.request("Server.GetStatus").then((result: any) => {
-        if (result?.server?.groups) groups.value = result.server.groups;
-      });
+      client
+        .request("Server.GetStatus")
+        .then((result: any) => {
+          if (result?.server?.groups) groups.value = result.server.groups;
+        })
+        .catch(() => {
+          // A disconnect/teardown racing this request (e.g. the card is
+          // detached within the request timeout window) rejects it —
+          // there's nothing to reconcile against once torn down.
+        });
     }
   });
 
