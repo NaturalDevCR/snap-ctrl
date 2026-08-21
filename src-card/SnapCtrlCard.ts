@@ -10,9 +10,16 @@ export class SnapCtrlCard extends HTMLElement {
 
   connectedCallback() {
     if (this.app) return;
-    const shadow = this.attachShadow({ mode: "open" });
-    this.mountPoint = document.createElement("div");
-    shadow.appendChild(this.mountPoint);
+    // The host may be disconnected and reconnected without being destroyed
+    // (e.g. HA's Lovelace masonry view re-laying-out columns on resize).
+    // attachShadow() throws if a shadow root already exists on this host,
+    // so reuse it — and the mount point div inside it — instead of
+    // recreating either on every reconnect.
+    const shadow = this.shadowRoot ?? this.attachShadow({ mode: "open" });
+    if (!this.mountPoint) {
+      this.mountPoint = document.createElement("div");
+      shadow.appendChild(this.mountPoint);
+    }
 
     this.app = createApp(CardRoot);
     const instance = this.app.mount(this.mountPoint) as unknown as InstanceType<
