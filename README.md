@@ -119,7 +119,9 @@ HA addon.
 The card connects directly to the Snapcast server over WebSocket, the same
 protocol the standalone app uses — no HA integration or addon required for
 the card itself to work, as long as the Snapcast server is reachable from
-your browser.
+your browser. The connection automatically follows your dashboard's own
+page protocol: `wss://` when the dashboard is served over HTTPS, `ws://`
+otherwise — no separate configuration needed.
 
 ## GitHub Release Workflow
 

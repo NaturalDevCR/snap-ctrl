@@ -114,6 +114,26 @@ describe("useCardConnection", () => {
     expect(conn.groups.value[0]!.muted).toBe(true);
   });
 
+  it("uses wss:// instead of ws:// when the dashboard page is served over https", async () => {
+    const originalLocation = window.location;
+    Object.defineProperty(window, "location", {
+      value: { ...originalLocation, protocol: "https:" },
+      writable: true,
+      configurable: true,
+    });
+    try {
+      const conn = useCardConnection({ host: "192.168.1.50", port: 1780 });
+      conn.connect();
+      expect(FakeWebSocket.instances[0]!.url).toBe("wss://192.168.1.50:1780/jsonrpc");
+    } finally {
+      Object.defineProperty(window, "location", {
+        value: originalLocation,
+        writable: true,
+        configurable: true,
+      });
+    }
+  });
+
   it("retry() reconnects after an error", async () => {
     const conn = useCardConnection({ host: "h", port: 1780 });
     conn.connect();

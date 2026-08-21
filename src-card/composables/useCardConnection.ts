@@ -28,8 +28,13 @@ export function useCardConnection(
   const error = ref<string | null>(null);
   const groups = ref<Group[]>([]);
 
+  // Match the standalone app's store (src/stores/snapcast.ts): follow the
+  // dashboard page's own protocol so an HA install served over HTTPS
+  // doesn't get its WebSocket blocked as mixed content.
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+
   const client = createSnapcastClient({
-    url: `ws://${options.host}:${options.port}/jsonrpc`,
+    url: `${protocol}//${options.host}:${options.port}/jsonrpc`,
   });
 
   function findClientGroup(clientId: string): Group | undefined {
