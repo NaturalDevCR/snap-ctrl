@@ -4,6 +4,7 @@ import { useAuthStore } from "./auth";
 import { useSettingsStore } from "./settings";
 import { useNotificationStore } from "./notification";
 import { logger } from "@/utils/logger";
+import { createSnapcastClient } from "@/services/snapcastClient";
 import type {
   Client,
   Group,
@@ -35,8 +36,6 @@ export const useSnapcastStore = defineStore(
     const clients = ref<Client[]>([]);
     const groups = ref<Group[]>([]);
     const streams = ref<Stream[]>([]);
-    const websocket = ref<WebSocket | null>(null);
-    const requestId = ref(1);
     const hasConnectedSuccessfully = ref(false);
 
     // Track the browser player's ID to hide its temporary group
@@ -67,14 +66,6 @@ export const useSnapcastStore = defineStore(
       return auth.filterAllowedEntities("client", clients.value);
     });
 
-    // Reconnection state
-    const reconnectAttempts = ref(0);
-    const maxReconnectAttempts = 10;
-    const baseReconnectDelay = 1000; // 1 second
-    const maxReconnectDelay = 30000; // 30 seconds
-    let reconnectTimeout: number | null = null;
-    let manualDisconnect = false;
-
     const allClients = computed(() => {
       if (!serverStatus.value) return [];
       return serverStatus.value.server.groups.flatMap((group) => group.clients);
@@ -85,173 +76,53 @@ export const useSnapcastStore = defineStore(
     });
 
     function setHost(newHost: string) {
-      // Strip protocol if present to avoid double protocol in connection URL
-      // Also strip trailing slash to avoid double slashes in path
       const cleanHost = newHost
         .replace(/^https?:\/\//, "")
         .replace(/^wss?:\/\//, "")
         .replace(/\/$/, "");
       if (cleanHost !== host.value) {
         hasConnectedSuccessfully.value = false;
-        reconnectAttempts.value = 0;
-        if (reconnectTimeout) {
-          clearTimeout(reconnectTimeout);
-          reconnectTimeout = null;
-        }
       }
       host.value = cleanHost;
     }
 
-    function getReconnectDelay(): number {
-      // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 30s (max)
-      const delay = Math.min(
-        baseReconnectDelay * Math.pow(2, reconnectAttempts.value),
-        maxReconnectDelay
-      );
-      return delay;
-    }
+    let client: ReturnType<typeof createSnapcastClient> | null = null;
 
-    function scheduleReconnect() {
-      if (!hasConnectedSuccessfully.value) {
-        return;
-      }
-
-      if (reconnectTimeout) {
-        return;
-      }
-
-      if (manualDisconnect || reconnectAttempts.value >= maxReconnectAttempts) {
-        if (reconnectAttempts.value >= maxReconnectAttempts) {
-          connectionError.value =
-            "Maximum reconnection attempts reached. Please check your server and try again manually.";
-        }
-        return;
-      }
-
-      const delay = getReconnectDelay();
-      logger.debug(
-        `Reconnecting in ${delay}ms (attempt ${
-          reconnectAttempts.value + 1
-        }/${maxReconnectAttempts})...`
-      );
-
-      reconnectTimeout = window.setTimeout(() => {
-        reconnectAttempts.value++;
-        connect();
-      }, delay);
-    }
-
-    function connect() {
-      if (websocket.value?.readyState === WebSocket.OPEN) {
-        return;
-      }
-
-      // Clear any pending reconnection
-      if (reconnectTimeout) {
-        clearTimeout(reconnectTimeout);
-        reconnectTimeout = null;
-      }
-
-      manualDisconnect = false;
-      isConnecting.value = true;
-      connectionError.value = null;
-
-      // In HA addon mode, always use a relative URL so nginx (same origin)
-      // proxies to Snapcast. This avoids WSS→WS mixed-content issues and
-      // works regardless of how HA is accessed (localhost, ingress, direct port).
-      let wsUrl: string;
+    function buildWsUrl(): string {
       if ((window as any).__HA_SNAPCAST_HOST__) {
         const base = new URL("./jsonrpc", window.location.href);
         base.protocol = base.protocol === "https:" ? "wss:" : "ws:";
-        wsUrl = base.toString();
-      } else {
-        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-        wsUrl = `${protocol}//${host.value}/jsonrpc`;
+        return base.toString();
       }
-      logger.debug(`Connecting to ${wsUrl}...`);
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      return `${protocol}//${host.value}/jsonrpc`;
+    }
 
-      try {
-        websocket.value = new WebSocket(wsUrl);
-      } catch (error) {
-        console.error("Failed to create WebSocket:", error);
-        connectionError.value = "Failed to create WebSocket connection";
-        isConnecting.value = false;
-        scheduleReconnect();
-        return;
+    function connect() {
+      if (client) {
+        client.disconnect();
       }
+      client = createSnapcastClient({ url: buildWsUrl() });
 
-      // Connection timeout
-      const connectionTimeout = setTimeout(() => {
-        if (websocket.value?.readyState === WebSocket.CONNECTING) {
-          console.error("Connection timeout");
-          connectionError.value = "Connection timeout";
-          websocket.value.close();
-          isConnecting.value = false;
-          scheduleReconnect();
+      client.onStatusChange((status, error) => {
+        isConnecting.value = status === "connecting";
+        isConnected.value = status === "connected";
+        connectionError.value = error;
+        if (status === "connected") {
+          hasConnectedSuccessfully.value = true;
+          getServerStatus();
         }
-      }, 10000); // 10 second timeout
+      });
 
-      websocket.value.onopen = () => {
-        clearTimeout(connectionTimeout);
-        isConnected.value = true;
-        isConnecting.value = false;
-        connectionError.value = null;
-        hasConnectedSuccessfully.value = true;
-        reconnectAttempts.value = 0; // Reset on successful connection
-        logger.debug("Connected to Snapcast server");
-        getServerStatus();
-      };
+      client.onEvent((data) => handleMessage(data));
 
-      websocket.value.onclose = (event) => {
-        clearTimeout(connectionTimeout);
-        isConnected.value = false;
-        isConnecting.value = false;
-
-        const wasClean = event.wasClean;
-        const code = event.code;
-        const reason = event.reason || "Unknown reason";
-
-        logger.debug(
-          `Disconnected from Snapcast server (clean: ${wasClean}, code: ${code}, reason: ${reason})`
-        );
-
-        if (!manualDisconnect) {
-          connectionError.value = `Connection lost: ${reason}`;
-          scheduleReconnect();
-        }
-      };
-
-      websocket.value.onerror = (error) => {
-        console.error("WebSocket error:", error);
-        connectionError.value = "WebSocket connection error";
-        isConnecting.value = false;
-        // The onclose handler will handle reconnection
-      };
-
-      websocket.value.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          handleMessage(data);
-        } catch (error) {
-          console.error("Failed to parse message:", error);
-        }
-      };
+      hasConnectedSuccessfully.value = false;
+      client.connect();
     }
 
     function disconnect() {
-      manualDisconnect = true;
-      reconnectAttempts.value = 0;
-
-      if (reconnectTimeout) {
-        clearTimeout(reconnectTimeout);
-        reconnectTimeout = null;
-      }
-
-      if (websocket.value) {
-        websocket.value.close();
-        websocket.value = null;
-      }
-
+      client?.disconnect();
+      client = null;
       isConnected.value = false;
       isConnecting.value = false;
       connectionError.value = null;
@@ -262,49 +133,10 @@ export const useSnapcastStore = defineStore(
       params?: Record<string, unknown>,
       timeoutMs: number = DEFAULT_REQUEST_TIMEOUT_MS
     ): Promise<any> {
-      return new Promise((resolve, reject) => {
-        if (!websocket.value || websocket.value.readyState !== WebSocket.OPEN) {
-          reject(new Error("WebSocket not connected"));
-          return;
-        }
-
-        const id = requestId.value++;
-        const message = {
-          id,
-          jsonrpc: "2.0",
-          method,
-          ...(params && { params }),
-        };
-
-        const cleanup = () => {
-          websocket.value?.removeEventListener("message", messageHandler);
-          clearTimeout(timeout);
-        };
-
-        const timeout = setTimeout(() => {
-          cleanup();
-          reject(new Error("Request timeout"));
-        }, timeoutMs);
-
-        const messageHandler = (event: MessageEvent) => {
-          try {
-            const data = JSON.parse(event.data);
-            if (data.id === id) {
-              cleanup();
-              if (data.error) {
-                reject(new Error(data.error.message));
-              } else {
-                resolve(data.result);
-              }
-            }
-          } catch (error) {
-            console.error("Failed to parse response:", error);
-          }
-        };
-
-        websocket.value.addEventListener("message", messageHandler);
-        websocket.value.send(JSON.stringify(message));
-      });
+      if (!client) {
+        return Promise.reject(new Error("WebSocket not connected"));
+      }
+      return client.request(method, params, timeoutMs);
     }
 
     function handleMessage(data: SnapcastInboundMessage) {
