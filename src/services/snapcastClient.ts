@@ -5,6 +5,7 @@ export type SnapcastClientStatus = "disconnected" | "connecting" | "connected";
 export interface SnapcastClientOptions {
   url: string;
   requestTimeoutMs?: number;
+  connectTimeoutMs?: number;
   maxReconnectAttempts?: number;
   baseReconnectDelayMs?: number;
   maxReconnectDelayMs?: number;
@@ -26,6 +27,7 @@ export interface SnapcastClient {
 }
 
 const DEFAULT_REQUEST_TIMEOUT_MS = 10_000;
+const DEFAULT_CONNECT_TIMEOUT_MS = 10_000;
 const DEFAULT_MAX_RECONNECT_ATTEMPTS = 10;
 const DEFAULT_BASE_RECONNECT_DELAY_MS = 1000;
 const DEFAULT_MAX_RECONNECT_DELAY_MS = 30_000;
@@ -34,6 +36,7 @@ export function createSnapcastClient(
   options: SnapcastClientOptions
 ): SnapcastClient {
   const requestTimeoutMs = options.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
+  const connectTimeoutMs = options.connectTimeoutMs ?? DEFAULT_CONNECT_TIMEOUT_MS;
   const maxReconnectAttempts =
     options.maxReconnectAttempts ?? DEFAULT_MAX_RECONNECT_ATTEMPTS;
   const baseReconnectDelayMs =
@@ -49,6 +52,7 @@ export function createSnapcastClient(
   let hasConnectedSuccessfully = false;
   let reconnectAttempts = 0;
   let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+  let connectTimeout: ReturnType<typeof setTimeout> | null = null;
 
   const eventHandlers = new Set<(msg: SnapcastInboundMessage) => void>();
   const statusHandlers = new Set<
@@ -59,6 +63,13 @@ export function createSnapcastClient(
     status = next;
     lastError = error;
     for (const handler of statusHandlers) handler(next, error);
+  }
+
+  function clearConnectTimeout() {
+    if (connectTimeout) {
+      clearTimeout(connectTimeout);
+      connectTimeout = null;
+    }
   }
 
   function getReconnectDelay(): number {
@@ -90,6 +101,7 @@ export function createSnapcastClient(
       clearTimeout(reconnectTimeout);
       reconnectTimeout = null;
     }
+    clearConnectTimeout();
 
     manualDisconnect = false;
     setStatus("connecting");
@@ -103,13 +115,38 @@ export function createSnapcastClient(
       return;
     }
 
+    // A socket stuck in CONNECTING (e.g. an unreachable-but-routable host)
+    // has no bound on how long the OS-level TCP handshake can take — it
+    // can exceed a minute. Force it closed after connectTimeoutMs so the
+    // client errors out and reconnects on a predictable schedule instead.
+    connectTimeout = setTimeout(() => {
+      connectTimeout = null;
+      const stalled = websocket;
+      if (stalled && stalled.readyState === WebSocket.CONNECTING) {
+        // Detach handlers before closing so the normal onclose path (which
+        // reports "Connection lost") doesn't also run for this socket —
+        // we report the timeout ourselves and drive scheduleReconnect()
+        // directly, same as any other unexpected close.
+        stalled.onopen = null;
+        stalled.onclose = null;
+        stalled.onerror = null;
+        stalled.onmessage = null;
+        stalled.close();
+        if (websocket === stalled) websocket = null;
+        setStatus("disconnected", "Connection timeout");
+        scheduleReconnect();
+      }
+    }, connectTimeoutMs);
+
     websocket.onopen = () => {
+      clearConnectTimeout();
       hasConnectedSuccessfully = true;
       reconnectAttempts = 0;
       setStatus("connected");
     };
 
     websocket.onclose = (event) => {
+      clearConnectTimeout();
       const wasManual = manualDisconnect;
       websocket = null;
       setStatus("disconnected", wasManual ? null : `Connection lost: ${event.reason || "unknown reason"}`);
@@ -136,6 +173,7 @@ export function createSnapcastClient(
   function disconnect() {
     manualDisconnect = true;
     reconnectAttempts = 0;
+    clearConnectTimeout();
     if (reconnectTimeout) {
       clearTimeout(reconnectTimeout);
       reconnectTimeout = null;

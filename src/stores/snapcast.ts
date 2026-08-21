@@ -82,6 +82,15 @@ export const useSnapcastStore = defineStore(
         .replace(/\/$/, "");
       if (cleanHost !== host.value) {
         hasConnectedSuccessfully.value = false;
+        // A live client's WebSocket URL is baked into its closure at
+        // connect() time, so it would otherwise keep retrying the OLD
+        // host forever while store.host already reports the new one —
+        // a silent split-brain. Stop it here; the caller (setHost is
+        // always followed by an explicit disconnect()/connect() pair in
+        // this codebase) is responsible for reconnecting.
+        if (client) {
+          disconnect();
+        }
       }
       host.value = cleanHost;
     }
