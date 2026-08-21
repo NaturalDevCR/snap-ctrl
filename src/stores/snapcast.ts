@@ -5,79 +5,18 @@ import { useSettingsStore } from "./settings";
 import { useNotificationStore } from "./notification";
 import { logger } from "@/utils/logger";
 import type {
+  Client,
+  Group,
+  ServerStatus,
   ServerStatusResult,
   SnapcastInboundMessage,
+  Stream,
 } from "@/types/snapcast-rpc";
+
+export type { Client, Group, ServerStatus, Stream };
 
 /** Default time to wait for a JSON-RPC response before giving up. */
 export const DEFAULT_REQUEST_TIMEOUT_MS = 10_000;
-
-export interface Client {
-  id: string;
-  name: string;
-  host: {
-    name: string;
-    ip: string;
-    mac: string;
-    arch: string;
-    os: string;
-  };
-  connected: boolean;
-  config: {
-    instance: number;
-    latency: number;
-    name: string;
-    volume: {
-      muted: boolean;
-      percent: number;
-    };
-  };
-  snapclient: {
-    name: string;
-    version: string;
-    protocolVersion: number;
-  };
-  lastSeen: {
-    sec: number;
-    usec: number;
-  };
-}
-
-export interface Group {
-  id: string;
-  name: string;
-  stream_id: string;
-  clients: Client[];
-  muted: boolean;
-}
-
-export interface Stream {
-  id: string;
-  uri: string;
-  status: string;
-}
-
-export interface ServerStatus {
-  server: {
-    groups: Group[];
-    streams: Stream[];
-    server: {
-      host: {
-        arch: string;
-        ip: string;
-        mac: string;
-        name: string;
-        os: string;
-      };
-      snapserver: {
-        controlProtocolVersion: number;
-        name: string;
-        protocolVersion: number;
-        version: string;
-      };
-    };
-  };
-}
 
 export const useSnapcastStore = defineStore(
   "snapcast",
