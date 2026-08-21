@@ -13,6 +13,12 @@ export class SnapCtrlCardEditor extends HTMLElement {
   private config: Partial<CardConfig> = {};
   private built = false;
   private fields: Record<string, FieldElement> = {};
+  // Tracks which field id (if any) currently has focus, via focusin/focusout
+  // rather than document.activeElement — focusin/focusout are composed and
+  // bubble across shadow boundaries (ha-textfield delegates focus to an
+  // internal input), so this works the same whether or not the field's
+  // implementation uses shadow DOM.
+  private focusedFieldId: string | null = null;
 
   setConfig(config: Partial<CardConfig>) {
     this.config = config;
@@ -59,6 +65,13 @@ export class SnapCtrlCardEditor extends HTMLElement {
   private syncFields() {
     const values = this.fieldValues();
     for (const [id, value] of Object.entries(values)) {
+      // Never overwrite a field the user is actively typing in: comparing
+      // the raw field text against a re-normalized value is lossy (e.g.
+      // "Kitchen," round-trips through zone_filter parsing as "Kitchen",
+      // and an emptied port field round-trips as "1780" via `Number("") ||
+      // 1780`), so a naive value comparison would clobber in-progress
+      // input on every keystroke.
+      if (id === this.focusedFieldId) continue;
       const field = this.fields[id];
       // Only assign when the value actually differs from what the field
       // already shows, so an in-progress edit that round-trips back to
@@ -126,6 +139,12 @@ export class SnapCtrlCardEditor extends HTMLElement {
     field.value = value;
     field.addEventListener("input", (e) => {
       onChange((e.target as HTMLInputElement).value);
+    });
+    field.addEventListener("focusin", () => {
+      this.focusedFieldId = id;
+    });
+    field.addEventListener("focusout", () => {
+      if (this.focusedFieldId === id) this.focusedFieldId = null;
     });
     this.fields[id] = field;
     return field;
