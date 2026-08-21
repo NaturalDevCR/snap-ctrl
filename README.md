@@ -88,6 +88,41 @@ Snapcast server can serve this web interface directly.
 4.  Copy the contents of the `dist` folder to the `doc_root`.
 5.  Access the interface via `http://<snapserver-ip>:1780`.
 
+## Home Assistant Lovelace Card
+
+`snap-ctrl` also ships a standalone Lovelace custom card (`snap-ctrl-card`) for
+volume/mute/group controls directly in an HA dashboard — independent of the
+HA addon.
+
+### Install
+
+1. Build the card: `pnpm build:card` (or download `snap-ctrl-card.js` from a
+   release once published).
+2. Copy `dist-card/snap-ctrl-card.js` into your HA config's `www/` folder,
+   e.g. `config/www/snap-ctrl-card.js`.
+3. In HA, go to **Settings → Dashboards → Resources**, add a new resource:
+   - URL: `/local/snap-ctrl-card.js`
+   - Resource type: `JavaScript Module`
+4. Edit any dashboard, **Add Card → Manual** (or find "Snap Ctrl" in the card
+   picker), and configure:
+
+   ```yaml
+   type: custom:snap-ctrl-card
+   host: 192.168.1.50   # your Snapcast server's host/IP
+   port: 1780            # Snapcast control port, default 1780
+   title: Whole House Audio   # optional
+   zone_filter:                # optional — restrict to specific zones/clients
+     - Kitchen
+     - Living Room
+   ```
+
+The card connects directly to the Snapcast server over WebSocket, the same
+protocol the standalone app uses — no HA integration or addon required for
+the card itself to work, as long as the Snapcast server is reachable from
+your browser. The connection automatically follows your dashboard's own
+page protocol: `wss://` when the dashboard is served over HTTPS, `ws://`
+otherwise — no separate configuration needed.
+
 ## GitHub Release Workflow
 
 This project includes a GitHub Actions workflow that automatically builds and releases the application.

@@ -2,7 +2,73 @@
  * Types for the Snapcast JSON-RPC control protocol.
  * https://github.com/badaix/snapcast/blob/develop/doc/json_rpc_api/control.md
  */
-import type { Client, Group, ServerStatus, Stream } from "@/stores/snapcast";
+
+export interface Client {
+  id: string;
+  name: string;
+  host: {
+    name: string;
+    ip: string;
+    mac: string;
+    arch: string;
+    os: string;
+  };
+  connected: boolean;
+  config: {
+    instance: number;
+    latency: number;
+    name: string;
+    volume: {
+      muted: boolean;
+      percent: number;
+    };
+  };
+  snapclient: {
+    name: string;
+    version: string;
+    protocolVersion: number;
+  };
+  lastSeen: {
+    sec: number;
+    usec: number;
+  };
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  stream_id: string;
+  clients: Client[];
+  muted: boolean;
+}
+
+export interface Stream {
+  id: string;
+  uri: string;
+  status: string;
+}
+
+export interface ServerStatus {
+  server: {
+    groups: Group[];
+    streams: Stream[];
+    server: {
+      host: {
+        arch: string;
+        ip: string;
+        mac: string;
+        name: string;
+        os: string;
+      };
+      snapserver: {
+        controlProtocolVersion: number;
+        name: string;
+        protocolVersion: number;
+        version: string;
+      };
+    };
+  };
+}
 
 export interface JsonRpcError {
   code: number;
@@ -89,5 +155,3 @@ export type SnapcastNotification =
 
 /** Any inbound message on the control socket. */
 export type SnapcastInboundMessage = JsonRpcResponse | SnapcastNotification;
-
-export type { Client, Group, ServerStatus, Stream };

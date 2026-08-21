@@ -6,6 +6,13 @@ carries auto-generated notes with the full commit list.
 
 > **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
 
+### v0.4.0
+
+- **Added**: Home Assistant Lovelace custom card (`<snap-ctrl-card>`) — a standalone dashboard card for volume/mute/group controls, installable independently of the HA addon (new `pnpm build:card` target, single self-contained `dist-card/snap-ctrl-card.js`). Connects directly to the Snapcast server over WebSocket, styled via Home Assistant's CSS custom properties, with a visual config editor (host/port/title/zone_filter). See the "Home Assistant Lovelace Card" section in the README for manual install steps.
+- **Added**: `src/services/snapcastClient.ts` — the WebSocket connect/reconnect/JSON-RPC-request logic previously inline in the Pinia store is now a shared, framework-agnostic module used by both the app and the new card, restoring a 10-second connect timeout along the way.
+- **Fixed**: `setHost()` now disconnects a live client when the host actually changes, instead of leaving it silently reconnecting to the old host while the store reports the new one.
+- **Fixed**: The app's WebSocket connection now correctly times out after 10 seconds against an unreachable-but-routable host, instead of hanging until the OS-level TCP timeout.
+
 ### v0.3.5
 
 - **Fixed**: Deleting a client or emptying a group now updates the UI immediately. Snapserver does not echo `Server.OnUpdate` back to the session that made the request, so the full server status returned by `Server.DeleteClient` / `Group.SetClients` is now applied locally (previously the response was discarded and the UI stayed stale until a manual reload).

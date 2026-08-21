@@ -1,6 +1,6 @@
 {
   "name": "snapcast-vue",
-  "version": "0.3.5",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -14,6 +14,7 @@
     "preview": "vite preview",
     "build-only": "vite build",
     "build-only:ha": "vite build --config vite.config.ha.ts",
+    "build:card": "vue-tsc --build && vite build --config vite.config.card.ts",
     "type-check": "vue-tsc --build",
     "test": "vitest run",
     "test:watch": "vitest"

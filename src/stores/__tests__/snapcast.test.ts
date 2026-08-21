@@ -267,6 +267,47 @@ describe("snapcast store — PR 1 network hygiene", () => {
     expect(statusCalls).toHaveLength(2);
   });
 
+  it("disconnects a live client when setHost() changes the host, instead of leaving it retrying the old target", async () => {
+    vi.useFakeTimers();
+    const store = useSnapcastStore();
+    useAuthStore();
+    store.setHost("old-host:1780");
+    store.connect();
+    const ws = FakeWebSocket.instances[0]!;
+    ws.open();
+    await Promise.resolve();
+    expect(store.isConnected).toBe(true);
+
+    store.setHost("new-host:1780");
+
+    expect(store.host).toBe("new-host:1780");
+    expect(store.isConnected).toBe(false);
+    expect(store.isConnecting).toBe(false);
+
+    // Even if the old socket were to report a lost connection, there is no
+    // live client left to react to it and schedule a reconnect against the
+    // stale (old) host.
+    ws.onclose?.({ wasClean: false, code: 1006, reason: "lost" });
+    vi.advanceTimersByTime(60_000);
+    expect(FakeWebSocket.instances).toHaveLength(1);
+  });
+
+  it("does not disconnect when setHost() is called with the same host", async () => {
+    const store = useSnapcastStore();
+    useAuthStore();
+    store.setHost("same-host:1780");
+    store.connect();
+    const ws = FakeWebSocket.instances[0]!;
+    ws.open();
+    await Promise.resolve();
+    expect(store.isConnected).toBe(true);
+
+    store.setHost("same-host:1780");
+
+    expect(store.isConnected).toBe(true);
+    expect(FakeWebSocket.instances).toHaveLength(1);
+  });
+
   it("removes its message listener on request timeout (no leak)", async () => {
     vi.useFakeTimers();
     const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
