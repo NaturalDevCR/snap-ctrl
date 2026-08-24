@@ -9,6 +9,7 @@ import { getStreamName } from "@/utils/stream-name";
 import {
   getStreamStatusColor,
   getStreamStatusIcon,
+  getStreamStatusTooltip,
 } from "@/utils/stream-status";
 import { averageGroupVolume } from "@/utils/group-volume";
 import Tooltip from "@/components/Tooltip.vue";
@@ -168,6 +169,9 @@ function streamOf(group: Group) {
                   <span
                     class="mdi"
                     :class="getStreamStatusIcon(snapcast.streams, group.stream_id)"
+                    role="img"
+                    :aria-label="getStreamStatusTooltip(snapcast.streams, group.stream_id)"
+                    :title="getStreamStatusTooltip(snapcast.streams, group.stream_id)"
                   ></span>
                   <span>{{ getStreamName(streamOf(group)) }}</span>
                 </div>

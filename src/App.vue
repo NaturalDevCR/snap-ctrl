@@ -202,6 +202,7 @@
         :stream-name="getStreamName(snapcast.streams.find(s => s.id === zoneControlGroup!.stream_id))"
         :stream-status-icon="getStreamStatusIcon(snapcast.streams, zoneControlGroup!.stream_id)"
         :stream-status-color="getStreamStatusColor(snapcast.streams, zoneControlGroup!.stream_id)"
+        :stream-status-tooltip="getStreamStatusTooltip(snapcast.streams, zoneControlGroup!.stream_id)"
         :volume="getGroupVolume(zoneControlGroup!.id)"
         :is-muted="zoneControlGroup!.muted"
         :clients="zoneControlGroup!.clients"
@@ -281,6 +282,7 @@ import { getGroupDisplayName } from "@/utils/group-name";
 import {
   getStreamStatusColor,
   getStreamStatusIcon,
+  getStreamStatusTooltip,
 } from "@/utils/stream-status";
 import { averageGroupVolume } from "@/utils/group-volume";
 import BrowserPlayer from "@/components/BrowserPlayer.vue";
