@@ -6,6 +6,10 @@ carries auto-generated notes with the full commit list.
 
 > **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
 
+### v0.4.2
+
+- **Fixed**: The Lovelace card's config editor (host/port/title/zone filter) rendered completely empty in the dashboard's card-configuration dialog. It built its fields with `<ha-textfield>`, which isn't guaranteed to be registered yet in that context — an undefined custom element takes zero visible space instead of erroring. Replaced with plain `<input>` elements, which have no such dependency.
+
 ### v0.4.1
 
 - **Added**: HACS support for the Lovelace card. Add `https://github.com/NaturalDevCR/snap-ctrl` as a custom repository (category Dashboard) and HACS installs and registers `snap-ctrl-card.js` automatically — no manual `www/` copy or Resources entry needed. The release workflow now publishes `snap-ctrl-card.js` as a standalone asset for this. Manual install remains available as a fallback.
