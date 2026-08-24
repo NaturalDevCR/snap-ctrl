@@ -7,8 +7,7 @@
     @focusin="show"
     @focusout="hide"
   >
-    <component :is="slottedChild" v-if="slottedChild" />
-    <slot v-else></slot>
+    <slot></slot>
   </span>
   <Teleport to="body">
     <div
@@ -27,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, useSlots, cloneVNode } from "vue";
+import { ref, computed, nextTick, watchEffect } from "vue";
 
 const props = defineProps({
   text: {
@@ -47,8 +46,6 @@ const tooltipRef = ref<HTMLElement | null>(null);
 const visible = ref(false);
 const tooltipStyle = ref<Record<string, string>>({});
 
-const slots = useSlots();
-
 // Tooltips only ever appeared on :hover, so most of the app's icon-only
 // buttons (wrapped in this component precisely so they'd get a label) had
 // zero accessible name for screen readers and zero affordance on
@@ -56,15 +53,23 @@ const slots = useSlots();
 // at all. Stamp the tooltip text on as aria-label (unless the child already
 // set its own) so the same source of truth covers both the visual tooltip
 // and the accessible name, and show on focus too so keyboard users get it.
-const slottedChild = computed(() => {
-  const children = slots.default?.() ?? [];
-  if (children.length !== 1) return null;
-  const vnode = children[0]!;
-  if (typeof vnode.type === "symbol") return null; // Text/Comment/Fragment
-  const existingLabel = (vnode.props as Record<string, unknown> | null)?.[
-    "aria-label"
-  ];
-  return cloneVNode(vnode, { "aria-label": existingLabel || props.text });
+//
+// This sets the attribute directly on the mounted DOM element rather than
+// cloning/re-injecting props into the slot's vnode (e.g. via cloneVNode +
+// <component :is>) — that approach crashed Vue's renderer here: this
+// wrapper's slotted children are often themselves conditionally rendered
+// (v-if buttons, buttons whose own attributes change), and re-parenting a
+// cloned vnode into a different position in the tree on every render
+// fought with Vue's block-tree/dynamicChildren tracking. Plain DOM
+// attribute writes side-step that entirely.
+const autoLabelMarker = "data-tooltip-auto-label";
+watchEffect(() => {
+  const el = triggerRef.value?.firstElementChild as HTMLElement | null | undefined;
+  if (!el) return;
+  const weOwnIt = el.hasAttribute(autoLabelMarker);
+  if (el.hasAttribute("aria-label") && !weOwnIt) return; // explicit label on the child — don't override it
+  el.setAttribute("aria-label", props.text);
+  el.setAttribute(autoLabelMarker, "");
 });
 
 const show = async () => {

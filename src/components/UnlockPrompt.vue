@@ -81,6 +81,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
+import { useEscapeToClose } from "@/composables/useEscapeToClose";
 
 const props = withDefaults(
   defineProps<{
@@ -136,4 +137,8 @@ function handleCancel() {
     emit("cancel");
   }
 }
+
+// handleCancel already no-ops when !canCancel, so Escape is always safe to
+// wire up here — it just won't do anything when cancelling isn't allowed.
+useEscapeToClose(() => true, handleCancel);
 </script>

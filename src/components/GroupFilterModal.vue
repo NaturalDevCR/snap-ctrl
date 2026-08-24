@@ -3,6 +3,7 @@ import { computed, toRef } from "vue";
 import { useSettingsStore } from "@/stores/settings";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useZoneOrder } from "@/composables/useZoneOrder";
+import { useEscapeToClose } from "@/composables/useEscapeToClose";
 import { getGroupDisplayName } from "@/utils/group-name";
 import type { Group } from "@/stores/snapcast";
 
@@ -13,6 +14,11 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "close"): void;
 }>();
+
+useEscapeToClose(
+  () => props.open,
+  () => emit("close")
+);
 
 const settings = useSettingsStore();
 const snapcast = useSnapcastStore();
@@ -26,6 +32,8 @@ const {
   handleDragOver,
   handleDrop,
   handleDragEnd,
+  moveZoneUp,
+  moveZoneDown,
   toggleVisibility,
 } = useZoneOrder(groupsRef, {
   hiddenZoneIds: computed(() => settings.hiddenGroups),
@@ -106,32 +114,61 @@ function onBackdropClick() {
           class="flex items-center justify-between p-3 mb-2 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700/50 rounded-xl cursor-move transition-colors border border-gray-200 dark:border-gray-700"
           :class="{ 'opacity-50': draggedIndex === index }"
         >
-          <div class="flex items-center gap-3">
-            <span class="mdi mdi-drag-vertical text-gray-400"></span>
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="mdi mdi-drag-vertical text-gray-400 hidden sm:inline" aria-hidden="true"></span>
+            <!-- Native HTML5 drag-and-drop (the handlers on the row above)
+                 never fires on touch devices — there's no browser
+                 fallback — so these are the only way to reorder on a
+                 phone or tablet, which is most of this app's install
+                 base. Kept small/inline rather than hidden behind a
+                 gesture. -->
+            <div class="flex flex-col shrink-0">
+              <button
+                type="button"
+                class="w-6 h-5 flex items-center justify-center rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:text-gray-200 dark:hover:bg-slate-700 disabled:opacity-25 disabled:pointer-events-none"
+                :disabled="index === 0"
+                :aria-label="`Move ${getGroupName(group)} up`"
+                @click.stop="moveZoneUp(index)"
+              >
+                <span class="mdi mdi-chevron-up text-sm"></span>
+              </button>
+              <button
+                type="button"
+                class="w-6 h-5 flex items-center justify-center rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:text-gray-200 dark:hover:bg-slate-700 disabled:opacity-25 disabled:pointer-events-none"
+                :disabled="index === orderedZonesForFilter.length - 1"
+                :aria-label="`Move ${getGroupName(group)} down`"
+                @click.stop="moveZoneDown(index)"
+              >
+                <span class="mdi mdi-chevron-down text-sm"></span>
+              </button>
+            </div>
             <span
-              class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+              class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
               :class="getGroupColor(group.id)"
             >
               {{ getGroupName(group).charAt(0).toUpperCase() }}
             </span>
-            <span class="font-medium text-gray-900 dark:text-white">{{
+            <span class="font-medium text-gray-900 dark:text-white truncate">{{
               getGroupName(group)
             }}</span>
           </div>
-          <div
-            class="w-6 h-6 rounded-full border flex items-center justify-center transition-colors"
+          <button
+            type="button"
+            class="w-6 h-6 rounded-full border flex items-center justify-center transition-colors shrink-0"
             :class="
               !isHidden(group.id)
                 ? 'bg-blue-500 border-blue-500 text-white'
                 : 'border-gray-300 dark:border-gray-600'
             "
+            :aria-pressed="!isHidden(group.id)"
+            :aria-label="isHidden(group.id) ? `Show ${getGroupName(group)}` : `Hide ${getGroupName(group)}`"
             @click.stop="toggleVisibility(group.id)"
           >
             <span
               v-if="!isHidden(group.id)"
               class="mdi mdi-check text-sm"
             ></span>
-          </div>
+          </button>
         </div>
       </div>
       <div

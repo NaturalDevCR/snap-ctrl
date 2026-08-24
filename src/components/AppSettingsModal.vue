@@ -3,6 +3,7 @@ import { ref, watch } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useSettingsStore } from "@/stores/settings";
 import { useAuthStore } from "@/stores/auth";
+import { useEscapeToClose } from "@/composables/useEscapeToClose";
 
 const props = defineProps<{
   open: boolean;
@@ -14,6 +15,11 @@ const emit = defineEmits<{
   (e: "enableAuthentication"): void;
   (e: "disableAuthentication"): void;
 }>();
+
+useEscapeToClose(
+  () => props.open,
+  () => emit("close")
+);
 
 const snapcast = useSnapcastStore();
 const settings = useSettingsStore();

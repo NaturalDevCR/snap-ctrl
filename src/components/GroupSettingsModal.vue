@@ -6,6 +6,7 @@ import { useAuthStore } from "@/stores/auth";
 import { getStreamName } from "@/utils/stream-name";
 import { logger } from "@/utils/logger";
 import Tooltip from "@/components/Tooltip.vue";
+import { useEscapeToClose } from "@/composables/useEscapeToClose";
 import type { Client, Group } from "@/stores/snapcast";
 
 const props = defineProps<{
@@ -16,6 +17,11 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "close"): void;
 }>();
+
+useEscapeToClose(
+  () => props.open,
+  () => emit("close")
+);
 
 const snapcast = useSnapcastStore();
 const settings = useSettingsStore();
@@ -61,8 +67,22 @@ function getOfflineClientsInGroup(): Client[] {
 // Remove all offline clients from current group
 async function removeOfflineClients() {
   if (!groupId.value) return;
+  const offline = getOfflineClientsInGroup();
+  if (offline.length === 0) return;
 
-  for (const client of getOfflineClientsInGroup()) {
+  // Server.DeleteClient permanently forgets the client (name, volume,
+  // latency) — it isn't just "hide until it reconnects". One misplaced tap
+  // here on a shared/kiosk device wipes that config for good.
+  const noun = offline.length === 1 ? "client" : "clients";
+  if (
+    !window.confirm(
+      `Permanently remove ${offline.length} offline ${noun} from this group? This forgets their saved name and volume — they'll show up as a brand-new client if they reconnect.`
+    )
+  ) {
+    return;
+  }
+
+  for (const client of offline) {
     try {
       await snapcast.deleteClient(client.id);
     } catch (error) {
@@ -161,6 +181,18 @@ async function deleteGroup() {
 
   const group = snapcast.groups.find((g) => g.id === groupId.value);
   if (!group) return;
+
+  // No undo: this empties the group (its clients fall back to
+  // Snapserver's default group) and permanently deletes any of its
+  // clients that are currently offline. A single accidental tap — easy on
+  // a shared/kiosk device — is otherwise enough to do both.
+  if (
+    !window.confirm(
+      `Delete "${name.value || group.name || "this group"}"? Its clients will be ungrouped, and any offline clients in it will be permanently forgotten.`
+    )
+  ) {
+    return;
+  }
 
   // Delete disconnected clients first
   for (const client of group.clients.filter((c) => !c.connected)) {

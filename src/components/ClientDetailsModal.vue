@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { formatLastSeen } from "@/utils/last-seen";
+import { useEscapeToClose } from "@/composables/useEscapeToClose";
 import type { Client } from "@/stores/snapcast";
 
 const props = defineProps<{
@@ -11,6 +12,11 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "close"): void;
 }>();
+
+useEscapeToClose(
+  () => props.open,
+  () => emit("close")
+);
 
 const displayName = computed(() => {
   if (!props.client) return "";

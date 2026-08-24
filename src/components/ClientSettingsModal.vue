@@ -3,6 +3,7 @@ import { ref, watch } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useAuthStore } from "@/stores/auth";
 import Tooltip from "@/components/Tooltip.vue";
+import { useEscapeToClose } from "@/composables/useEscapeToClose";
 import type { Client } from "@/stores/snapcast";
 
 const props = defineProps<{
@@ -15,6 +16,11 @@ const emit = defineEmits<{
   (e: "deleted", clientId: string, clientName: string): void;
   (e: "saved"): void;
 }>();
+
+useEscapeToClose(
+  () => props.open,
+  () => emit("close")
+);
 
 const snapcast = useSnapcastStore();
 const auth = useAuthStore();
@@ -44,6 +50,13 @@ async function deleteClient() {
   if (!clientId.value) return;
   const id = clientId.value;
   const displayName = name.value || id;
+  if (
+    !window.confirm(
+      `Permanently forget "${displayName}"? This deletes its saved name, volume, and latency — it'll show up as a brand-new client if it reconnects. This cannot be undone.`
+    )
+  ) {
+    return;
+  }
   try {
     await snapcast.deleteClient(id);
     emit("deleted", id, displayName);
@@ -57,7 +70,13 @@ async function save() {
   if (!clientId.value) return;
   try {
     await snapcast.setClientName(clientId.value, name.value);
-    await snapcast.setClientLatency(clientId.value, latency.value);
+    // v-model.number turns an emptied/invalid field into NaN, which
+    // JSON.stringify silently sends as `null` — clamp to a safe integer
+    // instead of shipping a malformed RPC param.
+    const safeLatency = Number.isFinite(latency.value)
+      ? Math.max(0, Math.round(latency.value))
+      : 0;
+    await snapcast.setClientLatency(clientId.value, safeLatency);
     emit("saved");
     emit("close");
   } catch (e) {

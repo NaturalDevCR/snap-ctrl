@@ -41,9 +41,6 @@ jobs:
       - name: Build HA addon
         run: pnpm run build:ha
 
-      - name: Build Lovelace card
-        run: pnpm run build:card
-
       - name: Zip dist folders
         run: |
           zip -r dist.zip dist
@@ -55,5 +52,4 @@ jobs:
           files: |
             dist.zip
             dist-ha.zip
-            dist-card/snap-ctrl-card.js
           generate_release_notes: true

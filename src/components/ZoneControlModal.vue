@@ -224,6 +224,7 @@ import VolumeControl from './VolumeControl.vue';
 import Tooltip from '@/components/Tooltip.vue';
 
 import { useSettingsStore } from "@/stores/settings";
+import { useEscapeToClose } from "@/composables/useEscapeToClose";
 
 const settings = useSettingsStore();
 
@@ -287,6 +288,8 @@ function handleModalClick(event: MouseEvent) {
 function close() {
   emit('close');
 }
+
+useEscapeToClose(() => props.isOpen, close);
 
 function toggleMute() {
   emit('toggle-mute');

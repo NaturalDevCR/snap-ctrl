@@ -134,6 +134,27 @@ export const useSettingsStore = defineStore(
       groupVolumeLinks.value[groupId] = { linkedClientIds, referenceVolumes };
     }
 
+    // Recently used Snapcast server addresses (most recent first). Lets
+    // someone who connects to more than one Snapcast server from the same
+    // browser (a laptop moving between home/vacation-house servers, a
+    // tablet used to administer several installs) pick a known-good
+    // address again instead of retyping host:port from memory.
+    const MAX_RECENT_HOSTS = 5;
+    const recentHosts = ref<string[]>([]);
+
+    function addRecentHost(host: string) {
+      const trimmed = host.trim();
+      if (!trimmed) return;
+      recentHosts.value = [
+        trimmed,
+        ...recentHosts.value.filter((h) => h !== trimmed),
+      ].slice(0, MAX_RECENT_HOSTS);
+    }
+
+    function removeRecentHost(host: string) {
+      recentHosts.value = recentHosts.value.filter((h) => h !== host);
+    }
+
     // Custom group ordering
     const customGroupOrder = ref<string[]>([]);
 
@@ -141,33 +162,14 @@ export const useSettingsStore = defineStore(
       customGroupOrder.value = order;
     }
 
-    function moveGroupUp(groupId: string) {
-      const index = customGroupOrder.value.indexOf(groupId);
-      if (index > 0) {
-        const newOrder = [...customGroupOrder.value];
-        const prev = newOrder[index - 1];
-        const curr = newOrder[index];
-        if (prev !== undefined && curr !== undefined) {
-          newOrder[index - 1] = curr;
-          newOrder[index] = prev;
-          customGroupOrder.value = newOrder;
-        }
-      }
-    }
-
-    function moveGroupDown(groupId: string) {
-      const index = customGroupOrder.value.indexOf(groupId);
-      if (index !== -1 && index < customGroupOrder.value.length - 1) {
-        const newOrder = [...customGroupOrder.value];
-        const curr = newOrder[index];
-        const next = newOrder[index + 1];
-        if (curr !== undefined && next !== undefined) {
-          newOrder[index] = next;
-          newOrder[index + 1] = curr;
-          customGroupOrder.value = newOrder;
-        }
-      }
-    }
+    // Note: reordering itself (move up/down, drag-and-drop) lives in
+    // useZoneOrder.ts, which seeds an order from what's currently on
+    // screen when customGroupOrder is still empty. A version of
+    // moveUp/moveDown used to live here operating directly on
+    // customGroupOrder.indexOf(groupId) — which silently did nothing on a
+    // fresh install (empty array → index -1) and was never wired to any
+    // UI. Removed rather than fixed in place, since useZoneOrder already
+    // has the correct (seeded) version.
 
     // Persisted client ordering per group id -> client id array
     // Removed manual client ordering feature per request
@@ -237,8 +239,9 @@ export const useSettingsStore = defineStore(
       setGroupVolumeLinks,
       customGroupOrder,
       setCustomGroupOrder,
-      moveGroupUp,
-      moveGroupDown,
+      recentHosts,
+      addRecentHost,
+      removeRecentHost,
       clientSourceVolumes,
       enabledPerSourceVolumeGroups,
       isPerSourceVolumeEnabled,
@@ -265,6 +268,7 @@ export const useSettingsStore = defineStore(
         "hiddenGroups",
         "groupVolumeLinks",
         "customGroupOrder",
+        "recentHosts",
         "enabledPerSourceVolumeGroups",
         "clientSourceVolumes",
         "globalVolumeControlMode",

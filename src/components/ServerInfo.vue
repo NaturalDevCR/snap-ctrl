@@ -142,6 +142,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useSnapcastStore } from '@/stores/snapcast';
+import { useEscapeToClose } from '@/composables/useEscapeToClose';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -150,6 +151,11 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'close'): void;
 }>();
+
+useEscapeToClose(
+  () => props.isOpen,
+  () => emit('close')
+);
 
 const snapcast = useSnapcastStore();
 
