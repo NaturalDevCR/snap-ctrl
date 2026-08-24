@@ -127,16 +127,43 @@ export class SnapCtrlCardEditor extends HTMLElement {
     this.built = true;
   }
 
+  /**
+   * Plain <label>/<input> rather than HA's <ha-textfield>. ha-textfield is
+   * lazy-loaded by HA's frontend and is not guaranteed to already be
+   * registered in the dashboard-editor context — an undefined custom
+   * element has no default box model or rendered content, so the field
+   * would silently take up zero visible space until (if ever) ha-textfield
+   * happens to load. A native input has no such dependency.
+   */
   private buildTextField(
     id: string,
     label: string,
     value: string,
     onChange: (value: string) => void
-  ): FieldElement {
-    const field = document.createElement("ha-textfield") as FieldElement;
+  ): HTMLElement {
+    const wrapper = document.createElement("label");
+    wrapper.style.display = "flex";
+    wrapper.style.flexDirection = "column";
+    wrapper.style.gap = "4px";
+    wrapper.style.fontSize = "0.875rem";
+    wrapper.style.color = "var(--primary-text-color, #212121)";
+
+    const labelText = document.createElement("span");
+    labelText.textContent = label;
+    wrapper.appendChild(labelText);
+
+    const field = document.createElement("input") as FieldElement;
+    field.setAttribute("type", "text");
     field.setAttribute("id", id);
-    field.label = label;
     field.value = value;
+    field.style.padding = "8px";
+    field.style.borderRadius = "4px";
+    field.style.border = "1px solid var(--divider-color, #e0e0e0)";
+    field.style.background = "var(--card-background-color, #fff)";
+    field.style.color = "var(--primary-text-color, #212121)";
+    field.style.font = "inherit";
+    field.style.boxSizing = "border-box";
+
     field.addEventListener("input", (e) => {
       onChange((e.target as HTMLInputElement).value);
     });
@@ -146,7 +173,9 @@ export class SnapCtrlCardEditor extends HTMLElement {
     field.addEventListener("focusout", () => {
       if (this.focusedFieldId === id) this.focusedFieldId = null;
     });
+
+    wrapper.appendChild(field);
     this.fields[id] = field;
-    return field;
+    return wrapper;
   }
 }
