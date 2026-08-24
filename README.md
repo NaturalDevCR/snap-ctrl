@@ -133,6 +133,63 @@ your browser. The connection automatically follows your dashboard's own
 page protocol: `wss://` when the dashboard is served over HTTPS, `ws://`
 otherwise — no separate configuration needed.
 
+### HTTPS dashboards need `wss://` all the way to Snapcast
+
+**If your HA dashboard is served over HTTPS** (Nabu Casa, a custom domain, any
+TLS-terminating reverse proxy in front of HA), the card connects with
+`wss://`. Browsers block a plain `ws://` connection from an HTTPS page as
+mixed content — there is no way around this client-side. If your Snapcast
+server only speaks plain `ws://` (the default — `snapserver` has no built-in
+TLS), the `wss://` handshake will simply fail and the card shows
+"Connection lost."
+
+Point the card's `host`/`port` at a TLS-terminating reverse proxy in front of
+Snapcast instead of at Snapcast directly. This is the same pattern the
+bundled HA addon already uses internally (see `addon/nginx.conf`) — you're
+just running an equivalent proxy of your own, reachable from your browser.
+
+**nginx** (adjust `server_name`, cert paths, and the upstream port):
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name snapcast.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/snapcast.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/snapcast.example.com/privkey.pem;
+
+    location /jsonrpc {
+        proxy_pass http://127.0.0.1:1780/jsonrpc;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+}
+```
+
+**Caddy** (automatic TLS, no cert management):
+
+```
+snapcast.example.com {
+    reverse_proxy /jsonrpc* 127.0.0.1:1780
+}
+```
+
+Then configure the card with the proxy's address, not Snapcast's raw port:
+
+```yaml
+type: custom:snap-ctrl-card
+host: snapcast.example.com
+port: 443
+```
+
+If the card doesn't need to work over an HTTPS/remote dashboard — only from
+your local network over plain HTTP — none of this is needed; point it
+directly at Snapcast's host and port (default `1780`) as shown above.
+
 ## GitHub Release Workflow
 
 This project includes a GitHub Actions workflow that automatically builds and releases the application.
