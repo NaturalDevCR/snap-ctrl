@@ -238,7 +238,7 @@ function streamOf(group: Group) {
     </div>
 
     <div
-      v-if="snapcast.isConnected && snapcast.groups.length === 0"
+      v-if="snapcast.isConnected && sortedGroups.length === 0"
       class="flex flex-col items-center justify-center py-16 px-4 text-center border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50/50 dark:bg-slate-900/50"
     >
       <div
@@ -249,8 +249,19 @@ function streamOf(group: Group) {
       <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
         No groups found
       </h3>
+      <!-- snapcast.groups.length === 0 means the server truly has none;
+           otherwise every group that exists is being hidden by this
+           device's own filters (hidden groups / "show empty groups" /
+           group filter modal), which is a very different situation from
+           "nothing is connected". -->
       <p class="text-gray-500 dark:text-gray-400 max-w-sm">
-        Make sure your Snapcast server is running and has clients connected.
+        <template v-if="snapcast.groups.length === 0">
+          Make sure your Snapcast server is running and has clients connected.
+        </template>
+        <template v-else>
+          All groups are hidden by your current filters. Check "Show empty
+          groups" or the group filter above.
+        </template>
       </p>
     </div>
 

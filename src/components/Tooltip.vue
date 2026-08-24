@@ -4,8 +4,11 @@
     class="inline-block"
     @mouseenter="show"
     @mouseleave="hide"
+    @focusin="show"
+    @focusout="hide"
   >
-    <slot></slot>
+    <component :is="slottedChild" v-if="slottedChild" />
+    <slot v-else></slot>
   </span>
   <Teleport to="body">
     <div
@@ -24,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick } from "vue";
+import { ref, computed, nextTick, useSlots, cloneVNode } from "vue";
 
 const props = defineProps({
   text: {
@@ -43,6 +46,26 @@ const triggerRef = ref<HTMLElement | null>(null);
 const tooltipRef = ref<HTMLElement | null>(null);
 const visible = ref(false);
 const tooltipStyle = ref<Record<string, string>>({});
+
+const slots = useSlots();
+
+// Tooltips only ever appeared on :hover, so most of the app's icon-only
+// buttons (wrapped in this component precisely so they'd get a label) had
+// zero accessible name for screen readers and zero affordance on
+// touch/keyboard — mobile has no hover, so those users never saw the label
+// at all. Stamp the tooltip text on as aria-label (unless the child already
+// set its own) so the same source of truth covers both the visual tooltip
+// and the accessible name, and show on focus too so keyboard users get it.
+const slottedChild = computed(() => {
+  const children = slots.default?.() ?? [];
+  if (children.length !== 1) return null;
+  const vnode = children[0]!;
+  if (typeof vnode.type === "symbol") return null; // Text/Comment/Fragment
+  const existingLabel = (vnode.props as Record<string, unknown> | null)?.[
+    "aria-label"
+  ];
+  return cloneVNode(vnode, { "aria-label": existingLabel || props.text });
+});
 
 const show = async () => {
   visible.value = true;

@@ -24,7 +24,7 @@ A modern, responsive, and feature-rich web interface for [Snapcast](https://gith
   - **Access Restrictions**: Restrict access to specific groups, sources, or clients.
 - **Smart Volume Memory**:
   - **Per-Source Volume**: Optionally remember volume levels for each source **per group**. Enable this in Group Settings to have clients in that group restore their volume when switching sources.
-  - **Multi-Device Sync**: Volume memory is synchronized across all devices. If you change the volume for a source on your phone, your laptop will learn and remember that volume too.
+  - **Per-Browser Memory**: Volume memory (and other UI preferences — theme, hidden groups, group ordering, permissions) is stored in that browser's `localStorage`. It is **not** synced across devices: opening SnapCtrl on your phone and your laptop are two independent memories, each learning its own volumes. Only the actual playback state (current volume, mute, active stream) is shared, because that lives on the Snapcast server itself and reaches every connected device over its WebSocket broadcast.
 - **Integrated Browser Player**: Listen to your Snapcast streams directly within the browser, utilizing WASM-based decoders (FLAC, Vorbis, PCM) for high-quality playback.
 - **Stream Management**: Intuitive interface for assigning streams to groups.
 - **PWA Support**: Install as a Progressive Web App (PWA) on your device for a native-like experience.

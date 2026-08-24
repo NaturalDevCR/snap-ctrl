@@ -19,6 +19,7 @@
         <button
           v-if="canCancel"
           @click="handleCancel"
+          aria-label="Cancel"
           class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
         >
           <span class="mdi mdi-close text-xl"></span>

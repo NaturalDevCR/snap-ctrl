@@ -111,6 +111,8 @@
             class="bg-transparent border-none text-base cursor-pointer p-1 rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-400"
             @click="toggleMute"
             :disabled="!connected"
+            :aria-label="isMuted ? 'Unmute' : 'Mute'"
+            :aria-pressed="isMuted"
           >
             <span
               :class="isMuted ? 'mdi mdi-volume-off' : 'mdi mdi-volume-high'"
@@ -142,6 +144,7 @@
           :class="{ '!bg-blue-600 dark:!bg-blue-500 !text-white': connected }"
           @click="handleConnect"
           :disabled="connecting"
+          :aria-label="connecting ? 'Connecting…' : connected ? 'Stop playback' : 'Play in browser'"
         >
           <span v-if="connecting" class="mdi mdi-loading mdi-spin"></span>
           <span v-else-if="connected" class="mdi mdi-stop"></span>

@@ -92,6 +92,7 @@ async function save() {
           </h3>
           <button
             @click="emit('close')"
+            aria-label="Close"
             class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
             <span class="mdi mdi-close text-xl"></span>
