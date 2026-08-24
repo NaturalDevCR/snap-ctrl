@@ -6,6 +6,11 @@ carries auto-generated notes with the full commit list.
 
 > **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
 
+### v0.4.1
+
+- **Added**: HACS support for the Lovelace card. Add `https://github.com/NaturalDevCR/snap-ctrl` as a custom repository (category Dashboard) and HACS installs and registers `snap-ctrl-card.js` automatically — no manual `www/` copy or Resources entry needed. The release workflow now publishes `snap-ctrl-card.js` as a standalone asset for this. Manual install remains available as a fallback.
+- **Docs**: Clarified that the card has its own configuration form in the "Add Card" picker (host/port/title/zone_filter) — no YAML editing required.
+
 ### v0.4.0
 
 - **Added**: Home Assistant Lovelace custom card (`<snap-ctrl-card>`) — a standalone dashboard card for volume/mute/group controls, installable independently of the HA addon (new `pnpm build:card` target, single self-contained `dist-card/snap-ctrl-card.js`). Connects directly to the Snapcast server over WebSocket, styled via Home Assistant's CSS custom properties, with a visual config editor (host/port/title/zone_filter). See the "Home Assistant Lovelace Card" section in the README for manual install steps.

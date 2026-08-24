@@ -94,17 +94,15 @@ Snapcast server can serve this web interface directly.
 volume/mute/group controls directly in an HA dashboard — independent of the
 HA addon.
 
-### Install
+### Install via HACS (recommended)
 
-1. Build the card: `pnpm build:card` (or download `snap-ctrl-card.js` from a
-   release once published).
-2. Copy `dist-card/snap-ctrl-card.js` into your HA config's `www/` folder,
-   e.g. `config/www/snap-ctrl-card.js`.
-3. In HA, go to **Settings → Dashboards → Resources**, add a new resource:
-   - URL: `/local/snap-ctrl-card.js`
-   - Resource type: `JavaScript Module`
-4. Edit any dashboard, **Add Card → Manual** (or find "Snap Ctrl" in the card
-   picker), and configure:
+1. HACS → **⋮ → Custom repositories** → add `https://github.com/NaturalDevCR/snap-ctrl`
+   as category **Dashboard**.
+2. Find **Snap Ctrl Card** in HACS and install it. The resource is registered
+   automatically — no manual `www/` copy or Resources entry needed.
+3. Edit any dashboard → **Add Card**, pick **Snap Ctrl** from the card picker.
+   The card has its own configuration form (host, port, title, zone filter) —
+   no YAML editing required. Switch to YAML mode only if you prefer it:
 
    ```yaml
    type: custom:snap-ctrl-card
@@ -115,6 +113,18 @@ HA addon.
      - Kitchen
      - Living Room
    ```
+
+### Manual install (no HACS)
+
+1. Build the card: `pnpm build:card` (or download `snap-ctrl-card.js` from a
+   [release](https://github.com/NaturalDevCR/snap-ctrl/releases)).
+2. Copy `dist-card/snap-ctrl-card.js` into your HA config's `www/` folder,
+   e.g. `config/www/snap-ctrl-card.js`.
+3. In HA, go to **Settings → Dashboards → Resources**, add a new resource:
+   - URL: `/local/snap-ctrl-card.js`
+   - Resource type: `JavaScript Module`
+4. Edit any dashboard → **Add Card**, pick **Snap Ctrl** from the card picker
+   and use its configuration form (or switch to YAML mode, same fields as above).
 
 The card connects directly to the Snapcast server over WebSocket, the same
 protocol the standalone app uses — no HA integration or addon required for
