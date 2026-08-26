@@ -3,6 +3,7 @@ import { ref, watch } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useSettingsStore } from "@/stores/settings";
 import { useAuthStore } from "@/stores/auth";
+import { useEscapeToClose } from "@/composables/useEscapeToClose";
 
 const props = defineProps<{
   open: boolean;
@@ -14,6 +15,11 @@ const emit = defineEmits<{
   (e: "enableAuthentication"): void;
   (e: "disableAuthentication"): void;
 }>();
+
+useEscapeToClose(
+  () => props.open,
+  () => emit("close")
+);
 
 const snapcast = useSnapcastStore();
 const settings = useSettingsStore();
@@ -44,6 +50,11 @@ function handleAuthenticationToggle(event: Event) {
     emit("disableAuthentication");
   }
 }
+
+function lockNow() {
+  auth.lock();
+  emit("close");
+}
 </script>
 
 <template>
@@ -72,6 +83,7 @@ function handleAuthenticationToggle(event: Event) {
           </h3>
           <button
             @click="emit('close')"
+            aria-label="Close"
             class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
             <span class="mdi mdi-close text-xl"></span>
@@ -280,6 +292,25 @@ function handleAuthenticationToggle(event: Event) {
                 >
               </div>
               <span class="mdi mdi-chevron-right text-gray-400"></span>
+            </button>
+
+            <!-- The passcode never re-locks itself (no idle timeout, no
+                 lock-on-background) — this is the only way to actually
+                 engage Lock Mode again after unlocking. Without it, once
+                 someone enters the passcode the app stays unlocked
+                 indefinitely, which defeats a shared/kiosk device's whole
+                 point. -->
+            <button
+              v-if="auth.isAuthEnabled"
+              @click="lockNow"
+              class="mt-3 w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+            >
+              <div class="flex items-center gap-2">
+                <span class="mdi mdi-lock-outline text-lg"></span>
+                <span class="font-medium text-gray-900 dark:text-white"
+                  >Lock Now</span
+                >
+              </div>
             </button>
             <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
               {{

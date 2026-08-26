@@ -202,6 +202,7 @@
         :stream-name="getStreamName(snapcast.streams.find(s => s.id === zoneControlGroup!.stream_id))"
         :stream-status-icon="getStreamStatusIcon(snapcast.streams, zoneControlGroup!.stream_id)"
         :stream-status-color="getStreamStatusColor(snapcast.streams, zoneControlGroup!.stream_id)"
+        :stream-status-tooltip="getStreamStatusTooltip(snapcast.streams, zoneControlGroup!.stream_id)"
         :volume="getGroupVolume(zoneControlGroup!.id)"
         :is-muted="zoneControlGroup!.muted"
         :clients="zoneControlGroup!.clients"
@@ -281,6 +282,7 @@ import { getGroupDisplayName } from "@/utils/group-name";
 import {
   getStreamStatusColor,
   getStreamStatusIcon,
+  getStreamStatusTooltip,
 } from "@/utils/stream-status";
 import { averageGroupVolume } from "@/utils/group-volume";
 import BrowserPlayer from "@/components/BrowserPlayer.vue";
@@ -545,8 +547,28 @@ const updateIsMobile = () => {
   isMobile.value = window.innerWidth < 768;
 };
 
+// Mobile browsers routinely suspend background tabs without firing the
+// WebSocket's onclose promptly (or at all until the OS reclaims the
+// socket) — a phone that sleeps and wakes back up can sit there reporting
+// "Connected" over a dead socket. Nudge a reconnect whenever the tab comes
+// back or the OS reports network back online; both paths are no-ops when
+// the connection is already healthy (connect() tears down any live client
+// first, and getServerStatus() just re-fetches over it).
+function handleWake() {
+  if (document.hidden) return;
+  if (!auth.isAuthenticated || auth.isLocked || !settings.autoConnect) return;
+  if (snapcast.isConnected) {
+    snapcast.getServerStatus();
+  } else if (!snapcast.isConnecting) {
+    snapcast.connect();
+  }
+}
+
 onMounted(async () => {
   window.addEventListener("resize", updateIsMobile);
+  document.addEventListener("visibilitychange", handleWake);
+  window.addEventListener("online", handleWake);
+  window.addEventListener("focus", handleWake);
 
   // host is already hydrated by pinia-plugin-persistedstate from snapcast.host
   if (auth.isAuthenticated && !auth.isLocked && settings.autoConnect) {
@@ -556,6 +578,9 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener("resize", updateIsMobile);
+  document.removeEventListener("visibilitychange", handleWake);
+  window.removeEventListener("online", handleWake);
+  window.removeEventListener("focus", handleWake);
   // Close connection when component is destroyed
   snapcast.disconnect();
 });

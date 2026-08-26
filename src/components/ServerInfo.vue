@@ -17,6 +17,7 @@
         </h3>
         <button
           @click="close"
+          aria-label="Close"
           class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
         >
           <span class="mdi mdi-close text-xl"></span>
@@ -141,6 +142,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useSnapcastStore } from '@/stores/snapcast';
+import { useEscapeToClose } from '@/composables/useEscapeToClose';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -149,6 +151,11 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'close'): void;
 }>();
+
+useEscapeToClose(
+  () => props.isOpen,
+  () => emit('close')
+);
 
 const snapcast = useSnapcastStore();
 

@@ -397,9 +397,19 @@ export function useSnapStream() {
       return;
     }
 
-    // Connect WebSocket to /stream endpoint
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const url = `${protocol}//${host}/stream`;
+    // Connect WebSocket to /stream endpoint.
+    // In HA addon mode the app never talks to the raw Snapcast host directly
+    // (avoids WSS→WS mixed content); `host` here is store.host, which under
+    // HA is a mangled window.location.host+pathname value, not a real
+    // hostname. Mirror snapcastClient's buildWsUrl() and route through the
+    // same-origin relative path so nginx's /stream proxy handles it.
+    const url = (window as any).__HA_SNAPCAST_HOST__
+      ? (() => {
+          const base = new URL("./stream", window.location.href);
+          base.protocol = base.protocol === "https:" ? "wss:" : "ws:";
+          return base.toString();
+        })()
+      : `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${host}/stream`;
     logger.debug(`Connecting to ${url}...`);
 
     try {
@@ -598,10 +608,13 @@ export function useSnapStream() {
   }
 
   function deleteClientSync(clientIdToDelete: string, host: string) {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsBase = `${protocol}//${host}`;
-    const url = `${wsBase}/jsonrpc`;
-    const httpBase = `${window.location.protocol}//${host}/jsonrpc`;
+    // In HA addon mode `host` is store.host (a mangled location.host+pathname
+    // value, not a real hostname) — same issue as the /stream connect above.
+    // Route through the same-origin relative path instead of building a
+    // (broken) absolute URL from it.
+    const httpBase = (window as any).__HA_SNAPCAST_HOST__
+      ? new URL("./jsonrpc", window.location.href).toString()
+      : `${window.location.protocol}//${host}/jsonrpc`;
     const body = JSON.stringify({
       id: 1,
       jsonrpc: "2.0",

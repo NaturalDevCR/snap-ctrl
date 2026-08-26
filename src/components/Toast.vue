@@ -30,7 +30,7 @@
             <span class="mdi" :class="getIconClass(notification.type)"></span>
           </span>
           <span class="flex-1 text-gray-700 dark:text-gray-200 text-sm leading-relaxed font-medium pt-0.5">{{ notification.message }}</span>
-          <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors shrink-0 -mr-1 -mt-1 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800" @click.stop="notifications.remove(notification.id)">
+          <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors shrink-0 -mr-1 -mt-1 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800" aria-label="Dismiss" @click.stop="notifications.remove(notification.id)">
             <span class="mdi mdi-close text-lg"></span>
           </button>
         </div>

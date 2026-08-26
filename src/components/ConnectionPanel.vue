@@ -1,12 +1,39 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
+import { useSettingsStore } from "@/stores/settings";
 
 defineProps<{
   showingPermissionsSetup: boolean;
 }>();
 
 const snapcast = useSnapcastStore();
+const settings = useSettingsStore();
+
+const DEFAULT_PORT = "1780";
+
+/** True if `value` already has an explicit :port — a bare hostname/IPv4
+ * ("192.168.1.42"), a "host:port" pair, or a bracketed IPv6 with port
+ * ("[::1]:1780"). Bare (unbracketed) IPv6 addresses have colons of their
+ * own and can't be told apart from "host:port" reliably, so those are left
+ * untouched rather than guessed at. */
+function hasExplicitPort(value: string): boolean {
+  if (/^\[[^\]]+\]:\d+$/.test(value)) return true;
+  if (/^[^:[\]]+:\d+$/.test(value)) return true;
+  return false;
+}
+
+function looksLikeBareIPv6(value: string): boolean {
+  return !value.startsWith("[") && (value.match(/:/g) || []).length >= 2;
+}
+
+/** Most people type "192.168.1.42" and never notice the help text calling
+ * out the port — they just get a generic "did not answer" error with no
+ * clue why. Fill in the documented default instead of making them guess. */
+function withDefaultPort(value: string): string {
+  if (hasExplicitPort(value) || looksLikeBareIPv6(value)) return value;
+  return `${value}:${DEFAULT_PORT}`;
+}
 
 const hostInput = ref(snapcast.host);
 const haSnapcastInfo = (window as any).__HA_SNAPCAST_INFO__ as
@@ -68,7 +95,9 @@ const connectionFormMessage = computed(() => {
 });
 
 const hostSuggestions = computed(() => {
-  const suggestions = new Set<string>();
+  // Recent servers actually used from this browser are more useful than
+  // generic guesses, so they're offered first.
+  const suggestions = new Set<string>(settings.recentHosts);
   const pageHostname = window.location.hostname;
 
   if (pageHostname && !isLoopbackHost(pageHostname)) {
@@ -82,14 +111,18 @@ const hostSuggestions = computed(() => {
 });
 
 function updateHost() {
-  const nextHost = hostInput.value.trim();
+  const rawHost = hostInput.value.trim();
 
-  if (!haSnapcastInfo && !nextHost) {
+  if (!haSnapcastInfo && !rawHost) {
     connectHostError.value = "Enter an IP address or hostname to continue.";
     return;
   }
 
+  const nextHost = withDefaultPort(rawHost);
+  hostInput.value = nextHost;
+
   connectHostError.value = "";
+  settings.addRecentHost(nextHost);
   snapcast.setHost(nextHost);
   snapcast.disconnect();
   snapcast.connect();
@@ -251,20 +284,33 @@ function useHostSuggestion(host: string) {
             v-if="hostSuggestions.length > 0 && !haSnapcastInfo"
             class="flex flex-wrap gap-2"
           >
-            <button
+            <span
               v-for="suggestion in hostSuggestions"
               :key="suggestion"
-              type="button"
-              class="rounded-lg border px-3 py-2 text-sm font-medium transition-all active:scale-[0.98]"
+              class="group inline-flex items-stretch overflow-hidden rounded-lg border transition-all"
               :class="
                 hostInput === suggestion
                   ? 'border-cyan-300 bg-cyan-50 text-cyan-800 dark:border-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-200'
                   : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300 hover:bg-gray-100 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 dark:hover:bg-slate-700'
               "
-              @click="useHostSuggestion(suggestion)"
             >
-              {{ suggestion }}
-            </button>
+              <button
+                type="button"
+                class="px-3 py-2 text-sm font-medium active:scale-[0.98]"
+                @click="useHostSuggestion(suggestion)"
+              >
+                {{ suggestion }}
+              </button>
+              <button
+                v-if="settings.recentHosts.includes(suggestion)"
+                type="button"
+                class="px-2 text-gray-400 opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100 focus:opacity-100 dark:hover:text-red-400"
+                :aria-label="`Forget ${suggestion}`"
+                @click="settings.removeRecentHost(suggestion)"
+              >
+                <span class="mdi mdi-close text-sm"></span>
+              </button>
+            </span>
           </div>
 
           <button

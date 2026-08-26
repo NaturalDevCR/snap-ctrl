@@ -261,6 +261,23 @@ export const useSnapcastStore = defineStore(
       }
     }
 
+    // A dragged slider fires `@input` continuously — dozens of events per
+    // second on touch devices. Sending Client.SetVolume for every one of
+    // them floods the server needlessly (worse with several devices/clients
+    // being dragged at once). The optimistic local write still happens on
+    // every call so the UI never lags; only the network dispatch is
+    // throttled per client, trailing-edge, so the final released value is
+    // always the one actually sent.
+    const VOLUME_DISPATCH_THROTTLE_MS = 120;
+    const pendingVolumeDispatch = new Map<
+      string,
+      {
+        timer: ReturnType<typeof setTimeout> | null;
+        lastSentAt: number;
+        previous: { percent: number; muted: boolean } | null;
+      }
+    >();
+
     async function setClientVolume(
       clientId: string,
       volume: number,
@@ -287,43 +304,72 @@ export const useSnapcastStore = defineStore(
         }
       }
 
-      // Optimistic update to remove UI lag
-      const previous = cl ? { ...cl.config.volume } : null;
-      if (cl) {
-        cl.config.volume.percent = Math.max(0, Math.min(100, volume));
-        cl.config.volume.muted = !!mute;
-      }
-      try {
-        await sendRequest("Client.SetVolume", {
-          id: clientId,
-          volume: {
-            percent: Math.max(0, Math.min(100, volume)),
-            muted: mute,
-          },
-        });
+      const clampedVolume = Math.max(0, Math.min(100, volume));
+      const clampedMute = !!mute;
 
-        // PER-SOURCE VOLUME: Save new volume if enabled for the client's group
-        const group = groups.value.find((g) =>
-          g.clients.some((c) => c.id === clientId)
-        );
-        if (
-          group &&
-          settings.isPerSourceVolumeEnabled(group.id) &&
-          group.stream_id
-        ) {
-          settings.saveClientVolume(
-            clientId,
-            group.stream_id,
-            Math.max(0, Math.min(100, volume))
+      let state = pendingVolumeDispatch.get(clientId);
+      if (!state) {
+        state = {
+          timer: null,
+          lastSentAt: 0,
+          previous: cl ? { ...cl.config.volume } : null,
+        };
+        pendingVolumeDispatch.set(clientId, state);
+      }
+
+      // Optimistic update to remove UI lag — always instant, every call.
+      if (cl) {
+        cl.config.volume.percent = clampedVolume;
+        cl.config.volume.muted = clampedMute;
+      }
+
+      const dispatch = async () => {
+        const s = pendingVolumeDispatch.get(clientId);
+        const previous = s?.previous ?? null;
+        pendingVolumeDispatch.delete(clientId);
+        try {
+          await sendRequest("Client.SetVolume", {
+            id: clientId,
+            volume: { percent: clampedVolume, muted: clampedMute },
+          });
+
+          // PER-SOURCE VOLUME: Save new volume if enabled for the client's group
+          const group = groups.value.find((g) =>
+            g.clients.some((c) => c.id === clientId)
           );
+          if (
+            group &&
+            settings.isPerSourceVolumeEnabled(group.id) &&
+            group.stream_id
+          ) {
+            settings.saveClientVolume(clientId, group.stream_id, clampedVolume);
+          }
+        } catch (error) {
+          console.error("Failed to set client volume:", error);
+          // Revert on failure
+          const c = findClientById(clientId);
+          if (c && previous) {
+            c.config.volume = previous;
+          }
+          notifyError("Volume change", error);
         }
-      } catch (error) {
-        console.error("Failed to set client volume:", error);
-        // Revert on failure
-        if (cl && previous) {
-          cl.config.volume = previous;
-        }
-        notifyError("Volume change", error);
+      };
+
+      if (state.timer) {
+        clearTimeout(state.timer);
+        state.timer = null;
+      }
+
+      const elapsed = Date.now() - state.lastSentAt;
+      if (elapsed >= VOLUME_DISPATCH_THROTTLE_MS) {
+        state.lastSentAt = Date.now();
+        await dispatch();
+      } else {
+        state.timer = setTimeout(() => {
+          const s = pendingVolumeDispatch.get(clientId);
+          if (s) s.lastSentAt = Date.now();
+          dispatch();
+        }, VOLUME_DISPATCH_THROTTLE_MS - elapsed);
       }
     }
 

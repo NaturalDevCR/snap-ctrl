@@ -15,6 +15,7 @@
         </h3>
         <button
           @click="$emit('cancel')"
+          aria-label="Close"
           class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
         >
           <span class="mdi mdi-close text-xl"></span>
@@ -413,6 +414,7 @@ import { useSnapcastStore } from "@/stores/snapcast";
 import type { AuthPermissions } from "@/stores/auth";
 import { getStreamName } from "@/utils/stream-name";
 import { getGroupDisplayName } from "@/utils/group-name";
+import { useEscapeToClose } from "@/composables/useEscapeToClose";
 
 const props = defineProps<{
   initialPermissions: AuthPermissions;
@@ -422,6 +424,14 @@ const emit = defineEmits<{
   save: [permissions: AuthPermissions];
   cancel: [];
 }>();
+
+// Unlike most modals here, this one is created/destroyed by the parent's
+// v-if rather than toggling an internal `open` prop — its whole mounted
+// lifetime is "open", so it just registers for as long as it exists.
+useEscapeToClose(
+  () => true,
+  () => emit("cancel")
+);
 
 const snapcast = useSnapcastStore();
 

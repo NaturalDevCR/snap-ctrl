@@ -6,6 +6,17 @@ carries auto-generated notes with the full commit list.
 
 > **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
 
+### v0.5.0
+
+- **Removed**: The Home Assistant Lovelace custom card (`snap-ctrl-card`), added in v0.4.0. `src-card/`, `vite.config.card.ts`, `hacs.json`, the `pnpm build:card` script, and the release workflow's card build/publish steps are gone. The HA **addon** (`addon/`) is unaffected — this only removes the separate standalone dashboard card.
+- **Fixed**: The Browser Player's audio-stream WebSocket (`/stream`) was never proxied by the HA addon's nginx config — only `/jsonrpc` was — so in-browser playback silently failed under the addon. The relative-URL host resolution used for `/jsonrpc` (and the `beforeunload` cleanup beacon) is now applied consistently to `/stream` as well.
+- **Fixed**: The main JSON-RPC WebSocket never reconnected on tab wake — only on its own `onclose`, which mobile browsers often don't fire promptly after the device sleeps. The UI could sit on stale "Connected" state until manually reloaded. Now reconnects/re-syncs on `visibilitychange`, `online`, and `focus`.
+- **Fixed**: Lock Mode had no way to re-engage once unlocked — `auth.lock()` had no UI trigger and there was no idle timeout, so a passcode-protected instance stayed unlocked indefinitely after first entry. Added a "Lock Now" action in App Settings.
+- **Changed**: Volume sliders now throttle their network dispatch per client (trailing-edge — the released value is always what's sent) instead of firing `Client.SetVolume` on every `input` tick. The optimistic local UI update is unchanged (still instant); this only reduces request volume against the Snapcast server, which matters more the more clients/devices are adjusting volume concurrently.
+- **Fixed**: Icon-only buttons across ~15 components had no accessible name. Most were wrapped in `Tooltip`, which only ever appeared on `:hover` — no touch, no keyboard — so screen-reader and touch/keyboard users had no label at all for those controls. `Tooltip` now stamps its text on as `aria-label` and also shows on focus; the few icon-only buttons not wrapped in `Tooltip` got `aria-label` directly.
+- **Fixed**: The empty "No groups found" state claimed the Snapcast server might not be running even when the real cause was every group being hidden by this device's own filters. Now distinguishes the two cases.
+- **Docs**: Corrected a README claim that per-source volume memory syncs across devices — it's per-browser `localStorage`, not server-synced. Only live playback state (current volume/mute/stream) is actually shared across devices, via the Snapcast server itself.
+
 ### v0.4.2
 
 - **Fixed**: The Lovelace card's config editor (host/port/title/zone filter) rendered completely empty in the dashboard's card-configuration dialog. It built its fields with `<ha-textfield>`, which isn't guaranteed to be registered yet in that context — an undefined custom element takes zero visible space instead of erroring. Replaced with plain `<input>` elements, which have no such dependency.

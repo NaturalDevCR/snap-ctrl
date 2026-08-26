@@ -32,7 +32,13 @@
                   {{ groupName }}
                 </h3>
                   <div class="relative flex items-center gap-1.5 text-xs w-full" :class="streamStatusColor || 'text-gray-500 dark:text-gray-400'">
-                      <span class="mdi shrink-0" :class="streamStatusIcon"></span>
+                      <span
+                        class="mdi shrink-0"
+                        :class="streamStatusIcon"
+                        role="img"
+                        :aria-label="streamStatusTooltip"
+                        :title="streamStatusTooltip"
+                      ></span>
                       
                       <!-- Custom Dropdown -->
                       <div class="relative inline-block" ref="dropdownRef">
@@ -224,6 +230,7 @@ import VolumeControl from './VolumeControl.vue';
 import Tooltip from '@/components/Tooltip.vue';
 
 import { useSettingsStore } from "@/stores/settings";
+import { useEscapeToClose } from "@/composables/useEscapeToClose";
 
 const settings = useSettingsStore();
 
@@ -238,6 +245,7 @@ const props = defineProps<{
   streamName: string;
   streamStatusIcon: string;
   streamStatusColor?: string;
+  streamStatusTooltip?: string;
   volume: number; // Group volume
   isMuted: boolean;
   clients: any[]; // Array of clients
@@ -287,6 +295,8 @@ function handleModalClick(event: MouseEvent) {
 function close() {
   emit('close');
 }
+
+useEscapeToClose(() => props.isOpen, close);
 
 function toggleMute() {
   emit('toggle-mute');

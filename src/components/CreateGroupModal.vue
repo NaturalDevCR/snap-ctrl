@@ -2,6 +2,8 @@
 import { ref, computed, watch } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { getStreamName } from "@/utils/stream-name";
+import { getGroupDisplayName } from "@/utils/group-name";
+import { useEscapeToClose } from "@/composables/useEscapeToClose";
 import type { Client } from "@/stores/snapcast";
 
 const props = defineProps<{
@@ -13,12 +15,37 @@ const emit = defineEmits<{
   (e: "created"): void;
 }>();
 
+useEscapeToClose(
+  () => props.open,
+  () => emit("close")
+);
+
 const snapcast = useSnapcastStore();
 
 const streamId = ref<string | null>(null);
 const clientIds = ref<string[]>([]);
 
 const availableClients = computed<Client[]>(() => snapcast.filteredClients);
+
+// A client picked here can currently belong to another group — Snapcast
+// clients only ever belong to one group at a time, so adding one here
+// silently pulls it out of wherever it already is. filteredClients doesn't
+// distinguish "unassigned" from "already grouped", so surface which group
+// (if any) each client would be moved out of instead of letting that
+// happen invisibly.
+const clientCurrentGroup = computed(() => {
+  const map = new Map<string, string>();
+  for (const g of snapcast.groups) {
+    const label = getGroupDisplayName(g, snapcast.streams);
+    for (const c of g.clients) {
+      // A client sits in exactly one group's `clients` array, so no
+      // conflict is possible here — later groups can't overwrite an
+      // earlier assignment for the same id.
+      map.set(c.id, label);
+    }
+  }
+  return map;
+});
 
 watch(
   () => props.open,
@@ -83,6 +110,7 @@ async function createGroup() {
           </h3>
           <button
             @click="emit('close')"
+            aria-label="Close"
             class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
             <span class="mdi mdi-close text-xl"></span>
@@ -146,6 +174,13 @@ async function createGroup() {
                   >
                     Offline
                   </span>
+                  <span
+                    v-if="clientCurrentGroup.has(c.id)"
+                    class="px-1.5 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded flex-shrink-0 truncate"
+                    :title="`Currently in ${clientCurrentGroup.get(c.id)} — adding it here moves it out of that group`"
+                  >
+                    From: {{ clientCurrentGroup.get(c.id) }}
+                  </span>
                 </div>
                 <div
                   class="relative inline-flex items-center cursor-pointer"
@@ -162,12 +197,17 @@ async function createGroup() {
                 </div>
               </label>
             </div>
+            <!-- This list shows every client regardless of its current
+                 group (see the "From: <group>" badge above) — it's never
+                 actually empty because clients are "already assigned"; it's
+                 empty because the server doesn't know about any clients
+                 yet. -->
             <p
               v-if="availableClients.length === 0"
               class="mt-3 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-900/30"
             >
-              All clients are already assigned to groups. You can move
-              clients between groups using group settings.
+              No clients connected yet. Start a Snapcast client and it will
+              appear here.
             </p>
           </div>
         </div>

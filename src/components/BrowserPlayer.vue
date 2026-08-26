@@ -57,6 +57,7 @@
             <div v-if="availableStreams.length > 0" class="flex items-center">
               <select
                 v-model="currentStreamId"
+                aria-label="Stream"
                 class="text-[10px] bg-gray-100 dark:bg-slate-700 border-none rounded px-1.5 py-0.5 text-gray-700 dark:text-gray-200 focus:ring-1 focus:ring-blue-500 outline-none cursor-pointer max-w-[120px] truncate"
                 @click.stop
               >
@@ -65,7 +66,7 @@
                   :key="stream.id"
                   :value="stream.id"
                 >
-                  {{ stream.id }}
+                  {{ getStreamName(stream) }}
                 </option>
               </select>
             </div>
@@ -74,6 +75,7 @@
               <select
                 v-model="bufferSetting"
                 class="text-[10px] bg-gray-100 dark:bg-slate-700 border-none rounded px-1.5 py-0.5 text-gray-700 dark:text-gray-200 focus:ring-1 focus:ring-blue-500 outline-none cursor-pointer max-w-[80px] truncate"
+                aria-label="Jitter buffer (safety margin)"
                 title="Jitter Buffer (Safety Margin)"
                 @click.stop
               >
@@ -111,6 +113,8 @@
             class="bg-transparent border-none text-base cursor-pointer p-1 rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-400"
             @click="toggleMute"
             :disabled="!connected"
+            :aria-label="isMuted ? 'Unmute' : 'Mute'"
+            :aria-pressed="isMuted"
           >
             <span
               :class="isMuted ? 'mdi mdi-volume-off' : 'mdi mdi-volume-high'"
@@ -126,6 +130,7 @@
               v-model.number="sliderValue"
               min="0"
               max="100"
+              aria-label="Browser player volume"
               class="w-full h-1 bg-gray-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-sm [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125 relative z-10"
               :disabled="!connected || isMuted"
             />
@@ -142,6 +147,7 @@
           :class="{ '!bg-blue-600 dark:!bg-blue-500 !text-white': connected }"
           @click="handleConnect"
           :disabled="connecting"
+          :aria-label="connecting ? 'Connecting…' : connected ? 'Stop playback' : 'Play in browser'"
         >
           <span v-if="connecting" class="mdi mdi-loading mdi-spin"></span>
           <span v-else-if="connected" class="mdi mdi-stop"></span>
@@ -208,6 +214,7 @@ import { useSnapStream } from "@/composables/useSnapStream";
 
 import { useSettingsStore } from "@/stores/settings";
 import { sliderToVolume, volumeToSlider } from "@/utils/volume";
+import { getStreamName } from "@/utils/stream-name";
 
 const snapcast = useSnapcastStore();
 const settings = useSettingsStore();

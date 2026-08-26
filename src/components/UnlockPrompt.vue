@@ -19,6 +19,7 @@
         <button
           v-if="canCancel"
           @click="handleCancel"
+          aria-label="Cancel"
           class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
         >
           <span class="mdi mdi-close text-xl"></span>
@@ -80,6 +81,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
+import { useEscapeToClose } from "@/composables/useEscapeToClose";
 
 const props = withDefaults(
   defineProps<{
@@ -135,4 +137,8 @@ function handleCancel() {
     emit("cancel");
   }
 }
+
+// handleCancel already no-ops when !canCancel, so Escape is always safe to
+// wire up here — it just won't do anything when cancelling isn't allowed.
+useEscapeToClose(() => true, handleCancel);
 </script>

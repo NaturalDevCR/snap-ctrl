@@ -103,6 +103,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { useEscapeToClose } from "@/composables/useEscapeToClose";
 
 const props = withDefaults(
   defineProps<{
@@ -152,4 +153,7 @@ function handleCancel() {
   error.value = "";
   emit("cancel");
 }
+
+// handleCancel already no-ops when !canCancel.
+useEscapeToClose(() => true, handleCancel);
 </script>

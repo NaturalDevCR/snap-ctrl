@@ -151,6 +151,25 @@ export function useZoneOrder<T extends ZoneLike>(
     dragOverIndex.value = null;
   }
 
+  // HTML5 drag-and-drop (handleDragStart/Over/Drop above) never fires on
+  // touch devices at all — there's no browser fallback — so reordering
+  // was previously impossible on phones/tablets, arguably the most common
+  // devices for a household audio control app. These give every input
+  // method (touch, mouse, keyboard-via-button-focus) a working way to
+  // reorder, built on the same reorderInList() the drag handlers use so
+  // both paths stay consistent.
+  function moveZoneUp(index: number) {
+    if (index <= 0) return;
+    const newOrder = reorderInList(orderedZonesForFilter.value, index, index - 1);
+    if (newOrder) settings.setCustomGroupOrder(newOrder);
+  }
+
+  function moveZoneDown(index: number) {
+    if (index >= orderedZonesForFilter.value.length - 1) return;
+    const newOrder = reorderInList(orderedZonesForFilter.value, index, index + 1);
+    if (newOrder) settings.setCustomGroupOrder(newOrder);
+  }
+
   function toggleVisibility(zoneId: string) {
     const list = [...settings.hiddenGroups];
     const index = list.indexOf(zoneId);
@@ -169,6 +188,8 @@ export function useZoneOrder<T extends ZoneLike>(
     handleDragOver,
     handleDrop,
     handleDragEnd,
+    moveZoneUp,
+    moveZoneDown,
     toggleVisibility,
     isBrowserZone,
   };

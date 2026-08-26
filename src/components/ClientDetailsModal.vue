@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { formatLastSeen } from "@/utils/last-seen";
+import { useEscapeToClose } from "@/composables/useEscapeToClose";
 import type { Client } from "@/stores/snapcast";
 
 const props = defineProps<{
@@ -11,6 +12,11 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "close"): void;
 }>();
+
+useEscapeToClose(
+  () => props.open,
+  () => emit("close")
+);
 
 const displayName = computed(() => {
   if (!props.client) return "";
@@ -52,6 +58,7 @@ const lastSeen = computed(() =>
           </h3>
           <button
             @click="emit('close')"
+            aria-label="Close"
             class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
             <span class="mdi mdi-close text-xl"></span>
