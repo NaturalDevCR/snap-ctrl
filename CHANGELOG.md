@@ -6,6 +6,14 @@ carries auto-generated notes with the full commit list.
 
 > **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
 
+### v0.5.1
+
+- **Fixed**: The `.custom-scrollbar` utility (Group Filter, Permissions, group/create client pickers, Zone Control) never actually rendered a visible scrollbar anywhere — its rules didn't override the global scrollbar-hiding `display: none`, and it was defined as component-scoped CSS in a couple of places despite Vue's scoped styles not crossing component boundaries, so most components using the class had no matching style at all. Content-heavy lists silently had no indication there was more below the fold. Moved to a single global rule (now including the `display` override) and applied the class to the lists that were missing it.
+- **Fixed**: Toast notifications had no `aria-live` region — the app's only feedback for async failures (a failed volume change, a delete that didn't go through) was invisible to screen reader users.
+- **Fixed**: `TimeProvider`'s `pendingRequests` map grew unbounded for any TimeMessage whose response never arrived, and wasn't cleared on an AudioContext swap — a slow memory leak for a Browser Player session left running for hours or days, and a latent risk of mixing two different context timelines into one sync calculation after a reset.
+- **Changed**: PWA manifest (standalone + HA addon) no longer locks orientation to portrait — the layout is already responsive, and a tablet wall-mounted in landscape (a common way to run a whole-house audio panel) would otherwise be forced into portrait once installed. Also fixed `background_color`/`theme_color` to match the app's actual dark theme instead of a leftover white/purple from an earlier design, avoiding a white flash on launch.
+- **Removed**: unused `vue-router` dependency and `src/stores/counter.ts` (default Pinia scaffold, zero references) — dead weight, not used anywhere in the app.
+
 ### v0.5.0
 
 - **Removed**: The Home Assistant Lovelace custom card (`snap-ctrl-card`), added in v0.4.0. `src-card/`, `vite.config.card.ts`, `hacs.json`, the `pnpm build:card` script, and the release workflow's card build/publish steps are gone. The HA **addon** (`addon/`) is unaffected — this only removes the separate standalone dashboard card.
