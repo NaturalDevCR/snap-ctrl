@@ -33,10 +33,13 @@ export default defineConfig({
         short_name: "SnapCtrl",
         description:
           "Modern web interface for Snapcast multiroom audio control",
-        theme_color: "#667eea",
-        background_color: "#ffffff",
+        theme_color: "#0f172a",
+        // See vite.config.ts — the app defaults to dark mode, so a white
+        // splash background would flash before the dark UI paints.
+        background_color: "#020617",
         display: "standalone",
-        orientation: "portrait",
+        // See vite.config.ts — no orientation lock, so a tablet mounted
+        // in landscape isn't forced into portrait once installed.
         icons: [
           {
             src: "pwa-192x192.png",

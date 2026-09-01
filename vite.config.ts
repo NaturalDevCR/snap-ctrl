@@ -24,10 +24,18 @@ export default defineConfig({
         short_name: "Snapcast",
         description:
           "Modern web interface for Snapcast multiroom audio control",
-        theme_color: "#667eea",
-        background_color: "#ffffff",
+        theme_color: "#0f172a",
+        // The app defaults to dark mode (settings.ts: theme ref default is
+        // "dark") — a white splash background here would flash white
+        // before the actual dark UI paints on launch. Matches
+        // App.vue's dark:bg-slate-950.
+        background_color: "#020617",
         display: "standalone",
-        orientation: "portrait",
+        // No orientation lock: the layout is already responsive (grid
+        // breakpoints for wider viewports), and a tablet mounted in
+        // landscape — a common way to wall-mount a whole-house audio
+        // control panel — would otherwise get locked to portrait by the
+        // OS once installed as a PWA.
         icons: [
           {
             src: "pwa-192x192.png",

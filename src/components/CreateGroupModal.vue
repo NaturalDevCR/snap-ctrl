@@ -149,7 +149,7 @@ async function createGroup() {
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >Select Clients</label
             >
-            <div class="max-h-48 overflow-y-auto space-y-2 p-1">
+            <div class="max-h-48 overflow-y-auto custom-scrollbar space-y-2 p-1">
               <label
                 v-for="c in availableClients"
                 :key="c.id"

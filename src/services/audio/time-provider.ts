@@ -40,6 +40,11 @@ export class TimeProvider {
   reset(): void {
     this.samples = [];
     this.median = 0;
+    // A pending request's `sentTime` is only meaningful against the
+    // AudioContext timeline that was active when it was sent — if
+    // setAudioContext() swaps in a new context, a stale response arriving
+    // afterward would compute a diff mixing two different clocks.
+    this.pendingRequests.clear();
   }
 
   /**
@@ -75,6 +80,20 @@ export class TimeProvider {
    */
   private sendTimeMessage(): void {
     if (!this.sendCallback) return;
+
+    // A response that never arrives (dropped packet, tab backgrounded
+    // mid-round-trip, etc.) left its entry in pendingRequests forever —
+    // reset() now clears the map on a context swap, but a long-running
+    // session (this runs every ~1s for as long as the browser player is
+    // connected, plausibly hours or days for a household leaving it on)
+    // could otherwise still accumulate entries indefinitely between
+    // resets. Prune anything old enough that its response is never
+    // coming: at this sync cadence, unanswered for 10+ intervals is
+    // effectively lost.
+    const staleBefore = this.now() - 10_000;
+    for (const [pendingId, sentAt] of this.pendingRequests) {
+      if (sentAt < staleBefore) this.pendingRequests.delete(pendingId);
+    }
 
     const id = this.nextId++;
     const sentTime = this.now();
