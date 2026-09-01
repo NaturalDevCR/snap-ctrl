@@ -1,6 +1,11 @@
 <template>
   <Teleport to="body">
-    <div class="fixed top-4 right-4 z-[9999] flex flex-col gap-3 pointer-events-none w-full max-w-sm sm:w-auto sm:min-w-[320px]">
+    <div
+      class="fixed top-4 right-4 z-[9999] flex flex-col gap-3 pointer-events-none w-full max-w-sm sm:w-auto sm:min-w-[320px]"
+      role="status"
+      aria-live="polite"
+      aria-atomic="false"
+    >
       <TransitionGroup
         enter-active-class="transition duration-300 ease-out"
         enter-from-class="opacity-0 translate-x-8"
