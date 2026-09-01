@@ -22,7 +22,7 @@
         </button>
       </div>
 
-      <div class="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+      <div class="p-6 space-y-6 overflow-y-auto custom-scrollbar max-h-[calc(90vh-140px)]">
         <!-- Feature Permissions -->
         <div>
           <h4
@@ -285,7 +285,7 @@
                 >
               </label>
               <div
-                class="max-h-32 overflow-y-auto space-y-1 p-2 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                class="max-h-32 overflow-y-auto custom-scrollbar space-y-1 p-2 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700"
               >
                 <label
                   v-for="group in availableGroups"
@@ -322,7 +322,7 @@
                 >
               </label>
               <div
-                class="max-h-32 overflow-y-auto space-y-1 p-2 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                class="max-h-32 overflow-y-auto custom-scrollbar space-y-1 p-2 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700"
               >
                 <label
                   v-for="source in availableSources"
@@ -359,7 +359,7 @@
                 >
               </label>
               <div
-                class="max-h-32 overflow-y-auto space-y-1 p-2 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                class="max-h-32 overflow-y-auto custom-scrollbar space-y-1 p-2 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700"
               >
                 <label
                   v-for="client in availableClients"
