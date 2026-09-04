@@ -23,14 +23,24 @@
         >
           <div class="flex items-center gap-3 min-w-0 flex-1" @click.stop>
              <div
-                class="w-10 h-10 rounded-lg bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-sm"
+                class="w-10 h-10 rounded-lg text-white flex items-center justify-center shrink-0 shadow-sm transition-colors"
+                :class="isMuted ? 'bg-red-500 dark:bg-red-600' : 'bg-blue-600 dark:bg-blue-500'"
               >
-                <span class="mdi mdi-speaker-multiple text-xl"></span>
+                <span class="mdi text-xl" :class="isMuted ? 'mdi-volume-mute' : 'mdi-speaker-multiple'"></span>
               </div>
               <div class="min-w-0 flex-1">
-                <h3 class="text-lg font-bold text-gray-900 dark:text-white truncate">
-                  {{ groupName }}
-                </h3>
+                <div class="flex items-center gap-2 min-w-0">
+                  <h3 class="text-lg font-bold text-gray-900 dark:text-white truncate">
+                    {{ groupName }}
+                  </h3>
+                  <span
+                    v-if="isMuted"
+                    class="inline-flex items-center gap-1 shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50"
+                  >
+                    <span class="mdi mdi-volume-off text-xs"></span>
+                    Muted
+                  </span>
+                </div>
                   <div class="relative flex items-center gap-1.5 text-xs w-full" :class="streamStatusColor || 'text-gray-500 dark:text-gray-400'">
                       <span
                         class="mdi shrink-0"
@@ -81,6 +91,17 @@
               </div>
           </div>
           <div class="flex items-center gap-2" @click.stop>
+            <Tooltip :text="isMuted ? 'Unmute Group' : 'Mute Group'">
+              <button
+                @click="toggleMute"
+                class="w-10 h-10 flex items-center justify-center rounded-full transition-colors cursor-pointer"
+                :class="isMuted ? 'bg-red-50 dark:bg-red-900/30 text-red-500 hover:text-red-600 dark:text-red-400' : 'hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'"
+                :aria-label="isMuted ? 'Unmute Group' : 'Mute Group'"
+                :aria-pressed="isMuted"
+              >
+                <span class="mdi text-xl" :class="isMuted ? 'mdi-volume-off' : 'mdi-volume-high'"></span>
+              </button>
+            </Tooltip>
             <Tooltip v-if="showSettingsButton" text="Group Settings">
               <button
                 @click="$emit('open-settings')"
@@ -104,8 +125,12 @@
         <div class="p-6 overflow-y-auto custom-scrollbar flex flex-col gap-8 rounded-b-2xl">
             
             <!-- Group Volume Master -->
-            <div v-if="linkedClientIds.length > 0" class="bg-gray-50 dark:bg-slate-800/50 rounded-xl p-4 border border-gray-100 dark:border-gray-800 flex flex-col gap-3">
-                 <span class="text-sm font-bold text-gray-500 uppercase tracking-wider">Master Volume</span>
+            <div
+              v-if="linkedClientIds.length > 0"
+              class="rounded-xl p-4 border flex flex-col gap-3 transition-colors"
+              :class="isMuted ? 'bg-red-50/60 dark:bg-red-900/10 border-red-200 dark:border-red-900/40' : 'bg-gray-50 dark:bg-slate-800/50 border-gray-100 dark:border-gray-800'"
+            >
+                 <span class="text-sm font-bold uppercase tracking-wider" :class="isMuted ? 'text-red-500 dark:text-red-400' : 'text-gray-500'">Master Volume</span>
                  <VolumeControl
                     :volume="volume"
                     :muted="isMuted"
