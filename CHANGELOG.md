@@ -6,6 +6,11 @@ carries auto-generated notes with the full commit list.
 
 > **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
 
+### v0.5.2
+
+- **Fixed**: The Zone Control dialog's group mute button only appeared inside the Master Volume block, which is only rendered when the group has volume-linked clients — groups without links had no way to mute/unmute from the dialog. The button now lives in the dialog header and is always available. ([#40](https://github.com/NaturalDevCR/snap-ctrl/issues/40))
+- **Changed**: Muted groups are now visually obvious beyond the mute button itself — the dialog shows a "Muted" badge next to the group name, the header icon tints red, and the Master Volume block (when shown) gets a red-tinted background/border.
+
 ### v0.5.1
 
 - **Fixed**: The `.custom-scrollbar` utility (Group Filter, Permissions, group/create client pickers, Zone Control) never actually rendered a visible scrollbar anywhere — its rules didn't override the global scrollbar-hiding `display: none`, and it was defined as component-scoped CSS in a couple of places despite Vue's scoped styles not crossing component boundaries, so most components using the class had no matching style at all. Content-heavy lists silently had no indication there was more below the fold. Moved to a single global rule (now including the `display` override) and applied the class to the lists that were missing it.
