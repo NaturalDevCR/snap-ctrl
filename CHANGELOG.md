@@ -6,6 +6,13 @@ carries auto-generated notes with the full commit list.
 
 > **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
 
+### v0.6.0
+
+- **Added**: A new **Simple** layout, built for everyday use by people who don't know Snapcast. Each zone is one card with everything inline: tappable source chips (with an icon and a stable accent color per source), one big zone volume slider, a large mute button, and an expandable speaker list with per-speaker volume, mute and **Link** toggles. Linked speakers move together with the zone volume and keep their relative offsets. With no speakers linked, the zone slider moves every speaker (the classic view hides its master slider in that case). It also has a "Mute all" action, a live "N playing now" summary, and animations: staggered card entrance, an equalizer and ambient glow while a zone plays, smooth panel expansion, and press feedback. All of it respects `prefers-reduced-motion`.
+- **Added**: A **Layout** picker (Simple / Classic) in App Settings. The classic view is unchanged and stays the default, and the choice is saved per device.
+- **Added**: An "Allow Changing Layout" permission. Turn it off to lock a shared or wall-mounted device to its current layout. The Simple view follows every existing permission: the source is shown read-only without *Stream Selection*, sliders and mute are disabled (with an explanation) without *Volume Adjustments*, Link toggles are hidden without *Client Linking*, zone settings, create group and filter follow their visibility permissions, and only allowed groups, sources and clients are listed.
+- **Changed**: The App Settings dialog now scrolls when it doesn't fit the screen.
+
 ### v0.5.2
 
 - **Fixed**: The Zone Control dialog's group mute button only appeared inside the Master Volume block, which is only rendered when the group has volume-linked clients — groups without links had no way to mute/unmute from the dialog. The button now lives in the dialog header and is always available. ([#40](https://github.com/NaturalDevCR/snap-ctrl/issues/40))

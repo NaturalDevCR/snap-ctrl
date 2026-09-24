@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
+import type { ViewMode } from "@/stores/settings";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useSettingsStore } from "@/stores/settings";
 import { useAuthStore } from "@/stores/auth";
@@ -26,6 +27,33 @@ const settings = useSettingsStore();
 const auth = useAuthStore();
 
 const hostInput = ref("");
+
+const canChangeView = computed(() => auth.hasFeaturePermission("canChangeView"));
+
+const viewOptions: Array<{
+  value: ViewMode;
+  label: string;
+  description: string;
+  icon: string;
+}> = [
+  {
+    value: "simple",
+    label: "Simple",
+    description: "Big, friendly controls for everyday use",
+    icon: "mdi-gesture-tap",
+  },
+  {
+    value: "classic",
+    label: "Classic",
+    description: "Compact grid with every option",
+    icon: "mdi-view-grid-outline",
+  },
+];
+
+function selectView(mode: ViewMode) {
+  if (!canChangeView.value) return;
+  settings.setViewMode(mode);
+}
 
 watch(
   () => props.open,
@@ -72,7 +100,7 @@ function lockNow() {
       @click.self="emit('close')"
     >
       <div
-        class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 dark:border-gray-800 transform transition-all"
+        class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden border border-gray-200 dark:border-gray-800 transform transition-all"
         @click.stop
       >
         <div
@@ -90,7 +118,7 @@ function lockNow() {
           </button>
         </div>
 
-        <div class="p-6 space-y-6">
+        <div class="p-6 space-y-6 overflow-y-auto custom-scrollbar">
           <div>
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -144,6 +172,80 @@ function lockNow() {
                   class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
                 ></div>
               </label>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span
+                id="layout-label"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >Layout</span
+              >
+              <span
+                v-if="!canChangeView"
+                class="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400"
+              >
+                <span class="mdi mdi-lock-outline" aria-hidden="true"></span>
+                Locked by permissions
+              </span>
+            </div>
+            <div
+              role="radiogroup"
+              aria-labelledby="layout-label"
+              class="grid grid-cols-2 gap-3"
+            >
+              <button
+                v-for="option in viewOptions"
+                :key="option.value"
+                type="button"
+                role="radio"
+                :aria-checked="settings.viewMode === option.value"
+                :disabled="!canChangeView"
+                class="relative text-left p-3 rounded-xl border-2 transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:active:scale-100"
+                :class="[
+                  settings.viewMode === option.value
+                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800 hover:border-blue-300 dark:hover:border-blue-700',
+                  { 'opacity-60': !canChangeView && settings.viewMode !== option.value },
+                ]"
+                @click="selectView(option.value)"
+              >
+                <!-- Mini preview of each layout -->
+                <div
+                  class="mb-2 h-14 rounded-lg bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 p-1.5 flex gap-1"
+                  aria-hidden="true"
+                >
+                  <template v-if="option.value === 'simple'">
+                    <div class="flex-1 rounded-md bg-gradient-to-br from-blue-500/20 to-indigo-500/10 p-1 flex flex-col gap-1">
+                      <div class="w-3 h-3 rounded bg-gradient-to-br from-blue-500 to-indigo-600"></div>
+                      <div class="h-1 w-full rounded-full bg-blue-500/70"></div>
+                    </div>
+                    <div class="flex-1 rounded-md bg-gradient-to-br from-emerald-500/20 to-teal-500/10 p-1 flex flex-col gap-1">
+                      <div class="w-3 h-3 rounded bg-gradient-to-br from-emerald-500 to-teal-600"></div>
+                      <div class="h-1 w-2/3 rounded-full bg-emerald-500/70"></div>
+                    </div>
+                  </template>
+                  <template v-else>
+                    <div v-for="n in 3" :key="n" class="flex-1 flex flex-col gap-1">
+                      <div class="flex-1 rounded bg-gray-100 dark:bg-slate-800"></div>
+                      <div class="flex-1 rounded bg-gray-100 dark:bg-slate-800"></div>
+                    </div>
+                  </template>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="mdi text-base text-blue-600 dark:text-blue-400" :class="option.icon" aria-hidden="true"></span>
+                  <span class="font-semibold text-sm text-gray-900 dark:text-white">{{ option.label }}</span>
+                  <span
+                    v-if="settings.viewMode === option.value"
+                    class="ml-auto mdi mdi-check-circle text-blue-600 dark:text-blue-400"
+                    aria-hidden="true"
+                  ></span>
+                </div>
+                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 leading-snug">
+                  {{ option.description }}
+                </p>
+              </button>
             </div>
           </div>
 
@@ -323,7 +425,7 @@ function lockNow() {
         </div>
 
         <div
-          class="px-6 py-4 bg-gray-50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3"
+          class="px-6 py-4 bg-gray-50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3 shrink-0"
         >
           <button
             class="px-4 py-2 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"

@@ -155,6 +155,12 @@
           />
         </div>
 
+        <SimpleZoneView
+          v-else-if="settings.viewMode === 'simple'"
+          @group-settings="openGroupSettings"
+          @create-group="openCreateGroup"
+        />
+
         <ZoneGrid
           v-else
           @zone-control="openZoneControl"
@@ -291,6 +297,7 @@ import LoadingSpinner from "@/components/LoadingSpinner.vue";
 import Tooltip from "@/components/Tooltip.vue";
 import ConnectionPanel from "@/components/ConnectionPanel.vue";
 import ZoneGrid from "@/components/ZoneGrid.vue";
+import SimpleZoneView from "@/components/simple/SimpleZoneView.vue";
 import ZoneControlModal from "@/components/ZoneControlModal.vue";
 import GroupSettingsModal from "@/components/GroupSettingsModal.vue";
 import ClientDetailsModal from "@/components/ClientDetailsModal.vue";
