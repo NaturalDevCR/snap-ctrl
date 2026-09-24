@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onUnmounted } from "vue";
+import { ref, computed, watch, nextTick } from "vue";
 import { useEscapeToClose } from "@/composables/useEscapeToClose";
+import { useBodyScrollLock } from "@/composables/useBodyScrollLock";
 import type { SourceAccent } from "@/utils/source-style";
 
 export interface PickerSource {
@@ -55,6 +56,7 @@ function choose(id: string) {
 }
 
 useEscapeToClose(() => props.open, close);
+useBodyScrollLock(() => props.open);
 
 watch(
   () => props.open,
@@ -62,7 +64,6 @@ watch(
     if (open) {
       returnFocusTo = document.activeElement as HTMLElement | null;
       query.value = "";
-      document.body.style.overflow = "hidden";
       await nextTick();
       if (showSearch.value) {
         searchRef.value?.focus();
@@ -72,16 +73,11 @@ watch(
           ?.focus();
       }
     } else {
-      document.body.style.overflow = "";
       returnFocusTo?.focus?.();
       returnFocusTo = null;
     }
   }
 );
-
-onUnmounted(() => {
-  if (props.open) document.body.style.overflow = "";
-});
 
 function onListKeydown(event: KeyboardEvent) {
   if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
@@ -99,13 +95,13 @@ function onListKeydown(event: KeyboardEvent) {
 
 <template>
   <Teleport to="body">
-    <Transition name="sheet" :duration="{ enter: 380, leave: 240 }">
+    <Transition name="sv-sheet" :duration="{ enter: 380, leave: 240 }">
       <div
         v-if="open"
-        class="fixed inset-0 z-[120] flex items-end sm:items-center justify-center sm:p-4"
+        class="fixed inset-0 z-[95] flex items-end sm:items-center justify-center sm:p-4"
       >
         <div
-          class="sheet-backdrop absolute inset-0 bg-black/50 backdrop-blur-sm"
+          class="sv-sheet-backdrop absolute inset-0 bg-black/50 backdrop-blur-sm"
           aria-hidden="true"
           @click="close"
         ></div>
@@ -115,7 +111,7 @@ function onListKeydown(event: KeyboardEvent) {
           role="dialog"
           aria-modal="true"
           :aria-label="`Choose a source for ${zoneName}`"
-          class="sheet-panel relative w-full sm:max-w-md max-h-[82vh] sm:max-h-[75vh] flex flex-col bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden"
+          class="sv-sheet-panel relative w-full sm:max-w-md max-h-[82vh] sm:max-h-[75vh] flex flex-col bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden"
           @keydown="onListKeydown"
         >
           <!-- Grab handle (mobile affordance) -->
@@ -170,7 +166,7 @@ function onListKeydown(event: KeyboardEvent) {
               type="button"
               role="option"
               :aria-selected="source.id === currentId"
-              class="option w-full flex items-center gap-3 p-2.5 rounded-2xl text-left transition-all duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-blue-500"
+              class="sv-cascade w-full flex items-center gap-3 p-2.5 rounded-2xl text-left transition-all duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-blue-500"
               :class="
                 source.id === currentId
                   ? 'bg-slate-100 dark:bg-slate-800'
@@ -239,47 +235,4 @@ function onListKeydown(event: KeyboardEvent) {
   color: var(--chip);
 }
 
-/* Items cascade in as the sheet opens. */
-.option {
-  animation: option-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(min(var(--i), 10) * 25ms + 60ms);
-}
-@keyframes option-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-}
-
-/* Backdrop fades; the panel slides up from the bottom edge on phones and
-   scales in on larger screens. */
-.sheet-enter-active .sheet-backdrop,
-.sheet-leave-active .sheet-backdrop {
-  transition: opacity 240ms ease;
-}
-.sheet-enter-from .sheet-backdrop,
-.sheet-leave-to .sheet-backdrop {
-  opacity: 0;
-}
-.sheet-enter-active .sheet-panel {
-  transition:
-    transform 380ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 240ms ease;
-}
-.sheet-leave-active .sheet-panel {
-  transition:
-    transform 240ms ease-in,
-    opacity 200ms ease-in;
-}
-.sheet-enter-from .sheet-panel,
-.sheet-leave-to .sheet-panel {
-  transform: translateY(100%);
-}
-@media (min-width: 640px) {
-  .sheet-enter-from .sheet-panel,
-  .sheet-leave-to .sheet-panel {
-    transform: translateY(12px) scale(0.96);
-    opacity: 0;
-  }
-}
 </style>

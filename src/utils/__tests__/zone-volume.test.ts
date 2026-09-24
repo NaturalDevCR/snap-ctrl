@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  averageClientVolume,
-  resolveZoneVolumeTargets,
-  snapshotVolumes,
-} from "@/utils/zone-volume";
+import { averageClientVolume, linkedZoneClients } from "@/utils/zone-volume";
 import type { Group } from "@/stores/snapcast";
 
 function makeGroup(volumes: Array<{ id: string; percent: number }>): Group {
@@ -35,32 +31,22 @@ const group = makeGroup([
   { id: "c", percent: 81 },
 ]);
 
-describe("resolveZoneVolumeTargets", () => {
-  it("targets every client when nothing is linked", () => {
-    const t = resolveZoneVolumeTargets(group, []);
-    expect(t.usesLinks).toBe(false);
-    expect(t.clients.map((c) => c.id)).toEqual(["a", "b", "c"]);
+describe("linkedZoneClients", () => {
+  it("is empty when nothing is linked (no master volume)", () => {
+    expect(linkedZoneClients(group, [])).toEqual([]);
   });
 
-  it("targets only linked clients when links exist", () => {
-    const t = resolveZoneVolumeTargets(group, ["b", "c"]);
-    expect(t.usesLinks).toBe(true);
-    expect(t.clients.map((c) => c.id)).toEqual(["b", "c"]);
+  it("returns only linked clients, in group order", () => {
+    expect(linkedZoneClients(group, ["c", "b"]).map((c) => c.id)).toEqual(["b", "c"]);
   });
 
-  it("falls back to all clients when every linked client left the group", () => {
-    const t = resolveZoneVolumeTargets(group, ["gone"]);
-    expect(t.usesLinks).toBe(false);
-    expect(t.clients).toHaveLength(3);
+  it("ignores linked ids that already left the group", () => {
+    expect(linkedZoneClients(group, ["gone", "a"]).map((c) => c.id)).toEqual(["a"]);
   });
 
   it("drops clients this device is not allowed to control", () => {
-    const t = resolveZoneVolumeTargets(group, [], (id) => id !== "a");
-    expect(t.clients.map((c) => c.id)).toEqual(["b", "c"]);
-
-    const linked = resolveZoneVolumeTargets(group, ["a", "b"], (id) => id !== "a");
-    expect(linked.usesLinks).toBe(true);
-    expect(linked.clients.map((c) => c.id)).toEqual(["b"]);
+    const ids = linkedZoneClients(group, ["a", "b"], (id) => id !== "a").map((c) => c.id);
+    expect(ids).toEqual(["b"]);
   });
 });
 
@@ -71,11 +57,5 @@ describe("averageClientVolume", () => {
 
   it("rounds the average", () => {
     expect(averageClientVolume(group.clients)).toBe(50);
-  });
-});
-
-describe("snapshotVolumes", () => {
-  it("maps client ids to their current volume", () => {
-    expect(snapshotVolumes(group.clients)).toEqual({ a: 20, b: 50, c: 81 });
   });
 });

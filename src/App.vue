@@ -159,6 +159,8 @@
           v-else-if="settings.viewMode === 'simple'"
           @group-settings="openGroupSettings"
           @create-group="openCreateGroup"
+          @client-details="openClientDetails"
+          @client-settings="openClientSettings"
         />
 
         <ZoneGrid
