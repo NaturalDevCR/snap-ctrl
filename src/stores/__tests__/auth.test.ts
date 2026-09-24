@@ -25,6 +25,19 @@ describe("auth store", () => {
     expect(auth.filterAllowedEntities("client", clients)).toEqual(clients);
   });
 
+  it("treats canChangeView missing from older saved permissions as allowed", () => {
+    const auth = useAuthStore();
+    auth.enableAuthentication();
+
+    const legacy = { ...auth.permissions };
+    delete legacy.canChangeView;
+    auth.updatePermissions(legacy);
+    expect(auth.hasFeaturePermission("canChangeView")).toBe(true);
+
+    auth.updatePermissions({ ...legacy, canChangeView: false });
+    expect(auth.hasFeaturePermission("canChangeView")).toBe(false);
+  });
+
   it("requires setup after enabling authentication without a passcode", () => {
     const auth = useAuthStore();
 
