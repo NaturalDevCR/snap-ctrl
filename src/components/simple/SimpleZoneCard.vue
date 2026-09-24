@@ -6,13 +6,19 @@ import { useAuthStore } from "@/stores/auth";
 import { getGroupDisplayName } from "@/utils/group-name";
 import { getStreamName } from "@/utils/stream-name";
 import { getStreamStatus } from "@/utils/stream-status";
-import { getSourceAccent, getSourceHue, getSourceIcon } from "@/utils/source-style";
+import {
+  getSourceAccent,
+  getSourceHue,
+  getSourceIcon,
+  pickInlineSources,
+} from "@/utils/source-style";
 import {
   averageClientVolume,
   resolveZoneVolumeTargets,
   snapshotVolumes,
 } from "@/utils/zone-volume";
 import SimpleVolumeSlider from "@/components/simple/SimpleVolumeSlider.vue";
+import SimpleSourcePicker from "@/components/simple/SimpleSourcePicker.vue";
 import Tooltip from "@/components/Tooltip.vue";
 import type { Client, Group } from "@/stores/snapcast";
 
@@ -27,6 +33,7 @@ const settings = useSettingsStore();
 const auth = useAuthStore();
 
 const showSpeakers = ref(false);
+const showSourcePicker = ref(false);
 
 // ---- Permissions -----------------------------------------------------------
 const canAdjustVolume = computed(() => auth.hasFeaturePermission("canAdjustVolumes"));
@@ -74,6 +81,15 @@ const sources = computed(() =>
   }))
 );
 
+// Long source lists collapse to a few quick picks + "N more" (opens a
+// searchable picker) so ten sources don't turn every card into a wall of chips.
+const inlineSources = computed(() =>
+  pickInlineSources(sources.value, props.group.stream_id)
+);
+const hiddenSourceCount = computed(
+  () => sources.value.length - inlineSources.value.length
+);
+
 const statusLabel = computed(() => {
   if (playState.value === "playing") return "Playing";
   if (playState.value === "idle") return "Paused";
@@ -91,7 +107,7 @@ function onSourceKeydown(event: KeyboardEvent, index: number) {
   const dir = keys[event.key];
   if (!dir) return;
   event.preventDefault();
-  const list = sources.value;
+  const list = inlineSources.value;
   const next = list[(index + dir + list.length) % list.length];
   if (!next) return;
   selectSource(next.id);
@@ -311,21 +327,58 @@ function speakerName(client: Client) {
           Listening to
         </h4>
 
+        <!-- Phones + long source lists: one full-width button that opens the
+             bottom-sheet picker, instead of chips wrapping over 3+ rows. -->
+        <button
+          v-if="canSelectStream && hiddenSourceCount > 0"
+          type="button"
+          class="sm:hidden w-full flex items-center gap-3 p-2 pr-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-left transition-all duration-300 active:scale-[0.98]"
+          aria-haspopup="dialog"
+          :aria-label="`Source: ${currentSourceName}. Change source`"
+          @click="showSourcePicker = true"
+        >
+          <span
+            class="zone-tile w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white"
+            :class="{ 'is-muted': group.muted }"
+            aria-hidden="true"
+          >
+            <span class="mdi text-xl" :class="currentSourceIcon"></span>
+          </span>
+          <span class="flex-1 min-w-0">
+            <span class="block truncate font-semibold text-slate-900 dark:text-white">
+              {{ currentSourceName }}
+            </span>
+            <span class="block text-xs text-slate-500 dark:text-slate-400">
+              {{ sources.length }} sources available
+            </span>
+          </span>
+          <span class="shrink-0 inline-flex items-center gap-0.5 text-sm font-semibold zone-accent-text">
+            Change
+            <span class="mdi mdi-chevron-right text-lg" aria-hidden="true"></span>
+          </span>
+        </button>
+
         <div
           v-if="canSelectStream"
-          role="radiogroup"
-          :aria-labelledby="`src-label-${group.id}`"
           class="flex flex-wrap gap-2"
+          :class="{ 'max-sm:hidden': hiddenSourceCount > 0 }"
         >
+          <TransitionGroup
+            tag="div"
+            name="chip"
+            role="radiogroup"
+            :aria-labelledby="`src-label-${group.id}`"
+            class="relative flex flex-wrap gap-2 max-w-full"
+          >
           <button
-            v-for="(source, index) in sources"
+            v-for="(source, index) in inlineSources"
             :key="source.id"
             type="button"
             role="radio"
             :aria-checked="source.id === group.stream_id"
             :tabindex="
               source.id === group.stream_id ||
-              (index === 0 && !sources.some((s) => s.id === group.stream_id))
+              (index === 0 && !inlineSources.some((s) => s.id === group.stream_id))
                 ? 0
                 : -1
             "
@@ -359,7 +412,30 @@ function speakerName(client: Client) {
               ></span>
             </Transition>
           </button>
+          </TransitionGroup>
+
+          <button
+            v-if="hiddenSourceCount > 0"
+            type="button"
+            class="inline-flex items-center gap-1.5 pl-3 pr-4 py-1.5 h-10 rounded-full border border-dashed border-slate-300 dark:border-slate-600 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:border-solid hover:bg-white dark:hover:bg-slate-800 hover:shadow-md hover:-translate-y-px transition-all duration-300 active:scale-95"
+            :aria-label="`${hiddenSourceCount} more sources`"
+            aria-haspopup="dialog"
+            @click="showSourcePicker = true"
+          >
+            <span class="mdi mdi-view-grid-plus-outline text-lg" aria-hidden="true"></span>
+            +{{ hiddenSourceCount }} more
+          </button>
         </div>
+
+        <SimpleSourcePicker
+          v-if="hiddenSourceCount > 0"
+          :open="showSourcePicker"
+          :zone-name="zoneName"
+          :sources="sources"
+          :current-id="group.stream_id"
+          @select="selectSource"
+          @close="showSourcePicker = false"
+        />
 
         <div
           v-else
@@ -699,6 +775,27 @@ function speakerName(client: Client) {
 }
 .speaker-row.is-open.opacity-60 {
   opacity: 0.6;
+}
+
+/* ---- Quick-pick chips re-rank smoothly when the source changes -------- */
+.chip-move {
+  transition: transform 350ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.chip-enter-active {
+  transition:
+    opacity 250ms ease,
+    transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.chip-leave-active {
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+  position: absolute;
+}
+.chip-enter-from,
+.chip-leave-to {
+  opacity: 0;
+  transform: scale(0.8);
 }
 
 /* ---- Small reusable transitions --------------------------------------- */

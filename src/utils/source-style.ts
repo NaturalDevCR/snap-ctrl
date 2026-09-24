@@ -81,3 +81,28 @@ export function getSourceAccent(hue: number): SourceAccent {
     soft: `hsl(${hue} 90% 60% / 0.16)`,
   };
 }
+
+/** Up to this many sources, every one gets its own chip on the zone card. */
+export const MAX_INLINE_SOURCES = 5;
+/** Beyond that, the card shows this many quick picks plus a "more" button. */
+export const QUICK_PICK_COUNT = 3;
+
+/**
+ * Sources to show as chips on a zone card. Small lists are shown whole, in
+ * server order, so each chip stays in the same place. Longer lists collapse
+ * to a few quick picks, most useful first: the zone's current source, then
+ * sources that are playing right now, then the rest in server order.
+ */
+export function pickInlineSources<T extends { id: string; state: string }>(
+  sources: T[],
+  currentId: string
+): T[] {
+  if (sources.length <= MAX_INLINE_SOURCES) return sources;
+  const current = sources.filter((s) => s.id === currentId);
+  const others = sources.filter((s) => s.id !== currentId);
+  const ranked = [
+    ...others.filter((s) => s.state === "playing"),
+    ...others.filter((s) => s.state !== "playing"),
+  ];
+  return [...current, ...ranked].slice(0, QUICK_PICK_COUNT);
+}
