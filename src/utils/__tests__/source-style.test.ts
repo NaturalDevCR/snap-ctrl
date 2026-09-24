@@ -4,7 +4,6 @@ import {
   getSourceHue,
   getSourceIcon,
   getStreamScheme,
-  pickInlineSources,
 } from "@/utils/source-style";
 
 describe("getStreamScheme", () => {
@@ -59,30 +58,3 @@ describe("getSourceAccent", () => {
   });
 });
 
-describe("pickInlineSources", () => {
-  const src = (id: string, state = "idle") => ({ id, state });
-
-  it("keeps short lists whole and in order", () => {
-    const list = [src("a"), src("b", "playing"), src("c")];
-    expect(pickInlineSources(list, "c")).toEqual(list);
-  });
-
-  it("collapses long lists to current, then playing, then the rest", () => {
-    const list = [
-      src("a"),
-      src("b"),
-      src("c", "playing"),
-      src("d"),
-      src("e", "playing"),
-      src("f"),
-      src("g"),
-    ];
-    expect(pickInlineSources(list, "f").map((s) => s.id)).toEqual(["f", "c", "e"]);
-    expect(pickInlineSources(list, "c").map((s) => s.id)).toEqual(["c", "e", "a"]);
-  });
-
-  it("still fills quick picks when the current source isn't allowed/listed", () => {
-    const list = ["a", "b", "c", "d", "e", "f"].map((id) => src(id));
-    expect(pickInlineSources(list, "zzz").map((s) => s.id)).toEqual(["a", "b", "c"]);
-  });
-});

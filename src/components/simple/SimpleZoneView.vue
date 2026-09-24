@@ -8,11 +8,14 @@ import { getStreamStatus } from "@/utils/stream-status";
 import SimpleZoneCard from "@/components/simple/SimpleZoneCard.vue";
 import GroupFilterModal from "@/components/GroupFilterModal.vue";
 import Tooltip from "@/components/Tooltip.vue";
-import type { Group } from "@/stores/snapcast";
+import type { Client, Group } from "@/stores/snapcast";
+import "./simple-view.css";
 
 const emit = defineEmits<{
   (e: "group-settings", group: Group): void;
   (e: "create-group"): void;
+  (e: "client-details", client: Client): void;
+  (e: "client-settings", client: Client): void;
 }>();
 
 const snapcast = useSnapcastStore();
@@ -123,6 +126,23 @@ async function refreshStatus() {
           </button>
         </Tooltip>
 
+        <!-- Same quick toggle as the classic grid's eye button. -->
+        <Tooltip :text="settings.showEmptyGroups ? 'Hide empty groups' : 'Show empty groups'">
+          <button
+            type="button"
+            class="w-11 h-11 flex items-center justify-center rounded-full border shadow-sm transition-all active:scale-90"
+            :class="
+              settings.showEmptyGroups
+                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400'
+                : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
+            "
+            :aria-pressed="settings.showEmptyGroups"
+            @click="settings.setShowEmptyGroups(!settings.showEmptyGroups)"
+          >
+            <span class="mdi text-xl" :class="settings.showEmptyGroups ? 'mdi-eye' : 'mdi-eye-off'"></span>
+          </button>
+        </Tooltip>
+
         <Tooltip v-if="auth.permissions.showGroupFilter" text="Filter Groups">
           <button
             type="button"
@@ -155,7 +175,7 @@ async function refreshStatus() {
       tag="div"
       name="zone"
       appear
-      class="relative grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-5 items-start"
+      class="relative grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start"
     >
       <SimpleZoneCard
         v-for="(group, index) in sortedZones"
@@ -163,6 +183,8 @@ async function refreshStatus() {
         :group="group"
         :style="{ '--i': index }"
         @group-settings="emit('group-settings', $event)"
+        @client-details="emit('client-details', $event)"
+        @client-settings="emit('client-settings', $event)"
       />
     </TransitionGroup>
 

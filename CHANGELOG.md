@@ -6,6 +6,16 @@ carries auto-generated notes with the full commit list.
 
 > **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
 
+### v0.7.0
+
+Simple layout refinements based on feedback from v0.6.0:
+
+- **Changed**: The source is now always picked from one full-width button on each zone card: current source, source count, "Change". It opens the source picker (a bottom sheet on phones, a dialog on larger screens, with search above 8 sources) at every screen size, instead of inline source chips.
+- **Changed**: Zone volume works the same way as in the classic view: it exists only while the zone has **linked** speakers and moves only those. Without linked speakers, the zone can still be muted, and the sheet explains how to link speakers.
+- **Changed**: Volume controls moved off the cards into a **Volume & speakers** sheet (bottom sheet on phones, dialog on larger screens). It has the source button, zone mute and volume, and each speaker's volume, mute and Link. Cards are now compact: zone header, source button, a mute button, and a button that opens the sheet (it shows the zone volume level when speakers are linked). Wide screens now fit 3 cards per row.
+- **Added**: Everything from the classic view is now available in the Simple layout, subject to the same permissions. Speaker info (tap the speaker's name), speaker settings (*Show Client Settings*), zone settings (*Show Group Settings*), and a show/hide empty groups toggle sit next to create group, filter and refresh.
+- **Removed**: The v0.6.0 behavior where an unlinked zone's slider moved every speaker.
+
 ### v0.6.0
 
 - **Added**: A new **Simple** layout, built for everyday use by people who don't know Snapcast. Each zone is one card with everything inline: tappable source chips (with an icon and a stable accent color per source), one big zone volume slider, a large mute button, and an expandable speaker list with per-speaker volume, mute and **Link** toggles. Linked speakers move together with the zone volume and keep their relative offsets. With no speakers linked, the zone slider moves every speaker (the classic view hides its master slider in that case). Zones with more than 5 sources show 3 quick picks (the current source first, then the ones playing now) plus a "+N more" button. It opens a source picker (a bottom sheet on phones, a dialog on larger screens) with search once there are more than 8 sources. On phones, a long source list shows as one full-width "Change" button, so a card never turns into rows of chips. It also has a "Mute all" action, a live "N playing now" summary, and animations: staggered card entrance, an equalizer and ambient glow while a zone plays, smooth panel expansion, and press feedback. All of it respects `prefers-reduced-motion`.
