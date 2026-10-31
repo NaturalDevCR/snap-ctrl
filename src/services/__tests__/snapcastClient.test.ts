@@ -153,13 +153,20 @@ describe("snapcastClient", () => {
     expect(FakeWebSocket.instances).toHaveLength(2);
   });
 
-  it("does not reconnect after a close that happens before the first successful open", async () => {
+  it("retries a close that happens before the first successful open (e.g. server not up yet)", async () => {
     vi.useFakeTimers();
-    const client = createSnapcastClient({ url: "ws://test/jsonrpc" });
+    const client = createSnapcastClient({
+      url: "ws://test/jsonrpc",
+      baseReconnectDelayMs: 1000,
+      maxReconnectDelayMs: 30000,
+    });
     client.connect();
     FakeWebSocket.instances[0]!.onclose?.({ wasClean: false, code: 1006, reason: "never opened" });
-    vi.advanceTimersByTime(30000);
-    expect(FakeWebSocket.instances).toHaveLength(1);
+    vi.advanceTimersByTime(1000);
+    // The very first connection attempt failing (server not up yet, e.g.
+    // right after an add-on/container restart) must not permanently give
+    // up — it retries with the same backoff as any other dropped socket.
+    expect(FakeWebSocket.instances).toHaveLength(2);
   });
 
   it("force-closes a socket stuck in CONNECTING after connectTimeoutMs and reports a timeout error", async () => {
@@ -167,6 +174,8 @@ describe("snapcastClient", () => {
     const client = createSnapcastClient({
       url: "ws://test/jsonrpc",
       connectTimeoutMs: 10_000,
+      baseReconnectDelayMs: 1000,
+      maxReconnectDelayMs: 30000,
     });
     const statuses: Array<{ status: string; error: string | null }> = [];
     client.onStatusChange((status, error) => statuses.push({ status, error }));
@@ -187,10 +196,11 @@ describe("snapcastClient", () => {
     expect(statuses.filter((s) => s.error === "Connection timeout")).toHaveLength(1);
 
     // This is the client's very first connection attempt — it never
-    // succeeded, so (matching the existing pre-first-success policy) no
-    // automatic reconnect is scheduled.
-    vi.advanceTimersByTime(60_000);
-    expect(FakeWebSocket.instances).toHaveLength(1);
+    // succeeded, but it still retries like any other dropped connection
+    // (bounded by maxReconnectAttempts), so the server coming up late
+    // doesn't strand the client until someone manually reconnects.
+    vi.advanceTimersByTime(1000);
+    expect(FakeWebSocket.instances).toHaveLength(2);
   });
 
   it("does not fire the connect timeout once the socket opens successfully", async () => {

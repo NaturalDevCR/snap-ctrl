@@ -185,20 +185,34 @@ describe("snapcast store — PR 1 network hygiene", () => {
     expect(statusCallsLater).toBe(statusCallsAtStart);
   });
 
-  it("does not retry forever after the first connection attempt fails", async () => {
+  it("retries after the first connection attempt fails, but gives up once bounded attempts are exhausted", async () => {
+    // The server not being up yet for the client's very first attempt
+    // (e.g. right after an add-on/container restart triggered by adding a
+    // zone) must not strand the client forever on a dead connection — it
+    // should keep retrying with backoff just like any later drop, only
+    // giving up once maxReconnectAttempts is exhausted.
     vi.useFakeTimers();
     const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const store = useSnapcastStore();
     useAuthStore();
 
     store.connect();
-    const ws = FakeWebSocket.instances[0]!;
-    ws.onerror?.({});
-    ws.onclose?.({ wasClean: false, code: 1006, reason: "" });
-
-    vi.advanceTimersByTime(60_000);
-
     expect(FakeWebSocket.instances).toHaveLength(1);
+
+    // Fail every attempt and let backoff run; eventually it stops retrying.
+    for (let i = 0; i < 15; i++) {
+      const ws = FakeWebSocket.instances.at(-1)!;
+      ws.onerror?.({});
+      ws.onclose?.({ wasClean: false, code: 1006, reason: "" });
+      vi.advanceTimersByTime(40_000);
+    }
+
+    const finalCount = FakeWebSocket.instances.length;
+    expect(finalCount).toBeGreaterThan(1);
+
+    // No further attempts once exhausted.
+    vi.advanceTimersByTime(60_000);
+    expect(FakeWebSocket.instances).toHaveLength(finalCount);
     expect(store.isConnected).toBe(false);
     expect(store.isConnecting).toBe(false);
     errSpy.mockRestore();

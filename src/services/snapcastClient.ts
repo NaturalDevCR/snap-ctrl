@@ -49,7 +49,6 @@ export function createSnapcastClient(
   let lastError: string | null = null;
   let requestId = 1;
   let manualDisconnect = false;
-  let hasConnectedSuccessfully = false;
   let reconnectAttempts = 0;
   let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   let connectTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -80,7 +79,7 @@ export function createSnapcastClient(
   }
 
   function scheduleReconnect() {
-    if (!hasConnectedSuccessfully || manualDisconnect) return;
+    if (manualDisconnect) return;
     if (reconnectTimeout) return;
     if (reconnectAttempts >= maxReconnectAttempts) {
       setStatus("disconnected", "Maximum reconnection attempts reached");
@@ -140,7 +139,6 @@ export function createSnapcastClient(
 
     websocket.onopen = () => {
       clearConnectTimeout();
-      hasConnectedSuccessfully = true;
       reconnectAttempts = 0;
       setStatus("connected");
     };
