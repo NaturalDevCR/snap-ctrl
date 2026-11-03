@@ -6,6 +6,10 @@ carries auto-generated notes with the full commit list.
 
 > **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
 
+### v0.7.1
+
+- **Fixed**: The app could get permanently stuck disconnected (requiring a manual page reload) if its very first connection attempt failed — for example when the Snapcast server or Home Assistant add-on was still restarting after a zone/config change. It now retries with backoff like any other dropped connection instead of giving up after one failed attempt.
+
 ### v0.7.0
 
 Simple layout refinements based on feedback from v0.6.0:
