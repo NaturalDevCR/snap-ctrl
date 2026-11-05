@@ -1,17 +1,17 @@
 <template>
   <div
-    class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+    class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-[var(--scrim)] backdrop-blur-sm"
     @click.self="handleCancel"
   >
     <div
-      class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 dark:border-gray-800 transform transition-all"
+      class="bg-[var(--surface-1)] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-[var(--border)] transform transition-all"
       @click.stop
     >
       <div
-        class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between"
+        class="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between"
       >
         <h3
-          class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2"
+          class="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2"
         >
           <span class="mdi mdi-lock-outline"></span>
           Enter Passcode
@@ -20,14 +20,14 @@
           v-if="canCancel"
           @click="handleCancel"
           aria-label="Cancel"
-          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          class="w-11 h-11 -mr-2 inline-flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
         >
           <span class="mdi mdi-close text-xl"></span>
         </button>
       </div>
 
       <div class="p-6 space-y-4">
-        <p class="text-sm text-gray-500 dark:text-gray-400">
+        <p class="text-sm text-[var(--text-tertiary)]">
           Enter your passcode to continue
         </p>
 
@@ -37,10 +37,10 @@
             v-model="passcode"
             type="password"
             :class="[
-              'w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border rounded-lg outline-none transition-colors text-gray-900 dark:text-white',
+              'w-full px-4 py-3 bg-[var(--surface-2)] min-h-[44px] border rounded-lg outline-none transition-colors text-[var(--text-primary)]',
               error
                 ? 'border-red-500 focus:ring-2 focus:ring-red-500'
-                : 'border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400',
+                : 'border-[var(--border)] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400',
             ]"
             placeholder="Enter passcode"
             @keyup.enter="handleUnlock"
@@ -58,11 +58,11 @@
       </div>
 
       <div
-        class="px-6 py-4 bg-gray-50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3"
+        class="px-6 py-4 bg-[var(--surface-2)] border-t border-[var(--border)] flex justify-end gap-3"
       >
         <button
           v-if="canCancel"
-          class="px-4 py-2 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+          class="px-4 py-2 text-[var(--text-secondary)] font-medium hover:bg-[var(--surface-2)] rounded-lg transition-colors"
           @click="handleCancel"
         >
           Cancel
