@@ -25,10 +25,10 @@ const subtitle = computed(() => {
   <component
     :is="canChange ? 'button' : 'div'"
     :type="canChange ? 'button' : undefined"
-    class="w-full flex items-center gap-3 p-2 pr-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800/60 text-left transition-all duration-300"
+    class="w-full flex items-center gap-3 p-2 pr-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] text-left transition-all duration-300"
     :class="
       canChange
-        ? 'hover:bg-white dark:hover:bg-slate-800 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500'
+        ? 'hover:bg-[var(--surface-1)] hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500'
         : ''
     "
     :aria-haspopup="canChange ? 'dialog' : undefined"
@@ -40,8 +40,7 @@ const subtitle = computed(() => {
     @click="canChange && (showPicker = true)"
   >
     <span
-      class="sv-tile w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-white transition-all duration-500"
-      :class="{ 'is-muted': group.muted }"
+      class="sv-tile is-idle w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-white transition-all duration-500"
       aria-hidden="true"
     >
       <Transition name="sv-swap" mode="out-in">
@@ -56,25 +55,25 @@ const subtitle = computed(() => {
       <Transition name="sv-slide" mode="out-in">
         <span
           :key="group.stream_id"
-          class="block truncate font-semibold text-slate-900 dark:text-white"
+          class="block truncate font-semibold text-[var(--text-primary)]"
         >
           {{ zone.currentSourceName.value }}
         </span>
       </Transition>
-      <span class="block truncate text-xs text-slate-500 dark:text-slate-400">
+      <span class="block truncate text-xs text-[var(--text-tertiary)]">
         {{ subtitle }}
       </span>
     </span>
     <span
       v-if="canChange"
-      class="shrink-0 inline-flex items-center gap-0.5 text-sm font-semibold sv-accent-text"
+      class="shrink-0 inline-flex items-center gap-0.5 text-sm font-semibold text-blue-600 dark:text-blue-400"
     >
       Change
       <span class="mdi mdi-chevron-right text-lg" aria-hidden="true"></span>
     </span>
     <span
       v-else-if="!zone.canSelectStream.value"
-      class="shrink-0 mdi mdi-lock-outline text-lg text-slate-400"
+      class="shrink-0 mdi mdi-lock-outline text-lg text-[var(--text-tertiary)]"
       aria-hidden="true"
     ></span>
   </component>

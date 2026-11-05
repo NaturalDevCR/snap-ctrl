@@ -99,7 +99,7 @@ function onListKeydown(event: KeyboardEvent) {
         class="fixed inset-0 z-[95] flex items-end sm:items-center justify-center sm:p-4"
       >
         <div
-          class="sv-sheet-backdrop absolute inset-0 bg-black/50 backdrop-blur-sm"
+          class="sv-sheet-backdrop absolute inset-0 bg-[var(--scrim)] backdrop-blur-sm"
           aria-hidden="true"
           @click="close"
         ></div>
@@ -109,7 +109,7 @@ function onListKeydown(event: KeyboardEvent) {
           role="dialog"
           aria-modal="true"
           :aria-label="`Choose a source for ${zoneName}`"
-          class="sv-sheet-panel relative w-full sm:max-w-md max-h-[82vh] sm:max-h-[75vh] flex flex-col bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden"
+          class="sv-sheet-panel relative w-full sm:max-w-md max-h-[82vh] sm:max-h-[75vh] flex flex-col bg-[var(--surface-1)] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[var(--border)] overflow-hidden"
           @keydown="onListKeydown"
         >
           <!-- Grab handle (mobile affordance) -->
@@ -119,16 +119,16 @@ function onListKeydown(event: KeyboardEvent) {
 
           <div class="px-5 pt-4 sm:pt-5 pb-3 flex items-start gap-3">
             <div class="flex-1 min-w-0">
-              <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
+              <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--text-tertiary)]">
                 Choose a source
               </p>
-              <h3 class="mt-0.5 text-xl font-bold tracking-tight text-slate-900 dark:text-white truncate">
+              <h3 class="mt-0.5 text-xl font-bold tracking-tight text-[var(--text-primary)] truncate">
                 {{ zoneName }}
               </h3>
             </div>
             <button
               type="button"
-              class="w-10 h-10 -mr-2 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-90"
+              class="w-11 h-11 -mr-2 flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-2)] transition-all active:scale-90"
               aria-label="Close"
               @click="close"
             >
@@ -140,7 +140,7 @@ function onListKeydown(event: KeyboardEvent) {
             <label class="relative block">
               <span class="sr-only">Search sources</span>
               <span
-                class="mdi mdi-magnify absolute left-3.5 top-1/2 -translate-y-1/2 text-lg text-slate-400"
+                class="mdi mdi-magnify absolute left-3.5 top-1/2 -translate-y-1/2 text-lg text-[var(--text-tertiary)]"
                 aria-hidden="true"
               ></span>
               <input
@@ -148,7 +148,7 @@ function onListKeydown(event: KeyboardEvent) {
                 v-model="query"
                 type="search"
                 placeholder="Search sources"
-                class="w-full h-11 pl-10 pr-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 outline-none text-slate-900 dark:text-white placeholder:text-slate-400 transition-colors"
+                class="w-full h-11 pl-10 pr-4 rounded-2xl bg-[var(--surface-2)] border border-transparent focus:border-blue-500 focus:bg-[var(--surface-1)] outline-none text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] transition-colors"
               />
             </label>
           </div>
@@ -157,6 +157,7 @@ function onListKeydown(event: KeyboardEvent) {
             role="listbox"
             :aria-label="`Sources for ${zoneName}`"
             class="flex-1 overflow-y-auto custom-scrollbar px-3 pb-4 sm:pb-3"
+            style="padding-bottom: calc(1rem + env(safe-area-inset-bottom))"
           >
             <button
               v-for="(source, i) in filtered"
@@ -167,8 +168,8 @@ function onListKeydown(event: KeyboardEvent) {
               class="sv-cascade w-full flex items-center gap-3 p-2.5 rounded-2xl text-left transition-all duration-200 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-blue-500"
               :class="
                 source.id === currentId
-                  ? 'bg-slate-100 dark:bg-slate-800'
-                  : 'hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                  ? 'bg-[var(--surface-2)]'
+                  : 'hover:bg-[var(--surface-2)]'
               "
               :style="{ '--i': i }"
               @click="choose(source.id)"
@@ -185,10 +186,10 @@ function onListKeydown(event: KeyboardEvent) {
                 <span class="mdi text-xl" :class="source.icon"></span>
               </span>
               <span class="flex-1 min-w-0">
-                <span class="block truncate font-semibold text-slate-900 dark:text-white">
+                <span class="block truncate font-semibold text-[var(--text-primary)]">
                   {{ source.name }}
                 </span>
-                <span class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                <span class="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]">
                   <span
                     class="w-1.5 h-1.5 rounded-full"
                     :class="{
@@ -209,7 +210,7 @@ function onListKeydown(event: KeyboardEvent) {
 
             <p
               v-if="filtered.length === 0"
-              class="py-10 text-center text-sm text-slate-500 dark:text-slate-400"
+              class="py-10 text-center text-sm text-[var(--text-tertiary)]"
             >
               No sources match “{{ query }}”
             </p>

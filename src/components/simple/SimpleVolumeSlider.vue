@@ -64,8 +64,8 @@ function nudge(direction: 1 | -1) {
   <div class="flex items-center gap-2 w-full" :class="{ 'opacity-60': disabled }">
     <button
       type="button"
-      class="shrink-0 flex items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:hover:bg-transparent disabled:hover:text-slate-500"
-      :class="size === 'lg' ? 'w-11 h-11 max-sm:hidden' : 'w-9 h-9'"
+      class="shrink-0 flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:hover:bg-transparent disabled:hover:text-[var(--text-tertiary)]"
+      :class="size === 'lg' ? 'w-11 h-11 max-sm:hidden' : 'w-11 h-11'"
       :disabled="disabled || volume <= 0"
       :aria-label="`Decrease ${label}`"
       @click="nudge(-1)"
@@ -82,7 +82,7 @@ function nudge(direction: 1 | -1) {
       :disabled="disabled"
       :aria-label="label"
       :aria-valuetext="`${volume}%${muted ? ', muted' : ''}`"
-      class="simple-range flex-1 min-w-0 appearance-none rounded-full bg-slate-200 dark:bg-slate-700 cursor-pointer touch-none disabled:cursor-not-allowed"
+      class="simple-range flex-1 min-w-0 appearance-none rounded-full bg-[color-mix(in_srgb,var(--text-tertiary)_35%,transparent)] cursor-pointer touch-none disabled:cursor-not-allowed"
       :class="size === 'lg' ? 'h-3 simple-range--lg' : 'h-2'"
       :style="trackStyle"
       @input="onInput"
@@ -91,8 +91,8 @@ function nudge(direction: 1 | -1) {
 
     <button
       type="button"
-      class="shrink-0 flex items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:hover:bg-transparent disabled:hover:text-slate-500"
-      :class="size === 'lg' ? 'w-11 h-11 max-sm:hidden' : 'w-9 h-9'"
+      class="shrink-0 flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:hover:bg-transparent disabled:hover:text-[var(--text-tertiary)]"
+      :class="size === 'lg' ? 'w-11 h-11 max-sm:hidden' : 'w-11 h-11'"
       :disabled="disabled || volume >= 100"
       :aria-label="`Increase ${label}`"
       @click="nudge(1)"
@@ -104,7 +104,7 @@ function nudge(direction: 1 | -1) {
       class="shrink-0 text-right tabular-nums font-semibold"
       :class="[
         size === 'lg' ? 'w-12 text-lg' : 'w-10 text-sm',
-        muted ? 'text-slate-400 line-through' : 'text-slate-700 dark:text-slate-200',
+        muted ? 'text-[var(--text-tertiary)] line-through' : 'text-[var(--text-secondary)]',
       ]"
       aria-hidden="true"
     >
