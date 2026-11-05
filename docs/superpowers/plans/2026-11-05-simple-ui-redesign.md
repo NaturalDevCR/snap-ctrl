@@ -10,9 +10,12 @@
 
 ## Global Constraints
 
-- No behavior change anywhere in this plan except the three deletions in Task 21 (Classic UI, `viewMode`, `canChangeView`) — every other task is visual-only. Props, emits, store actions, and RPC calls stay exactly as they are.
+- No behavior change anywhere in this plan except: the Classic UI / `viewMode` / `canChangeView` removal (Tasks 10, 18, 19, 20, 21), the mobile overflow menu (Task 14), and the Classic parity fixes (Task 22). Every other task is visual-only. Props, emits, store actions, and RPC calls stay exactly as they are.
+- Execution order: Tasks 1-15, then Task 22, then Tasks 16-21.
+- Color is reserved for state: playing (green), muted/unavailable (red). Idle is neutral. Action labels never use a status color: they use brand blue (`text-blue-600 dark:text-blue-400`) so they stay readable on white.
+- Every commit message ends with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - Spec requirement "consistent radius scale" is satisfied via a **documented Tailwind-class convention**, not new CSS variables: cards/modals/sheets use `rounded-3xl` (mobile sheet top corners) / `rounded-t-3xl sm:rounded-3xl`, buttons/chips/inputs use `rounded-xl` or `rounded-full` (already the app's dominant pattern) — Tailwind's own scale already gives this consistency; adding a parallel `--radius-*` token system on top of it would be redundant. This is the one deliberate simplification versus the literal token list in the spec's "Design tokens" section; everything else in that section is implemented as specified.
-- Spec requirement "minimum 44×44px touch targets on every interactive control": every icon-only circular button this plan writes out in full (AppDialog's close button, every footer icon button, the zone-card and toolbar icon buttons) is sized `w-11 h-11` (44px) — this was corrected during self-review after a first draft left a couple at the app's older `w-10 h-10` (40px). When a migration task says "apply the substitution table" to a modal body this plan does *not* reproduce in full, also bump any `w-10 h-10` icon-only button encountered to `w-11 h-11` while in that file. Padded text buttons (e.g. `px-4 py-2` Cancel/Create/Apply buttons) are left at their existing padding — they're an established app-wide pattern, not a new regression, and Task 21's QA pass is the place to flag any that read as cramped on a real device rather than this plan re-deriving exact padding-to-pixel math for each one.
+- Spec requirement "minimum 44×44px touch targets on every interactive control": every icon-only circular button this plan writes out in full (AppDialog's close button, every footer icon button, the zone-card and toolbar icon buttons) is sized `w-11 h-11` (44px). When a task says "apply the substitution table" to markup this plan does *not* reproduce in full, also bump any `w-9 h-9` or `w-10 h-10` icon-only button, and any `h-9` pill button, to 44px (`w-11 h-11` / `h-11`) while in that file. Padded text buttons (e.g. `px-4 py-2` Cancel/Create/Apply buttons) are left at their existing padding — they're an established app-wide pattern, not a new regression, and Task 21's QA pass is the place to flag any that read as cramped on a real device rather than this plan re-deriving exact padding-to-pixel math for each one.
 - Fixed class → token substitution table (every migration task in this plan applies this table verbatim; it is given once here, not repeated per task):
   | Old Tailwind classes | New |
   |---|---|
@@ -38,7 +41,7 @@
 - Modify: `src/assets/main.css`
 
 **Interfaces:**
-- Produces: CSS custom properties `--surface-0`, `--surface-1`, `--surface-2`, `--text-primary`, `--text-secondary`, `--text-tertiary`, `--border`, `--scrim` (light in `:root`, dark in `.dark`), and theme-invariant `--status-playing`/`-deep`/`-soft`, `--status-idle`/`-deep`/`-soft`, `--status-attention`/`-deep`/`-soft`, and theme-split `--status-offline` (light in `:root`, dark in `.dark`). Every later task's `bg-[var(--x)]`/`text-[var(--x)]` classes consume these names exactly.
+- Produces: CSS custom properties `--surface-0`, `--surface-1`, `--surface-2`, `--text-primary`, `--text-secondary`, `--text-tertiary`, `--border`, `--scrim` (light in `:root`, dark in `.dark`), and theme-invariant `--status-playing`/`-deep`/`-soft`, `--status-idle`/`-deep`/`-soft`, `--status-attention`/`-deep`/`-soft`. Every later task's `bg-[var(--x)]`/`text-[var(--x)]` classes consume these names exactly.
 
 - [ ] **Step 1: Add the tokens**
 
@@ -54,7 +57,6 @@ Edit `src/assets/main.css` — insert right after the `@custom-variant dark` lin
   --text-tertiary: #64748b;
   --border: #e2e8f0;
   --scrim: rgba(2, 6, 23, 0.6);
-  --status-offline: #94a3b8;
 }
 
 .dark {
@@ -66,17 +68,16 @@ Edit `src/assets/main.css` — insert right after the `@custom-variant dark` lin
   --text-tertiary: #94a3b8;
   --border: #1e293b;
   --scrim: rgba(2, 6, 23, 0.6);
-  --status-offline: #64748b;
 }
 
 :root,
 .dark {
-  --status-playing: #22c55e;
-  --status-playing-deep: #16a34a;
-  --status-playing-soft: rgba(34, 197, 94, 0.16);
-  --status-idle: #fbbf24;
-  --status-idle-deep: #f59e0b;
-  --status-idle-soft: rgba(251, 191, 36, 0.16);
+  --status-playing: #16a34a;
+  --status-playing-deep: #15803d;
+  --status-playing-soft: rgba(22, 163, 74, 0.16);
+  --status-idle: #64748b;
+  --status-idle-deep: #475569;
+  --status-idle-soft: rgba(100, 116, 139, 0.14);
   --status-attention: #ef4444;
   --status-attention-deep: #dc2626;
   --status-attention-soft: rgba(239, 68, 68, 0.16);
@@ -232,7 +233,7 @@ with:
 
 ```ts
   // The zone's accent reflects its own state, not its source's identity:
-  // red while muted or unavailable, green while playing, amber while idle.
+  // red while muted or unavailable, green while playing, neutral while idle.
   const STATUS_ACCENT = {
     playing: {
       main: "var(--status-playing)",
@@ -1064,7 +1065,7 @@ with:
 
 ```vue
             <span
-              class="w-8 h-8 rounded-full flex items-center justify-center bg-blue-600 text-white text-sm font-bold shrink-0"
+              class="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--surface-2)] text-[var(--text-secondary)] text-sm font-bold shrink-0"
             >
               {{ getGroupName(group).charAt(0).toUpperCase() }}
             </span>
@@ -1072,7 +1073,7 @@ with:
 
 - [ ] **Step 3: Verify in the browser**
 
-Open "Filter Groups" from the Simple UI toolbar. Confirm drag-to-reorder, up/down buttons, show/hide toggle, and Done all still work; every group's avatar is now solid blue instead of a rainbow of hash-picked colors; mobile shows a bottom sheet.
+Open "Filter Groups" from the Simple UI toolbar. Confirm drag-to-reorder, up/down buttons, show/hide toggle, and Done all still work; every group's avatar is now a neutral circle instead of a rainbow of hash-picked colors; mobile shows a bottom sheet.
 
 - [ ] **Step 4: Verify build and commit**
 
@@ -1378,11 +1379,37 @@ git commit -m "refactor: apply design tokens to SetupPasscode"
 - Modify: `src/components/simple/SimpleZoneView.vue`
 - Modify: `src/components/simple/simple-view.css`
 
-**Interfaces:** No prop/emit change on either component. `simple-view.css`'s `.sv-tile`/`.sv-glow`/`.sv-accent-text`/`.sv-accent-badge`/`.sv-link-on` keep reading `--accent`/`--accent-2`/`--accent-soft` — Task 2 already changed what values flow into those variables, so **no change is needed in this file to `.sv-tile`/`.sv-glow`'s CSS rules themselves** (the "icon tile becomes neutral while idle, tinted while playing/muted" effect now falls out automatically from Task 2's state-driven accent — idle's amber is a gentle hue, not a strong per-source color, so the card already reads as calm/neutral most of the time and only visibly colors up when playing (green) or muted (red), which is exactly the "color reserved for state" goal).
+**Interfaces:** No prop/emit change on either component.
+
+- [ ] **Step 0: Make the tile neutral unless the zone is playing or muted**
+
+In `src/components/simple/simple-view.css`, replace the `.sv-tile`, `.sv-tile.is-idle`, `.sv-tile.is-muted`, and `.sv-link-on` rules with:
+
+```css
+.sv-tile {
+  background: var(--accent);
+}
+.sv-tile.is-idle {
+  background: var(--surface-2);
+  color: var(--text-secondary);
+}
+.sv-tile.is-muted {
+  background: var(--status-attention);
+  color: #fff;
+}
+```
+
+```css
+.sv-link-on {
+  background: #2563eb;
+}
+```
+
+(`.sv-link-on` marks a selection, not a state, so it uses brand blue. The `is-muted` rule stays after `is-idle` so a muted idle zone reads red.) Keep `.sv-glow` and `.sv-eq` as they are.
 
 - [ ] **Step 1: Token pass on `SimpleZoneCard.vue`'s non-accent structural classes**
 
-Apply the substitution table to classes that aren't part of the accent system: the card's own `border-gray-200/80 dark:border-gray-800` (non-muted case) → `border-[var(--border)]` (keep the muted-case `border-red-200 dark:border-red-900/50` as literal semantic color), `bg-white/90 dark:bg-slate-900/90` → `bg-[var(--surface-1)]/90` (keep the `backdrop-blur`), the zone name `text-slate-900 dark:text-white` → `text-[var(--text-primary)]`, the status-line `text-slate-500 dark:text-slate-400` → `text-[var(--text-tertiary)]`, the Volume & Speakers row's `border-slate-200 dark:border-slate-700` → `border-[var(--border)]` and `bg-slate-50/80 dark:bg-slate-800/60` → `bg-[var(--surface-2)]/80`, its hover `hover:bg-white dark:hover:bg-slate-800` → `hover:bg-[var(--surface-1)]`, the volume percentage text's `text-slate-700 dark:text-slate-200` → `text-[var(--text-secondary)]`, the "no speakers" message's `text-slate-500 dark:text-slate-400` → `text-[var(--text-tertiary)]`. Leave `sv-accent-text`, the green/red status dots, and the mute button's red state exactly as they are (state color).
+Apply the substitution table to classes that aren't part of the accent system: the card's own `border-gray-200/80 dark:border-gray-800` (non-muted case) → `border-[var(--border)]` (keep the muted-case `border-red-200 dark:border-red-900/50` as literal semantic color), `bg-white/90 dark:bg-slate-900/90 backdrop-blur` → `bg-[var(--surface-1)]` (solid card, no blur), the zone name `text-slate-900 dark:text-white` → `text-[var(--text-primary)]`, the status-line `text-slate-500 dark:text-slate-400` → `text-[var(--text-tertiary)]`, the Volume & Speakers row's `border-slate-200 dark:border-slate-700` → `border-[var(--border)]` and `bg-slate-50/80 dark:bg-slate-800/60` → `bg-[var(--surface-2)]`, its hover `hover:bg-white dark:hover:bg-slate-800` → `hover:bg-[var(--surface-1)]`, the mute button's non-muted `bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700` → `bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--surface-1)]`, the settings cog `w-10 h-10` → `w-11 h-11`, the volume percentage text's `text-slate-700 dark:text-slate-200` → `text-[var(--text-secondary)]`, the "no speakers" message's `text-slate-500 dark:text-slate-400` → `text-[var(--text-tertiary)]`. Leave `sv-accent-text`, the green/red status dots, and the mute button's red state exactly as they are (state color).
 
 - [ ] **Step 2: Toolbar — collapse secondary actions into an overflow menu on mobile**
 
@@ -1415,15 +1442,15 @@ Replace the toolbar's `<div class="flex items-center gap-2 flex-wrap">...</div>`
           {{ allMuted ? "Unmute all" : "Mute all" }}
         </button>
 
-        <Tooltip v-if="auth.permissions.showCreateGroup" text="Create Group">
-          <button
-            type="button"
-            class="w-11 h-11 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/25 transition-all active:scale-90"
-            @click="emit('create-group')"
-          >
-            <span class="mdi mdi-plus text-xl"></span>
-          </button>
-        </Tooltip>
+        <button
+          v-if="auth.permissions.showCreateGroup"
+          type="button"
+          class="h-11 px-4 inline-flex items-center gap-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition-all active:scale-95"
+          @click="emit('create-group')"
+        >
+          <span class="mdi mdi-plus text-lg" aria-hidden="true"></span>
+          Add zone
+        </button>
 
         <!-- Desktop: inline. Mobile: collapsed into the overflow menu below. -->
         <div class="hidden sm:flex items-center gap-2">
@@ -1471,7 +1498,7 @@ Replace the toolbar's `<div class="flex items-center gap-2 flex-wrap">...</div>`
         </div>
 
         <!-- Mobile: a single overflow trigger replaces the three buttons above. -->
-        <div class="relative sm:hidden">
+        <div ref="overflowMenuRef" class="relative sm:hidden">
           <button
             type="button"
             class="w-11 h-11 flex items-center justify-center rounded-full bg-[var(--surface-1)] border border-[var(--border)] text-[var(--text-secondary)] shadow-sm transition-all active:scale-90"
@@ -1522,13 +1549,27 @@ Replace the toolbar's `<div class="flex items-center gap-2 flex-wrap">...</div>`
       </div>
 ```
 
-Add `useEscapeToClose` and a click-outside close for the new menu (same composable every other popover in this app already uses for Escape — this is the one piece of *new* interaction behavior in this task, everything else above is pure restyle):
+Add Escape and click-outside close for the new menu (this is the one piece of *new* interaction behavior in this task, everything else above is pure restyle). Change the `vue` import to `import { ref, computed, onMounted, onUnmounted } from "vue";`, then add:
 
 ```ts
 import { useEscapeToClose } from "@/composables/useEscapeToClose";
 // ...
-useEscapeToClose(() => showOverflowMenu.value, () => (showOverflowMenu.value = false));
+const overflowMenuRef = ref<HTMLElement | null>(null);
+
+function closeOverflowMenu() {
+  showOverflowMenu.value = false;
+}
+
+function onDocumentPointerDown(event: PointerEvent) {
+  if (!overflowMenuRef.value?.contains(event.target as Node)) closeOverflowMenu();
+}
+
+onMounted(() => document.addEventListener("pointerdown", onDocumentPointerDown));
+onUnmounted(() => document.removeEventListener("pointerdown", onDocumentPointerDown));
+useEscapeToClose(() => showOverflowMenu.value, closeOverflowMenu);
 ```
+
+Also apply the substitution table to the rest of `SimpleZoneView.vue`: the header title and summary text, and the empty-state block (`border-gray-200 dark:border-gray-800`, `bg-white/50 dark:bg-slate-900/50` → `bg-[var(--surface-1)]`, its text). Replace the empty state's gradient icon circle (`bg-gradient-to-br from-blue-500 to-indigo-600 text-white ... shadow-lg shadow-blue-600/20`) with `bg-[var(--surface-2)] text-[var(--text-secondary)]`.
 
 - [ ] **Step 3: Verify in the browser — desktop**
 
@@ -1543,7 +1584,7 @@ Resize to a 375px-wide viewport (`resize_window` preset `mobile` if using the bu
 Run: `pnpm run build` — expect success.
 
 ```bash
-git add src/components/simple/SimpleZoneCard.vue src/components/simple/SimpleZoneView.vue
+git add src/components/simple/SimpleZoneCard.vue src/components/simple/SimpleZoneView.vue src/components/simple/simple-view.css
 git commit -m "feat: token pass on zone cards, collapse toolbar into overflow menu on mobile"
 ```
 
@@ -1560,15 +1601,15 @@ git commit -m "feat: token pass on zone cards, collapse toolbar into overflow me
 
 - [ ] **Step 1: `SimpleSourceButton.vue`**
 
-Apply the substitution table: `border-slate-200 dark:border-slate-700` → `border-[var(--border)]`; `bg-slate-50/80 dark:bg-slate-800/60` → `bg-[var(--surface-2)]/80`; hover `hover:bg-white dark:hover:bg-slate-800` → `hover:bg-[var(--surface-1)]`; the stream-name text `text-slate-900 dark:text-white` → `text-[var(--text-primary)]`; the subtitle `text-slate-500 dark:text-slate-400` → `text-[var(--text-tertiary)]`; the lock icon `text-slate-400` → `text-[var(--text-tertiary)]`. Leave `sv-tile`/`sv-accent-text` (the icon tile and "Change" label, both state-colored now) untouched.
+Apply the substitution table: `border-slate-200 dark:border-slate-700` → `border-[var(--border)]`; `bg-slate-50/80 dark:bg-slate-800/60` → `bg-[var(--surface-2)]`; hover `hover:bg-white dark:hover:bg-slate-800` → `hover:bg-[var(--surface-1)]`; the stream-name text `text-slate-900 dark:text-white` → `text-[var(--text-primary)]`; the subtitle `text-slate-500 dark:text-slate-400` → `text-[var(--text-tertiary)]`; the lock icon `text-slate-400` → `text-[var(--text-tertiary)]`. On the "Change" label, replace `sv-accent-text` with `text-blue-600 dark:text-blue-400`. Make the source tile always neutral, so a card has one colored tile at most: replace its `class="sv-tile w-11 h-11 ..."` and `:class="{ 'is-muted': group.muted }"` with a static `class="sv-tile is-idle w-11 h-11 ..."` and no `:class`.
 
 - [ ] **Step 2: `SimpleVolumeSlider.vue`**
 
-Read the file first (not yet read this session) and apply the same substitution table to whatever structural gray/slate classes it has for its track background, −/+ buttons, and percentage label; leave any accent/fill color (driven by `--accent`) untouched.
+Apply the substitution table to the −/+ buttons' `text-slate-500 dark:text-slate-400`, the track's `bg-slate-200 dark:bg-slate-700` → `bg-[var(--surface-2)]`, and the value label. In the `size === 'md'` branch of both −/+ buttons change `w-9 h-9` to `w-11 h-11` (44px touch target). Leave the fill color (the `accent` prop) untouched.
 
 - [ ] **Step 3: `SimpleZoneModal.vue`**
 
-Apply the substitution table to its structural classes: panel `bg-white dark:bg-slate-900` → already uses the `sv-sheet-panel` + this file's own background class, map it to `bg-[var(--surface-1)]`; header/footer borders `border-gray-200 dark:border-gray-800` type classes → `border-[var(--border)]`; zone-name text → `text-[var(--text-primary)]`; helper/meta text → `text-[var(--text-tertiary)]`; the per-speaker row backgrounds/borders → `bg-[var(--surface-2)]`/`border-[var(--border)]`. Leave `sv-tile`, `sv-glow`, `sv-accent-text`, `sv-link-on`, and the green/red/amber state dots and badges untouched (all state-driven already).
+Apply the substitution table to its structural classes: panel `bg-white dark:bg-slate-900` → already uses the `sv-sheet-panel` + this file's own background class, map it to `bg-[var(--surface-1)]`; header/footer borders `border-gray-200 dark:border-gray-800` type classes → `border-[var(--border)]`; zone-name text → `text-[var(--text-primary)]`; helper/meta text → `text-[var(--text-tertiary)]`; the per-speaker row backgrounds/borders → `bg-[var(--surface-2)]`/`border-[var(--border)]`; every speaker-row button to 44px (settings and mute `w-9 h-9` → `w-11 h-11`, the Link pill `h-9` → `h-11`, the header cog and close `w-10 h-10` → `w-11 h-11`). Leave `sv-tile`, `sv-glow`, `sv-accent-text`, `sv-link-on`, and the green/red/amber state dots and badges untouched (all state-driven already).
 
 - [ ] **Step 4: Verify in the browser**
 
@@ -1997,7 +2038,8 @@ Delete `viewMode,` from the returned state object and `setViewMode,` from the re
 
 - [ ] **Step 5: Delete the persistence path**
 
-Delete `"viewMode",` from the `persist.paths` array.
+Delete `"viewMode",` from the `persist.pick` array (the store's actual
+persistence option is named `pick`, not `paths`).
 
 - [ ] **Step 6: Verify repo-wide**
 
@@ -2036,10 +2078,14 @@ Expected: only the three files themselves (and nothing else — if anything else
 git rm src/components/ZoneGrid.vue src/components/VolumeControl.vue src/components/ZoneControlModal.vue
 ```
 
-- [ ] **Step 2: Full repo-wide dead-reference sweep**
+- [ ] **Step 2: Delete helpers only Classic used, and stale comments**
 
-Run: `grep -rn "viewMode\|ZoneGrid\|VolumeControl\|ZoneControlModal\|getSourceAccent\|getSourceHue\|canChangeView" src`
-Expected: no output.
+`git rm src/utils/group-volume.ts src/utils/__tests__/group-volume.test.ts`. In `src/utils/stream-status.ts` delete `getStreamStatusIcon`, `getStreamStatusColor`, and `getStreamStatusTooltip` (keep `getStreamStatus`), and delete their test cases and imports from `src/utils/__tests__/stream-status.test.ts`.
+
+Reword the comments that still describe Classic: `src/composables/useZoneControls.ts:99`, `src/composables/useEscapeToClose.ts:8-10`, `src/utils/zone-volume.ts:7-8`, `src/components/simple/SimpleZoneView.vue:28` and `:129`. Keep what each comment explains; drop the Classic reference.
+
+Run: `grep -rnEi "viewMode|ZoneGrid|VolumeControl\b|ZoneControl\b|ZoneControlModal|getSourceAccent|getSourceHue|canChangeView|averageGroupVolume|classic|zone control" src`
+Expected: no output. (`getVolumeControlMode` and similar settings names do not match this pattern and must stay.)
 
 - [ ] **Step 3: Run the full test suite**
 
@@ -2053,7 +2099,7 @@ Expected: succeeds (type-check + Vite build).
 
 - [ ] **Step 5: Full visual QA pass**
 
-`pnpm run dev`, using the mock Snapcast server set up earlier this session (or a real one) with a mix of playing/idle/muted/offline-client/empty-zone/multi-speaker/long-name zones:
+`pnpm run dev`, using a mock or real Snapcast server with a mix of playing/idle/muted/offline-client/empty-zone/multi-speaker/long-name zones:
 
 - Desktop, light theme: zone cards, toolbar, every modal (group settings, client details, client settings, create group, filter groups, app settings, server info), connection panel (disconnect to see it), setup passcode + unlock (enable auth to see them), toasts, loading spinner.
 - Desktop, dark theme: same full pass.
@@ -2063,6 +2109,7 @@ Expected: succeeds (type-check + Vite build).
 - [ ] **Step 6: Commit**
 
 ```bash
+git add -A src
 git commit -m "$(cat <<'EOF'
 refactor: delete Classic UI files (ZoneGrid, VolumeControl, ZoneControlModal)
 
@@ -2070,7 +2117,94 @@ Simple UI is now the app's only interface. Feature-parity audit (done
 during planning) confirmed Simple already covered every Classic
 capability before this redesign started.
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 EOF
 )"
+```
+
+---
+
+## Task 22: Classic parity fixes
+
+Run this after Task 15 and before Task 16. Reading `ZoneGrid.vue` and `ZoneControlModal.vue` found two things Classic has that Simple lacks.
+
+**Files:**
+- Modify: `src/composables/useZoneControls.ts`
+- Modify: `src/composables/__tests__/use-zone-controls.test.ts`
+- Modify: `src/components/simple/SimpleZoneCard.vue`
+- Modify: `src/components/simple/SimpleVolumeSlider.vue`
+
+**Interfaces:**
+- Consumes: `useZoneControls` from Task 2.
+- Produces: `useZoneControls(group).zoneVolume` (`ComputedRef<number>`): the average of the linked speakers, or of every allowed speaker when none are linked.
+
+- [ ] **Step 1: Write the failing test**
+
+Append to `src/composables/__tests__/use-zone-controls.test.ts`, adding `import { useSettingsStore } from "@/stores/settings";` and `import type { Client } from "@/stores/snapcast";` to the imports:
+
+```ts
+function makeClient(id: string, percent: number): Client {
+  return {
+    id,
+    config: { name: id, volume: { muted: false, percent } },
+    host: { name: id },
+  } as Client;
+}
+
+describe("useZoneControls zoneVolume", () => {
+  const clients = [makeClient("c1", 20), makeClient("c2", 60)];
+
+  it("averages every speaker when none are linked", () => {
+    const zone = useZoneControls(() => makeGroup({ clients }));
+
+    expect(zone.zoneVolume.value).toBe(40);
+  });
+
+  it("averages only the linked speakers when some are linked", () => {
+    useSettingsStore().setGroupVolumeLinks("g1", ["c2"], {});
+    const zone = useZoneControls(() => makeGroup({ clients }));
+
+    expect(zone.zoneVolume.value).toBe(60);
+  });
+});
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `pnpm vitest run src/composables/__tests__/use-zone-controls.test.ts`
+Expected: FAIL, `zone.zoneVolume` is undefined.
+
+- [ ] **Step 3: Add `zoneVolume`**
+
+In `src/composables/useZoneControls.ts`, after the `masterVolume` computed, add:
+
+```ts
+  const zoneVolume = computed(() =>
+    averageClientVolume(hasMasterVolume.value ? linkedClients.value : speakers.value)
+  );
+```
+
+Add `zoneVolume,` to the returned object after `masterVolume,`.
+
+- [ ] **Step 4: Run the test to verify it passes**
+
+Run: `pnpm vitest run src/composables/__tests__/use-zone-controls.test.ts`
+Expected: PASS.
+
+- [ ] **Step 5: Show the volume on every zone card**
+
+In `src/components/simple/SimpleZoneCard.vue`'s volume row: remove `v-if="zone.hasMasterVolume.value"` from the outer `<span>`, change both `zone.masterVolume.value` references to `zone.zoneVolume.value`, and delete the `<span v-else ...>Volume &amp; speakers</span>` fallback. Keep the `sr-only` label.
+
+- [ ] **Step 6: Keep the master −/+ buttons on phones**
+
+In `src/components/simple/SimpleVolumeSlider.vue`, change `'w-11 h-11 max-sm:hidden'` to `'w-11 h-11'` on both buttons.
+
+- [ ] **Step 7: Run tests and build, then commit**
+
+Run: `pnpm test && pnpm run build`
+Expected: both succeed.
+
+```bash
+git add src/composables/useZoneControls.ts src/composables/__tests__/use-zone-controls.test.ts src/components/simple/SimpleZoneCard.vue src/components/simple/SimpleVolumeSlider.vue
+git commit -m "fix: show zone volume on every card, keep master volume buttons on phones"
 ```

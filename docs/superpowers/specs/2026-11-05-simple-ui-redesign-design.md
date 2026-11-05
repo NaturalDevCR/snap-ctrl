@@ -7,14 +7,14 @@ SnapCtrl currently ships two UIs, selectable via `settings.viewMode`:
 - **Classic** — `ZoneGrid.vue`, `VolumeControl.vue`, `ZoneControlModal.vue`.
 - **Simple** — `src/components/simple/*`.
 
-A feature-parity audit (this session) confirmed Simple is already a strict
-superset of Classic: every Classic capability (group mute, create group,
+A feature-parity review found Simple covers nearly all of Classic: every Classic capability (group mute, create group,
 filter/show-empty/refresh, stream switching with status, master + per-client
 volume, mute, client link/details/settings, group settings) exists in Simple,
 plus extras Classic lacks (mute-all, searchable/keyboard-navigable source
-picker, enter/exit animations). No functionality needs to be built to make
-Simple a safe replacement — this project is a visual redesign plus dead-code
-removal, not feature work.
+picker, enter/exit animations). Reading the Classic files directly found two
+gaps, fixed in this project: the zone card must show a volume even with no
+linked speakers, and the master volume −/+ buttons must stay on phones.
+Everything else is a visual redesign plus dead-code removal.
 
 Simple becomes the app's **only** UI. Everything the app shows — zone cards,
 every modal Simple opens, and the app chrome (header, footer, connection/setup
@@ -34,8 +34,7 @@ screens) — gets one consistent, polished visual language.
 
 ## Non-goals
 
-- No new features beyond what Classic already had (audit found zero gaps to
-  fill).
+- No new features beyond what Classic already had.
 - No change to the underlying Pinia stores' data shape or the Snapcast
   JSON-RPC client.
 - Drag-reordering and latency calibration UI: absent in both Classic and
@@ -59,6 +58,10 @@ inline `slate-900/50`-style literals:
   blue): `--status-playing` (green), `--status-muted` (red),
   `--status-idle` (amber/neutral), `--status-error` (red, distinct shade from
   muted where both can appear together).
+
+As implemented: `--status-muted` became `--status-attention`, which also
+covers unavailable streams; `--surface-overlay` became `--scrim`; idle is
+neutral; and radii use a Tailwind class convention instead of `--radius-*`.
 
 Components consume these via Tailwind arbitrary-value utilities
 (`bg-[var(--surface-1)]`) or small scoped CSS — not new hardcoded colors.
