@@ -71,18 +71,22 @@ export function useZoneControls(group: () => Group) {
     },
   } as const;
 
-  const statusAccent = computed(() => {
-    if (group().muted) return STATUS_ACCENT.attention;
+  const playAccent = computed(() => {
     if (playState.value === "playing") return STATUS_ACCENT.playing;
     if (playState.value === "idle") return STATUS_ACCENT.idle;
     return STATUS_ACCENT.attention; // unavailable
   });
+  const statusAccent = computed(() =>
+    group().muted ? STATUS_ACCENT.attention : playAccent.value
+  );
   const accent = computed(() => statusAccent.value.main);
   const accentStyle = computed(() => ({
     "--accent": statusAccent.value.main,
     "--accent-2": statusAccent.value.deep,
     "--accent-soft": statusAccent.value.soft,
   }));
+  // The tile shows playback only. Mute lives on its label and mute button.
+  const tileStyle = computed(() => ({ "--accent": playAccent.value.main }));
 
   const sources = computed(() =>
     snapcast.filteredStreams.map((s) => ({
@@ -188,6 +192,7 @@ export function useZoneControls(group: () => Group) {
     currentSourceIcon,
     accent,
     accentStyle,
+    tileStyle,
     sources,
     selectSource,
     // volume

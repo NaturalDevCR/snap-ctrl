@@ -80,12 +80,12 @@ watch(
           <header class="relative px-5 pt-4 sm:pt-5 pb-4 flex items-start gap-3">
             <div
               class="sv-tile w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-white transition-all duration-500"
-              :class="{ 'is-muted': group.muted, 'is-idle': zone.playState.value === 'idle' }"
+              :class="{ 'is-idle': zone.playState.value === 'idle' }"
+              :style="zone.tileStyle.value"
               aria-hidden="true"
             >
               <Transition name="sv-swap" mode="out-in">
-                <span v-if="group.muted" key="m" class="mdi mdi-volume-off text-2xl"></span>
-                <span v-else-if="zone.playState.value === 'playing'" key="eq" class="sv-eq scale-90">
+                <span v-if="zone.playState.value === 'playing'" key="eq" class="sv-eq scale-90">
                   <span></span><span></span><span></span><span></span>
                 </span>
                 <span v-else key="i" class="mdi text-2xl" :class="zone.currentSourceIcon.value"></span>

@@ -21,10 +21,6 @@
   background: var(--surface-2);
   color: var(--text-secondary);
 }
-.sv-tile.is-muted {
-  background: var(--status-attention);
-  color: #fff;
-}
 .sv-accent-text {
   color: var(--accent);
 }
