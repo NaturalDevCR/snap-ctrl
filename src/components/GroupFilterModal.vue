@@ -3,7 +3,7 @@ import { computed, toRef } from "vue";
 import { useSettingsStore } from "@/stores/settings";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useZoneOrder } from "@/composables/useZoneOrder";
-import { useEscapeToClose } from "@/composables/useEscapeToClose";
+import AppDialog from "@/components/AppDialog.vue";
 import { getGroupDisplayName } from "@/utils/group-name";
 import type { Group } from "@/stores/snapcast";
 
@@ -14,11 +14,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "close"): void;
 }>();
-
-useEscapeToClose(
-  () => props.open,
-  () => emit("close")
-);
 
 const settings = useSettingsStore();
 const snapcast = useSnapcastStore();
@@ -48,132 +43,87 @@ function getGroupName(group: Group): string {
 function isHidden(groupId: string): boolean {
   return settings.hiddenGroups.includes(groupId);
 }
-
-function getGroupColor(groupId: string): string {
-  const colors = [
-    "bg-red-500",
-    "bg-blue-500",
-    "bg-green-500",
-    "bg-yellow-500",
-    "bg-purple-500",
-    "bg-pink-500",
-    "bg-indigo-500",
-    "bg-teal-500",
-  ];
-  let hash = 0;
-  for (let i = 0; i < groupId.length; i++) {
-    hash = groupId.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const index = Math.abs(hash) % colors.length;
-  return colors[index]!;
-}
-
-function onBackdropClick() {
-  emit("close");
-}
 </script>
 
 <template>
-  <div
-    v-if="props.open"
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm"
-    @click.self="onBackdropClick"
-  >
-    <div
-      class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 w-full max-w-md overflow-hidden"
-    >
+  <AppDialog :open="props.open" title="Manage Groups" @close="emit('close')">
+    <div class="-m-2">
       <div
-        class="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between"
+        v-if="snapcast.groups.length === 0"
+        class="p-4 text-center text-[var(--text-tertiary)]"
       >
-        <h3 class="font-bold text-lg text-gray-900 dark:text-white">
-          Manage Groups
-        </h3>
+        No groups available
+      </div>
+      <div
+        v-for="(group, index) in orderedZonesForFilter"
+        :key="group.id"
+        draggable="true"
+        @dragstart="handleDragStart(index, $event)"
+        @dragover.prevent="handleDragOver(index, $event)"
+        @drop="handleDrop(index, $event)"
+        @dragend="handleDragEnd"
+        class="flex items-center justify-between p-3 mb-2 bg-[var(--surface-1)] hover:bg-[var(--surface-2)] rounded-xl cursor-move transition-colors border border-[var(--border)]"
+        :class="{ 'opacity-50': draggedIndex === index }"
+      >
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="mdi mdi-drag-vertical text-[var(--text-tertiary)] hidden sm:inline" aria-hidden="true"></span>
+          <!-- Native HTML5 drag-and-drop (the handlers on the row above)
+               never fires on touch devices — there's no browser
+               fallback — so these are the only way to reorder on a
+               phone or tablet, which is most of this app's install
+               base. Kept small/inline rather than hidden behind a
+               gesture. -->
+          <div class="flex flex-col shrink-0">
+            <button
+              type="button"
+              class="w-6 h-5 flex items-center justify-center rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] disabled:opacity-25 disabled:pointer-events-none"
+              :disabled="index === 0"
+              :aria-label="`Move ${getGroupName(group)} up`"
+              @click.stop="moveZoneUp(index)"
+            >
+              <span class="mdi mdi-chevron-up text-sm"></span>
+            </button>
+            <button
+              type="button"
+              class="w-6 h-5 flex items-center justify-center rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] disabled:opacity-25 disabled:pointer-events-none"
+              :disabled="index === orderedZonesForFilter.length - 1"
+              :aria-label="`Move ${getGroupName(group)} down`"
+              @click.stop="moveZoneDown(index)"
+            >
+              <span class="mdi mdi-chevron-down text-sm"></span>
+            </button>
+          </div>
+          <span
+            class="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--surface-2)] text-[var(--text-secondary)] text-sm font-bold shrink-0"
+          >
+            {{ getGroupName(group).charAt(0).toUpperCase() }}
+          </span>
+          <span class="font-medium text-[var(--text-primary)] truncate">{{
+            getGroupName(group)
+          }}</span>
+        </div>
         <button
-          @click="emit('close')"
-          aria-label="Close"
-          class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          type="button"
+          class="w-6 h-6 rounded-full border flex items-center justify-center transition-colors shrink-0"
+          :class="
+            !isHidden(group.id)
+              ? 'bg-blue-500 border-blue-500 text-white'
+              : 'border-gray-300 dark:border-gray-600'
+          "
+          :aria-pressed="!isHidden(group.id)"
+          :aria-label="isHidden(group.id) ? `Show ${getGroupName(group)}` : `Hide ${getGroupName(group)}`"
+          @click.stop="toggleVisibility(group.id)"
         >
-          <span class="mdi mdi-close text-xl"></span>
+          <span
+            v-if="!isHidden(group.id)"
+            class="mdi mdi-check text-sm"
+          ></span>
         </button>
       </div>
-      <div class="p-2 max-h-[60vh] overflow-y-auto custom-scrollbar">
-        <div
-          v-if="snapcast.groups.length === 0"
-          class="p-4 text-center text-gray-500 dark:text-gray-400"
-        >
-          No groups available
-        </div>
-        <div
-          v-for="(group, index) in orderedZonesForFilter"
-          :key="group.id"
-          draggable="true"
-          @dragstart="handleDragStart(index, $event)"
-          @dragover.prevent="handleDragOver(index, $event)"
-          @drop="handleDrop(index, $event)"
-          @dragend="handleDragEnd"
-          class="flex items-center justify-between p-3 mb-2 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700/50 rounded-xl cursor-move transition-colors border border-gray-200 dark:border-gray-700"
-          :class="{ 'opacity-50': draggedIndex === index }"
-        >
-          <div class="flex items-center gap-3 min-w-0">
-            <span class="mdi mdi-drag-vertical text-gray-400 hidden sm:inline" aria-hidden="true"></span>
-            <!-- Native HTML5 drag-and-drop (the handlers on the row above)
-                 never fires on touch devices — there's no browser
-                 fallback — so these are the only way to reorder on a
-                 phone or tablet, which is most of this app's install
-                 base. Kept small/inline rather than hidden behind a
-                 gesture. -->
-            <div class="flex flex-col shrink-0">
-              <button
-                type="button"
-                class="w-6 h-5 flex items-center justify-center rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:text-gray-200 dark:hover:bg-slate-700 disabled:opacity-25 disabled:pointer-events-none"
-                :disabled="index === 0"
-                :aria-label="`Move ${getGroupName(group)} up`"
-                @click.stop="moveZoneUp(index)"
-              >
-                <span class="mdi mdi-chevron-up text-sm"></span>
-              </button>
-              <button
-                type="button"
-                class="w-6 h-5 flex items-center justify-center rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:text-gray-200 dark:hover:bg-slate-700 disabled:opacity-25 disabled:pointer-events-none"
-                :disabled="index === orderedZonesForFilter.length - 1"
-                :aria-label="`Move ${getGroupName(group)} down`"
-                @click.stop="moveZoneDown(index)"
-              >
-                <span class="mdi mdi-chevron-down text-sm"></span>
-              </button>
-            </div>
-            <span
-              class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0"
-              :class="getGroupColor(group.id)"
-            >
-              {{ getGroupName(group).charAt(0).toUpperCase() }}
-            </span>
-            <span class="font-medium text-gray-900 dark:text-white truncate">{{
-              getGroupName(group)
-            }}</span>
-          </div>
-          <button
-            type="button"
-            class="w-6 h-6 rounded-full border flex items-center justify-center transition-colors shrink-0"
-            :class="
-              !isHidden(group.id)
-                ? 'bg-blue-500 border-blue-500 text-white'
-                : 'border-gray-300 dark:border-gray-600'
-            "
-            :aria-pressed="!isHidden(group.id)"
-            :aria-label="isHidden(group.id) ? `Show ${getGroupName(group)}` : `Hide ${getGroupName(group)}`"
-            @click.stop="toggleVisibility(group.id)"
-          >
-            <span
-              v-if="!isHidden(group.id)"
-              class="mdi mdi-check text-sm"
-            ></span>
-          </button>
-        </div>
-      </div>
-      <div
-        class="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-slate-800/50 flex justify-end"
-      >
+    </div>
+
+    <template #footer>
+      <div class="w-full flex justify-end">
         <button
           @click="emit('close')"
           class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
@@ -181,6 +131,6 @@ function onBackdropClick() {
           Done
         </button>
       </div>
-    </div>
-  </div>
+    </template>
+  </AppDialog>
 </template>
