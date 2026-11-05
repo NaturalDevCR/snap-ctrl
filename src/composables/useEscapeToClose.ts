@@ -5,10 +5,9 @@ import { watch, onUnmounted } from "vue";
 // — none of them ever handled Escape, so a keyboard-only user had no way
 // to back out of a dialog except tabbing to its close button. This is a
 // small global stack (shared across every call site, not per-component
-// state) so that when dialogs are intentionally stacked — Zone Control
-// with Group Settings opened on top of it, see App.vue's
-// handleOpenSettingsFromZoneControl — Escape closes only the top one
-// instead of both at once.
+// state) so that when dialogs are intentionally stacked — a zone's
+// Volume & Speakers sheet with Group Settings opened on top of it —
+// Escape closes only the top one instead of both at once.
 const stack: Array<() => void> = [];
 let listenerAttached = false;
 

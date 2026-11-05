@@ -40,8 +40,8 @@ onMounted(() => document.addEventListener("pointerdown", onDocumentPointerDown))
 onUnmounted(() => document.removeEventListener("pointerdown", onDocumentPointerDown));
 useEscapeToClose(() => showOverflowMenu.value, closeOverflowMenu);
 
-// Same filtering/ordering as the classic grid, so hidden zones, custom
-// order and the Browser Player's temporary group behave identically.
+// Shared filtering/ordering, so hidden zones, custom order and the
+// Browser Player's temporary group behave consistently.
 const { sortedZones } = useZoneOrder(
   computed(() => snapcast.filteredGroups),
   {

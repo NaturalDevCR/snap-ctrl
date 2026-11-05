@@ -3,9 +3,8 @@ import type { Client, Group } from "@/stores/snapcast";
 /**
  * Clients a zone-level ("master") volume control moves: the group's
  * volume-linked clients that are still in the group and that this device
- * may control. Empty means the zone has no master volume — same rule as
- * the classic Zone Control dialog, which only shows its master slider
- * when at least one client is linked.
+ * may control. Empty means the zone has no master volume: the master
+ * slider only appears when at least one client is linked.
  */
 export function linkedZoneClients(
   group: Group,

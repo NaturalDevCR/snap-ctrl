@@ -121,7 +121,7 @@ export function useZoneControls(group: () => Group) {
 
   function setMasterVolume(value: number) {
     if (!canAdjustVolume.value || !hasMasterVolume.value) return;
-    // Same call and baseline as the classic Zone Control master slider.
+    // Moves the linked clients proportionally from their saved reference volumes.
     snapcast.setGroupVolumeProportional(
       group().id,
       value,
