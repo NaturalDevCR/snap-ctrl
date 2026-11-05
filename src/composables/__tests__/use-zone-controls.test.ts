@@ -2,7 +2,8 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
 import { useZoneControls } from "@/composables/useZoneControls";
 import { useSnapcastStore } from "@/stores/snapcast";
-import type { Group, Stream } from "@/stores/snapcast";
+import { useSettingsStore } from "@/stores/settings";
+import type { Client, Group, Stream } from "@/stores/snapcast";
 
 function makeStream(id: string, status: string): Stream {
   return { id, uri: `pipe:///tmp/${id}?name=${id}`, status };
@@ -65,5 +66,30 @@ describe("useZoneControls accent", () => {
     const zone = useZoneControls(() => makeGroup());
 
     expect(zone.sources.value[0]).not.toHaveProperty("accent");
+  });
+});
+
+function makeClient(id: string, percent: number): Client {
+  return {
+    id,
+    config: { name: id, volume: { muted: false, percent } },
+    host: { name: id },
+  } as Client;
+}
+
+describe("useZoneControls zoneVolume", () => {
+  const clients = [makeClient("c1", 20), makeClient("c2", 60)];
+
+  it("averages every speaker when none are linked", () => {
+    const zone = useZoneControls(() => makeGroup({ clients }));
+
+    expect(zone.zoneVolume.value).toBe(40);
+  });
+
+  it("averages only the linked speakers when some are linked", () => {
+    useSettingsStore().setGroupVolumeLinks("g1", ["c2"], {});
+    const zone = useZoneControls(() => makeGroup({ clients }));
+
+    expect(zone.zoneVolume.value).toBe(60);
   });
 });

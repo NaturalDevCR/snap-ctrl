@@ -147,12 +147,12 @@ const showVolume = ref(false);
         >
           <span class="mdi mdi-tune-vertical-variant text-xl sv-accent-text shrink-0" aria-hidden="true"></span>
 
-          <span v-if="zone.hasMasterVolume.value" class="flex-1 min-w-0 flex items-center gap-3">
+          <span class="flex-1 min-w-0 flex items-center gap-3">
             <span class="flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden" aria-hidden="true">
               <span
                 class="block h-full rounded-full transition-all duration-300"
                 :style="{
-                  width: `${zone.masterVolume.value}%`,
+                  width: `${zone.zoneVolume.value}%`,
                   background: group.muted ? '#94a3b8' : zone.accent.value,
                 }"
               ></span>
@@ -160,10 +160,7 @@ const showVolume = ref(false);
             <span
               class="tabular-nums text-sm font-bold w-9 text-right"
               :class="group.muted ? 'text-slate-400 line-through' : 'text-[var(--text-secondary)]'"
-            >{{ zone.masterVolume.value }}%</span>
-          </span>
-          <span v-else class="flex-1 min-w-0 truncate text-sm font-semibold text-[var(--text-secondary)]">
-            Volume &amp; speakers
+            >{{ zone.zoneVolume.value }}%</span>
           </span>
 
           <span class="mdi mdi-chevron-right text-lg text-slate-400 group-hover/vol:translate-x-0.5 transition-transform" aria-hidden="true"></span>

@@ -114,6 +114,9 @@ export function useZoneControls(group: () => Group) {
   /** A zone has a master volume only while it has linked speakers. */
   const hasMasterVolume = computed(() => linkedClients.value.length > 0);
   const masterVolume = computed(() => averageClientVolume(linkedClients.value));
+  const zoneVolume = computed(() =>
+    averageClientVolume(hasMasterVolume.value ? linkedClients.value : speakers.value)
+  );
   const exponent = computed(() => settings.getVolumeExponent(group().id));
 
   function setMasterVolume(value: number) {
@@ -192,6 +195,7 @@ export function useZoneControls(group: () => Group) {
     linkedClients,
     hasMasterVolume,
     masterVolume,
+    zoneVolume,
     exponent,
     volumeStep: computed(() => settings.volumeStep),
     setMasterVolume,

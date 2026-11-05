@@ -65,7 +65,7 @@ function nudge(direction: 1 | -1) {
     <button
       type="button"
       class="shrink-0 flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:hover:bg-transparent disabled:hover:text-[var(--text-tertiary)]"
-      :class="size === 'lg' ? 'w-11 h-11 max-sm:hidden' : 'w-11 h-11'"
+      :class="size === 'lg' ? 'w-11 h-11' : 'w-11 h-11'"
       :disabled="disabled || volume <= 0"
       :aria-label="`Decrease ${label}`"
       @click="nudge(-1)"
@@ -92,7 +92,7 @@ function nudge(direction: 1 | -1) {
     <button
       type="button"
       class="shrink-0 flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:hover:bg-transparent disabled:hover:text-[var(--text-tertiary)]"
-      :class="size === 'lg' ? 'w-11 h-11 max-sm:hidden' : 'w-11 h-11'"
+      :class="size === 'lg' ? 'w-11 h-11' : 'w-11 h-11'"
       :disabled="disabled || volume >= 100"
       :aria-label="`Increase ${label}`"
       @click="nudge(1)"
