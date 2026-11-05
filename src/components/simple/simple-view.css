@@ -15,17 +15,15 @@
 
 /* ---- Zone tile ---------------------------------------------------------- */
 .sv-tile {
-  background-image: linear-gradient(135deg, var(--accent), var(--accent-2));
-  box-shadow: 0 10px 24px -8px var(--accent);
+  background: var(--accent);
 }
 .sv-tile.is-idle {
-  filter: saturate(0.55);
-  box-shadow: 0 6px 16px -10px var(--accent);
+  background: var(--surface-2);
+  color: var(--text-secondary);
 }
 .sv-tile.is-muted {
-  background-image: linear-gradient(135deg, #f87171, #dc2626);
-  box-shadow: 0 10px 24px -10px #ef4444;
-  filter: none;
+  background: var(--status-attention);
+  color: #fff;
 }
 .sv-accent-text {
   color: var(--accent);
@@ -35,8 +33,7 @@
   background: var(--accent-soft);
 }
 .sv-link-on {
-  background-image: linear-gradient(135deg, var(--accent), var(--accent-2));
-  box-shadow: 0 6px 14px -8px var(--accent);
+  background: #2563eb;
 }
 
 /* ---- Ambient glow while playing ----------------------------------------- */

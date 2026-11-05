@@ -20,9 +20,9 @@ const showVolume = ref(false);
 
 <template>
   <article
-    class="relative flex flex-col rounded-3xl border bg-white/90 dark:bg-slate-900/90 backdrop-blur shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+    class="relative flex flex-col rounded-3xl border bg-[var(--surface-1)] shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
     :class="[
-      group.muted ? 'border-red-200 dark:border-red-900/50' : 'border-gray-200/80 dark:border-gray-800',
+      group.muted ? 'border-red-200 dark:border-red-900/50' : 'border-[var(--border)]',
       { 'is-playing': zone.playState.value === 'playing' && !group.muted },
     ]"
     :style="zone.accentStyle.value"
@@ -53,7 +53,7 @@ const showVolume = ref(false);
           </Transition>
           <span
             v-if="zone.playState.value === 'playing' && !group.muted"
-            class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white dark:bg-slate-900 flex items-center justify-center shadow"
+            class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[var(--surface-1)] flex items-center justify-center shadow"
           >
             <span class="mdi text-sm sv-accent-text" :class="zone.currentSourceIcon.value"></span>
           </span>
@@ -62,7 +62,7 @@ const showVolume = ref(false);
         <div class="flex-1 min-w-0 pt-1">
           <div class="flex items-center gap-2 min-w-0">
             <h3
-              class="text-xl font-bold tracking-tight text-slate-900 dark:text-white truncate"
+              class="text-xl font-bold tracking-tight text-[var(--text-primary)] truncate"
               :title="zone.zoneName.value"
             >
               {{ zone.zoneName.value }}
@@ -76,7 +76,7 @@ const showVolume = ref(false);
               </span>
             </Transition>
           </div>
-          <p class="mt-1 flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 min-w-0">
+          <p class="mt-1 flex items-center gap-1.5 text-sm text-[var(--text-tertiary)] min-w-0">
             <span class="relative flex w-2 h-2 shrink-0" aria-hidden="true">
               <span
                 v-if="zone.playState.value === 'playing'"
@@ -104,7 +104,7 @@ const showVolume = ref(false);
         <Tooltip v-if="zone.showGroupSettings.value" text="Zone settings">
           <button
             type="button"
-            class="w-10 h-10 -mr-2 -mt-1 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:rotate-90 active:scale-90 transition-all duration-300"
+            class="w-11 h-11 -mr-2 -mt-1 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:rotate-90 active:scale-90 transition-all duration-300"
             @click="emit('group-settings', group)"
           >
             <span class="mdi mdi-cog-outline text-2xl"></span>
@@ -123,7 +123,7 @@ const showVolume = ref(false);
           :class="
             group.muted
               ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/30'
-              : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+              : 'bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--surface-1)]'
           "
           :disabled="!zone.canAdjustVolume.value"
           :aria-pressed="group.muted"
@@ -141,7 +141,7 @@ const showVolume = ref(false);
 
         <button
           type="button"
-          class="group/vol flex-1 min-w-0 h-12 flex items-center gap-3 pl-3 pr-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-800 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 text-left transition-all duration-300 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+          class="group/vol flex-1 min-w-0 h-12 flex items-center gap-3 pl-3 pr-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] hover:bg-[var(--surface-1)] hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 text-left transition-all duration-300 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
           aria-haspopup="dialog"
           @click="showVolume = true"
         >
@@ -159,10 +159,10 @@ const showVolume = ref(false);
             </span>
             <span
               class="tabular-nums text-sm font-bold w-9 text-right"
-              :class="group.muted ? 'text-slate-400 line-through' : 'text-slate-700 dark:text-slate-200'"
+              :class="group.muted ? 'text-slate-400 line-through' : 'text-[var(--text-secondary)]'"
             >{{ zone.masterVolume.value }}%</span>
           </span>
-          <span v-else class="flex-1 min-w-0 truncate text-sm font-semibold text-slate-700 dark:text-slate-200">
+          <span v-else class="flex-1 min-w-0 truncate text-sm font-semibold text-[var(--text-secondary)]">
             Volume &amp; speakers
           </span>
 
@@ -171,7 +171,7 @@ const showVolume = ref(false);
         </button>
       </div>
 
-      <p v-else class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+      <p v-else class="flex items-center gap-2 text-sm text-[var(--text-tertiary)]">
         <span class="mdi mdi-speaker-off text-lg" aria-hidden="true"></span>
         No speakers in this zone yet.
       </p>

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useSettingsStore } from "@/stores/settings";
 import { useAuthStore } from "@/stores/auth";
 import { useZoneOrder } from "@/composables/useZoneOrder";
+import { useEscapeToClose } from "@/composables/useEscapeToClose";
 import { getStreamStatus } from "@/utils/stream-status";
 import SimpleZoneCard from "@/components/simple/SimpleZoneCard.vue";
 import GroupFilterModal from "@/components/GroupFilterModal.vue";
@@ -24,6 +25,20 @@ const auth = useAuthStore();
 
 const refreshing = ref(false);
 const showGroupFilter = ref(false);
+const showOverflowMenu = ref(false);
+const overflowMenuRef = ref<HTMLElement | null>(null);
+
+function closeOverflowMenu() {
+  showOverflowMenu.value = false;
+}
+
+function onDocumentPointerDown(event: PointerEvent) {
+  if (!overflowMenuRef.value?.contains(event.target as Node)) closeOverflowMenu();
+}
+
+onMounted(() => document.addEventListener("pointerdown", onDocumentPointerDown));
+onUnmounted(() => document.removeEventListener("pointerdown", onDocumentPointerDown));
+useEscapeToClose(() => showOverflowMenu.value, closeOverflowMenu);
 
 // Same filtering/ordering as the classic grid, so hidden zones, custom
 // order and the Browser Player's temporary group behave identically.
@@ -81,10 +96,10 @@ async function refreshStatus() {
     <!-- Hero header -->
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 hero-in">
       <div>
-        <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+        <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-[var(--text-primary)]">
           Your zones
         </h2>
-        <p class="mt-1 flex items-center gap-2 text-slate-500 dark:text-slate-400">
+        <p class="mt-1 flex items-center gap-2 text-[var(--text-tertiary)]">
           <span class="relative flex w-2.5 h-2.5" aria-hidden="true">
             <span
               v-if="playingCount > 0"
@@ -107,7 +122,7 @@ async function refreshStatus() {
           :class="
             allMuted
               ? 'bg-red-500 border-red-500 text-white shadow-red-500/30 hover:bg-red-600'
-              : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-700 text-slate-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700'
+              : 'bg-[var(--surface-1)] border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--surface-2)]'
           "
           :aria-pressed="allMuted"
           @click="toggleMuteAll"
@@ -116,58 +131,110 @@ async function refreshStatus() {
           {{ allMuted ? "Unmute all" : "Mute all" }}
         </button>
 
-        <Tooltip v-if="auth.permissions.showCreateGroup" text="Create Group">
-          <button
-            type="button"
-            class="w-11 h-11 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/25 transition-all active:scale-90"
-            @click="emit('create-group')"
-          >
-            <span class="mdi mdi-plus text-xl"></span>
-          </button>
-        </Tooltip>
+        <button
+          v-if="auth.permissions.showCreateGroup"
+          type="button"
+          class="h-11 px-4 inline-flex items-center gap-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition-all active:scale-95"
+          @click="emit('create-group')"
+        >
+          <span class="mdi mdi-plus text-lg" aria-hidden="true"></span>
+          Add zone
+        </button>
 
-        <!-- Same quick toggle as the classic grid's eye button. -->
-        <Tooltip :text="settings.showEmptyGroups ? 'Hide empty groups' : 'Show empty groups'">
-          <button
-            type="button"
-            class="w-11 h-11 flex items-center justify-center rounded-full border shadow-sm transition-all active:scale-90"
-            :class="
-              settings.showEmptyGroups
-                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400'
-                : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
-            "
-            :aria-pressed="settings.showEmptyGroups"
-            @click="settings.setShowEmptyGroups(!settings.showEmptyGroups)"
-          >
-            <span class="mdi text-xl" :class="settings.showEmptyGroups ? 'mdi-eye' : 'mdi-eye-off'"></span>
-          </button>
-        </Tooltip>
+        <!-- Desktop: inline. Mobile: collapsed into the overflow menu below. -->
+        <div class="hidden sm:flex items-center gap-2">
+          <Tooltip :text="settings.showEmptyGroups ? 'Hide empty groups' : 'Show empty groups'">
+            <button
+              type="button"
+              class="w-11 h-11 flex items-center justify-center rounded-full border shadow-sm transition-all active:scale-90"
+              :class="
+                settings.showEmptyGroups
+                  ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400'
+                  : 'bg-[var(--surface-1)] border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--surface-2)]'
+              "
+              :aria-pressed="settings.showEmptyGroups"
+              @click="settings.setShowEmptyGroups(!settings.showEmptyGroups)"
+            >
+              <span class="mdi text-xl" :class="settings.showEmptyGroups ? 'mdi-eye' : 'mdi-eye-off'"></span>
+            </button>
+          </Tooltip>
 
-        <Tooltip v-if="auth.permissions.showGroupFilter" text="Filter Groups">
-          <button
-            type="button"
-            class="w-11 h-11 flex items-center justify-center rounded-full border shadow-sm transition-all active:scale-90"
-            :class="
-              showGroupFilter
-                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400'
-                : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
-            "
-            @click="showGroupFilter = !showGroupFilter"
-          >
-            <span class="mdi mdi-filter-variant text-xl"></span>
-          </button>
-        </Tooltip>
+          <Tooltip v-if="auth.permissions.showGroupFilter" text="Filter Groups">
+            <button
+              type="button"
+              class="w-11 h-11 flex items-center justify-center rounded-full border shadow-sm transition-all active:scale-90"
+              :class="
+                showGroupFilter
+                  ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400'
+                  : 'bg-[var(--surface-1)] border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--surface-2)]'
+              "
+              @click="showGroupFilter = !showGroupFilter"
+            >
+              <span class="mdi mdi-filter-variant text-xl"></span>
+            </button>
+          </Tooltip>
 
-        <Tooltip text="Refresh Status">
+          <Tooltip text="Refresh Status">
+            <button
+              type="button"
+              class="w-11 h-11 flex items-center justify-center rounded-full bg-[var(--surface-1)] border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--surface-2)] shadow-sm transition-all active:scale-90"
+              :disabled="refreshing"
+              @click="refreshStatus"
+            >
+              <span class="mdi mdi-refresh text-xl block" :class="{ 'animate-spin': refreshing }"></span>
+            </button>
+          </Tooltip>
+        </div>
+
+        <!-- Mobile: a single overflow trigger replaces the three buttons above. -->
+        <div ref="overflowMenuRef" class="relative sm:hidden">
           <button
             type="button"
-            class="w-11 h-11 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 shadow-sm transition-all active:scale-90"
-            :disabled="refreshing"
-            @click="refreshStatus"
+            class="w-11 h-11 flex items-center justify-center rounded-full bg-[var(--surface-1)] border border-[var(--border)] text-[var(--text-secondary)] shadow-sm transition-all active:scale-90"
+            aria-haspopup="menu"
+            :aria-expanded="showOverflowMenu"
+            aria-label="More zone actions"
+            @click="showOverflowMenu = !showOverflowMenu"
           >
-            <span class="mdi mdi-refresh text-xl block" :class="{ 'animate-spin': refreshing }"></span>
+            <span class="mdi mdi-dots-horizontal text-xl"></span>
           </button>
-        </Tooltip>
+          <Transition name="sv-pop">
+            <div
+              v-if="showOverflowMenu"
+              role="menu"
+              class="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-[var(--border)] bg-[var(--surface-1)] shadow-xl p-1.5 z-20"
+            >
+              <button
+                type="button"
+                role="menuitem"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
+                @click="settings.setShowEmptyGroups(!settings.showEmptyGroups); showOverflowMenu = false"
+              >
+                <span class="mdi text-lg" :class="settings.showEmptyGroups ? 'mdi-eye' : 'mdi-eye-off'" aria-hidden="true"></span>
+                {{ settings.showEmptyGroups ? "Hide empty groups" : "Show empty groups" }}
+              </button>
+              <button
+                v-if="auth.permissions.showGroupFilter"
+                type="button"
+                role="menuitem"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
+                @click="showGroupFilter = true; showOverflowMenu = false"
+              >
+                <span class="mdi mdi-filter-variant text-lg" aria-hidden="true"></span>
+                Filter groups
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
+                @click="refreshStatus(); showOverflowMenu = false"
+              >
+                <span class="mdi mdi-refresh text-lg" :class="{ 'animate-spin': refreshing }" aria-hidden="true"></span>
+                Refresh status
+              </button>
+            </div>
+          </Transition>
+        </div>
       </div>
     </div>
 
@@ -190,17 +257,17 @@ async function refreshStatus() {
 
     <div
       v-if="snapcast.isConnected && sortedZones.length === 0"
-      class="flex flex-col items-center justify-center py-16 px-4 text-center rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-slate-900/50"
+      class="flex flex-col items-center justify-center py-16 px-4 text-center rounded-3xl border-2 border-dashed border-[var(--border)] bg-[var(--surface-1)]"
     >
       <div
-        class="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center mb-4 shadow-lg shadow-blue-600/20"
+        class="w-20 h-20 rounded-full bg-[var(--surface-2)] text-[var(--text-secondary)] flex items-center justify-center mb-4"
       >
         <span class="mdi mdi-speaker-off text-4xl"></span>
       </div>
-      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
+      <h3 class="text-xl font-bold text-[var(--text-primary)] mb-2">
         No zones to show
       </h3>
-      <p class="text-gray-500 dark:text-gray-400 max-w-sm">
+      <p class="text-[var(--text-tertiary)] max-w-sm">
         <template v-if="snapcast.groups.length === 0">
           Make sure your Snapcast server is running and has speakers connected.
         </template>
