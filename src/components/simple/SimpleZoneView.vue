@@ -187,11 +187,10 @@ async function refreshStatus() {
         </div>
 
         <!-- Mobile: a single overflow trigger replaces the three buttons above. -->
-        <div ref="overflowMenuRef" class="relative sm:hidden">
+        <div ref="overflowMenuRef" class="relative ml-auto sm:hidden">
           <button
             type="button"
             class="w-11 h-11 flex items-center justify-center rounded-full bg-[var(--surface-1)] border border-[var(--border)] text-[var(--text-secondary)] shadow-sm transition-all active:scale-90"
-            aria-haspopup="menu"
             :aria-expanded="showOverflowMenu"
             aria-label="More zone actions"
             @click="showOverflowMenu = !showOverflowMenu"
@@ -201,12 +200,10 @@ async function refreshStatus() {
           <Transition name="sv-pop">
             <div
               v-if="showOverflowMenu"
-              role="menu"
-              class="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-[var(--border)] bg-[var(--surface-1)] shadow-xl p-1.5 z-20"
+              class="absolute right-0 top-full mt-2 w-56 max-w-[calc(100vw-2rem)] origin-top-right rounded-2xl border border-[var(--border)] bg-[var(--surface-1)] shadow-xl p-1.5 z-20"
             >
               <button
                 type="button"
-                role="menuitem"
                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
                 @click="settings.setShowEmptyGroups(!settings.showEmptyGroups); showOverflowMenu = false"
               >
@@ -216,7 +213,6 @@ async function refreshStatus() {
               <button
                 v-if="auth.permissions.showGroupFilter"
                 type="button"
-                role="menuitem"
                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
                 @click="showGroupFilter = true; showOverflowMenu = false"
               >
@@ -225,7 +221,7 @@ async function refreshStatus() {
               </button>
               <button
                 type="button"
-                role="menuitem"
+                :disabled="refreshing"
                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
                 @click="refreshStatus(); showOverflowMenu = false"
               >

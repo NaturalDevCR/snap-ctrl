@@ -80,7 +80,7 @@ watch(
           <header class="relative px-5 pt-4 sm:pt-5 pb-4 flex items-start gap-3">
             <div
               class="sv-tile w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-white transition-all duration-500"
-              :class="{ 'is-muted': group.muted, 'is-idle': zone.playState.value !== 'playing' }"
+              :class="{ 'is-muted': group.muted, 'is-idle': zone.playState.value === 'idle' }"
               aria-hidden="true"
             >
               <Transition name="sv-swap" mode="out-in">

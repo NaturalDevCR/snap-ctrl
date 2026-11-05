@@ -36,7 +36,7 @@ const showVolume = ref(false);
       <header class="flex items-start gap-4">
         <div
           class="sv-tile relative w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 text-white shadow-lg transition-all duration-500"
-          :class="{ 'is-muted': group.muted, 'is-idle': zone.playState.value !== 'playing' }"
+          :class="{ 'is-muted': group.muted, 'is-idle': zone.playState.value === 'idle' }"
           aria-hidden="true"
         >
           <Transition name="sv-swap" mode="out-in">
@@ -104,7 +104,7 @@ const showVolume = ref(false);
         <Tooltip v-if="zone.showGroupSettings.value" text="Zone settings">
           <button
             type="button"
-            class="w-11 h-11 -mr-2 -mt-1 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:rotate-90 active:scale-90 transition-all duration-300"
+            class="w-11 h-11 -mr-2 -mt-1 flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] hover:rotate-90 active:scale-90 transition-all duration-300"
             @click="emit('group-settings', group)"
           >
             <span class="mdi mdi-cog-outline text-2xl"></span>
@@ -141,7 +141,7 @@ const showVolume = ref(false);
 
         <button
           type="button"
-          class="group/vol flex-1 min-w-0 h-12 flex items-center gap-3 pl-3 pr-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] hover:bg-[var(--surface-1)] hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 text-left transition-all duration-300 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+          class="group/vol flex-1 min-w-0 h-12 flex items-center gap-3 pl-3 pr-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] hover:bg-[var(--surface-1)] hover:shadow-md hover:border-[var(--text-tertiary)] text-left transition-all duration-300 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
           aria-haspopup="dialog"
           @click="showVolume = true"
         >
