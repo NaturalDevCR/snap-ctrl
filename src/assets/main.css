@@ -145,3 +145,41 @@ html {
     transform: translateY(8px);
   }
 }
+
+/* Exponent sliders: 44px hit area around a thin track. */
+.app-range {
+  appearance: none;
+  width: 100%;
+  height: 2.75rem;
+  background: transparent;
+  cursor: pointer;
+  touch-action: none;
+}
+.app-range::-webkit-slider-runnable-track {
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--text-tertiary) 35%, transparent);
+}
+.app-range::-moz-range-track {
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--text-tertiary) 35%, transparent);
+}
+.app-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-top: -0.625rem;
+  border-radius: 9999px;
+  background: #fff;
+  border: 1px solid rgb(203 213 225);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
+}
+.app-range::-moz-range-thumb {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  background: #fff;
+  border: 1px solid rgb(203 213 225);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
+}

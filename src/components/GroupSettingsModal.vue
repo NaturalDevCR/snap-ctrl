@@ -223,7 +223,7 @@ async function deleteGroup() {
           >Group Name</label
         >
         <input
-          class="w-full px-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full px-4 py-2.5 min-h-11 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
           v-model.trim="name"
           placeholder="Custom group name"
           :disabled="!auth.permissions.canRenameGroups"
@@ -238,7 +238,7 @@ async function deleteGroup() {
         <div class="relative">
           <select
             v-model="streamId"
-            class="w-full pl-4 pr-10 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)]"
+            class="w-full pl-4 pr-10 py-2.5 min-h-11 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)]"
           >
             <option
               v-for="s in snapcast.filteredStreams"
@@ -295,7 +295,7 @@ async function deleteGroup() {
           <div class="relative">
             <select
               v-model="volumeMode"
-              class="w-full pl-4 pr-10 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)]"
+              class="w-full pl-4 pr-10 py-2.5 min-h-11 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)]"
             >
               <option value="global">
                 Global Default ({{ settings.globalVolumeControlMode }})
@@ -323,7 +323,7 @@ async function deleteGroup() {
               >Exponent (Curve)</label
             >
             <span
-              class="text-xs font-mono bg-[var(--surface-2)] px-2 py-0.5 rounded text-[var(--text-secondary)]"
+              class="text-xs font-mono bg-[var(--surface-1)] px-2 py-0.5 rounded text-[var(--text-secondary)]"
             >
               {{ volumeExponent ?? settings.globalVolumeExponent }}
             </span>
@@ -334,7 +334,7 @@ async function deleteGroup() {
             min="1.0"
             max="5.0"
             step="0.1"
-            class="w-full h-2 bg-gray-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+            class="app-range"
           />
           <p class="mt-1 text-xs text-[var(--text-tertiary)]">
             Higher values provide more precision at low volumes.
@@ -352,7 +352,7 @@ async function deleteGroup() {
           <button
             v-if="getOfflineClientsInGroup().length > 0"
             @click="removeOfflineClients"
-            class="px-3 py-1.5 text-xs font-medium text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors flex items-center gap-1.5 border border-orange-200 dark:border-orange-800"
+            class="px-3 py-1.5 min-h-11 text-xs font-medium text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors flex items-center gap-1.5 border border-orange-200 dark:border-orange-800"
           >
             <span class="mdi mdi-trash-can-outline text-sm"></span>
             Clean Offline ({{ getOfflineClientsInGroup().length }})
@@ -415,27 +415,35 @@ async function deleteGroup() {
 
             <!-- In Group checkbox -->
             <div class="w-24 flex justify-center">
-              <input
-                type="checkbox"
-                :value="c.id"
-                v-model="clientIds"
-                class="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                :disabled="!auth.permissions.canAssignClients"
-              />
+              <label
+                class="min-h-11 min-w-11 flex items-center justify-center cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  :value="c.id"
+                  v-model="clientIds"
+                  class="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                  :disabled="!auth.permissions.canAssignClients"
+                />
+              </label>
             </div>
 
             <!-- Linked checkbox (only enabled if in group) -->
             <div class="w-24 flex justify-center">
-              <input
-                type="checkbox"
-                :value="c.id"
-                v-model="linkedClientIds"
-                :disabled="
-                  !clientIds.includes(c.id) ||
-                  !auth.permissions.canLinkClients
-                "
-                class="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-              />
+              <label
+                class="min-h-11 min-w-11 flex items-center justify-center cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  :value="c.id"
+                  v-model="linkedClientIds"
+                  :disabled="
+                    !clientIds.includes(c.id) ||
+                    !auth.permissions.canLinkClients
+                  "
+                  class="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                />
+              </label>
             </div>
           </div>
         </div>

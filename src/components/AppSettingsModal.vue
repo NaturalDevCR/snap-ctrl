@@ -61,7 +61,7 @@ function lockNow() {
           >Server Host</label
         >
         <input
-          class="w-full px-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)]"
+          class="w-full px-4 py-2.5 min-h-11 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)]"
           v-model="hostInput"
           placeholder="localhost:1780"
         />
@@ -72,8 +72,8 @@ function lockNow() {
           class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
           >Theme</label
         >
-        <div
-          class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]"
+        <label
+          class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer"
         >
           <div class="flex items-center gap-2">
             <span
@@ -89,9 +89,7 @@ function lockNow() {
               >{{ settings.theme }} Mode</span
             >
           </div>
-          <label
-            class="relative inline-flex items-center cursor-pointer"
-          >
+          <div class="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
               :checked="settings.theme === 'dark'"
@@ -107,8 +105,8 @@ function lockNow() {
             <div
               class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
             ></div>
-          </label>
-        </div>
+          </div>
+        </label>
       </div>
 
       <div class="space-y-3">
@@ -162,7 +160,7 @@ function lockNow() {
               <div class="relative inline-flex items-center cursor-pointer">
                 <select
                     v-model="settings.globalVolumeControlMode"
-                    class="bg-transparent border-none text-right focus:ring-0 text-sm font-medium text-blue-600 dark:text-blue-400 cursor-pointer outline-none"
+                    class="min-h-11 pl-3 bg-transparent border-none text-right focus:ring-0 text-sm font-medium text-blue-600 dark:text-blue-400 cursor-pointer outline-none"
                 >
                     <option value="linear">Linear</option>
                     <option value="nonlinear">Non-Linear</option>
@@ -173,7 +171,7 @@ function lockNow() {
            <div v-if="settings.globalVolumeControlMode === 'nonlinear'" class="p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
               <div class="flex items-center justify-between mb-2">
                 <span class="font-medium text-[var(--text-primary)] text-sm">Control Curve (Exponent)</span>
-                <span class="text-xs font-mono bg-[var(--surface-2)] px-2 py-0.5 rounded text-[var(--text-secondary)]">
+                <span class="text-xs font-mono bg-[var(--surface-1)] px-2 py-0.5 rounded text-[var(--text-secondary)]">
                   {{ settings.globalVolumeExponent }}
                 </span>
               </div>
@@ -183,7 +181,7 @@ function lockNow() {
                 min="1.0"
                 max="5.0"
                 step="0.1"
-                class="w-full h-2 bg-gray-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                class="app-range"
               />
                <p class="mt-1 text-xs text-[var(--text-tertiary)]">
                  Higher values provide more precision at low volumes.
@@ -247,7 +245,7 @@ function lockNow() {
         <button
           v-if="auth.isAuthEnabled"
           @click="emit('changePermissions')"
-          class="mt-3 w-full flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] hover:border-[var(--text-tertiary)] transition-colors"
+          class="mt-3 w-full min-h-11 flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] hover:border-[var(--text-tertiary)] transition-colors"
         >
           <div class="flex items-center gap-2">
             <span class="mdi mdi-tune-variant text-lg"></span>
@@ -267,7 +265,7 @@ function lockNow() {
         <button
           v-if="auth.isAuthEnabled"
           @click="lockNow"
-          class="mt-3 w-full flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] hover:border-[var(--text-tertiary)] transition-colors"
+          class="mt-3 w-full min-h-11 flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] hover:border-[var(--text-tertiary)] transition-colors"
         >
           <div class="flex items-center gap-2">
             <span class="mdi mdi-lock-outline text-lg"></span>
@@ -289,13 +287,13 @@ function lockNow() {
     <template #footer>
       <div class="w-full flex justify-end gap-3">
         <button
-          class="px-4 py-2 text-[var(--text-secondary)] font-medium hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+          class="px-4 py-2 min-h-11 text-[var(--text-secondary)] font-medium hover:bg-[var(--surface-2)] rounded-lg transition-colors"
           @click="emit('close')"
         >
           Cancel
         </button>
         <button
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
+          class="px-4 py-2 min-h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
           @click="apply"
         >
           Apply

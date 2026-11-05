@@ -130,7 +130,7 @@ function isHidden(groupId: string): boolean {
       <div class="w-full flex justify-end">
         <button
           @click="emit('close')"
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+          class="px-4 py-2 min-h-11 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
         >
           Done
         </button>

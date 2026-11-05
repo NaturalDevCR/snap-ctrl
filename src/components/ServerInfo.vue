@@ -103,7 +103,7 @@
     <template #footer>
       <div class="w-full flex justify-end">
         <button
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
+          class="px-4 py-2 min-h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
           @click="close"
         >
           Close
