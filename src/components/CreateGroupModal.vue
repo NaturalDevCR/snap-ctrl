@@ -113,13 +113,13 @@ async function createGroup() {
           class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
           >Select Clients</label
         >
-        <div class="max-h-48 overflow-y-auto custom-scrollbar space-y-2 p-1">
+        <div class="space-y-2">
           <label
             v-for="c in availableClients"
             :key="c.id"
             class="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-2)] cursor-pointer transition-colors"
           >
-            <div class="flex items-center gap-2 flex-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 flex-1 min-w-0 pr-3">
               <span
                 class="w-2 h-2 rounded-full flex-shrink-0"
                 :class="
@@ -129,7 +129,7 @@ async function createGroup() {
                 "
               ></span>
               <span
-                class="font-medium text-[var(--text-secondary)] truncate"
+                class="font-medium text-[var(--text-secondary)] truncate min-w-0"
                 >{{ c.config.name || c.host.name }}</span
               >
               <span
@@ -140,14 +140,14 @@ async function createGroup() {
               </span>
               <span
                 v-if="clientCurrentGroup.has(c.id)"
-                class="px-1.5 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded flex-shrink-0 truncate"
+                class="px-1.5 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded max-w-full truncate"
                 :title="`Currently in ${clientCurrentGroup.get(c.id)} — adding it here moves it out of that group`"
               >
                 From: {{ clientCurrentGroup.get(c.id) }}
               </span>
             </div>
             <div
-              class="relative inline-flex items-center cursor-pointer"
+              class="relative inline-flex items-center cursor-pointer shrink-0"
             >
               <input
                 type="checkbox"
