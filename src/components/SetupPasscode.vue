@@ -4,7 +4,7 @@
     @click.self="handleCancel"
   >
     <div
-      class="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 p-8"
+      class="w-full max-w-md bg-[var(--surface-1)] rounded-2xl shadow-2xl border border-[var(--border)] p-8"
     >
       <div class="text-center mb-8">
         <div
@@ -12,10 +12,10 @@
         >
           <span class="mdi mdi-lock-outline text-4xl"></span>
         </div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        <h1 class="text-2xl font-bold text-[var(--text-primary)] mb-2">
           {{ title }}
         </h1>
-        <p class="text-gray-500 dark:text-gray-400">
+        <p class="text-[var(--text-tertiary)]">
           {{ description }}
         </p>
       </div>
@@ -23,7 +23,7 @@
       <form @submit.prevent="handleSubmit" class="space-y-6">
         <div>
           <label
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
           >
             Passcode
           </label>
@@ -31,10 +31,10 @@
             v-model="passcode"
             type="password"
             :class="[
-              'w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border rounded-lg outline-none transition-colors text-gray-900 dark:text-white',
+              'w-full px-4 py-3 bg-[var(--surface-2)] min-h-[44px] border rounded-lg outline-none transition-colors text-[var(--text-primary)]',
               error
                 ? 'border-red-500 focus:ring-2 focus:ring-red-500'
-                : 'border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400',
+                : 'border-[var(--border)] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400',
             ]"
             placeholder="Enter passcode"
             required
@@ -44,7 +44,7 @@
 
         <div>
           <label
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
           >
             Confirm Passcode
           </label>
@@ -52,10 +52,10 @@
             v-model="confirmPasscode"
             type="password"
             :class="[
-              'w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border rounded-lg outline-none transition-colors text-gray-900 dark:text-white',
+              'w-full px-4 py-3 bg-[var(--surface-2)] min-h-[44px] border rounded-lg outline-none transition-colors text-[var(--text-primary)]',
               error
                 ? 'border-red-500 focus:ring-2 focus:ring-red-500'
-                : 'border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400',
+                : 'border-[var(--border)] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400',
             ]"
             placeholder="Confirm passcode"
             required
@@ -91,7 +91,7 @@
         <button
           v-if="canCancel"
           type="button"
-          class="w-full py-3 px-4 text-gray-600 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+          class="w-full py-3 px-4 text-[var(--text-secondary)] font-semibold rounded-lg hover:bg-[var(--surface-2)] transition-colors"
           @click="handleCancel"
         >
           Cancel
