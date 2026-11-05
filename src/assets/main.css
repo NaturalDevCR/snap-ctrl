@@ -2,6 +2,41 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+:root {
+  --surface-0: #f8fafc;
+  --surface-1: #ffffff;
+  --surface-2: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-tertiary: #64748b;
+  --border: #e2e8f0;
+  --scrim: rgba(2, 6, 23, 0.6);
+}
+
+.dark {
+  --surface-0: #020617;
+  --surface-1: #0f172a;
+  --surface-2: #1e293b;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --border: #1e293b;
+  --scrim: rgba(2, 6, 23, 0.6);
+}
+
+:root,
+.dark {
+  --status-playing: #16a34a;
+  --status-playing-deep: #15803d;
+  --status-playing-soft: rgba(22, 163, 74, 0.16);
+  --status-idle: #64748b;
+  --status-idle-deep: #475569;
+  --status-idle-soft: rgba(100, 116, 139, 0.14);
+  --status-attention: #ef4444;
+  --status-attention-deep: #dc2626;
+  --status-attention-soft: rgba(239, 68, 68, 0.16);
+}
+
 /* Hide scrollbar for Chrome, Safari and Opera */
 ::-webkit-scrollbar {
   display: none;
