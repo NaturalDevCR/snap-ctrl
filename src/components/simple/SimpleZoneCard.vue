@@ -36,12 +36,12 @@ const showVolume = ref(false);
       <header class="flex items-start gap-4">
         <div
           class="sv-tile relative w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 text-white shadow-lg transition-all duration-500"
-          :class="{ 'is-idle': zone.playState.value === 'idle' }"
+          :class="{ 'is-idle': zone.tileState.value === 'idle' }"
           :style="zone.tileStyle.value"
           aria-hidden="true"
         >
           <Transition name="sv-swap" mode="out-in">
-            <span v-if="zone.playState.value === 'playing'" key="eq" class="sv-eq">
+            <span v-if="zone.tileState.value === 'playing'" key="eq" class="sv-eq">
               <span></span><span></span><span></span><span></span>
             </span>
             <span
@@ -52,7 +52,7 @@ const showVolume = ref(false);
             ></span>
           </Transition>
           <span
-            v-if="zone.playState.value === 'playing'"
+            v-if="zone.tileState.value === 'playing'"
             class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[var(--surface-1)] flex items-center justify-center shadow"
           >
             <span class="mdi text-sm sv-accent-text" :class="zone.currentSourceIcon.value"></span>
@@ -79,7 +79,7 @@ const showVolume = ref(false);
           <p class="mt-1 flex items-center gap-1.5 text-sm text-[var(--text-tertiary)] min-w-0">
             <span class="relative flex w-2 h-2 shrink-0" aria-hidden="true">
               <span
-                v-if="zone.playState.value === 'playing'"
+                v-if="zone.tileState.value === 'playing'"
                 class="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping"
               ></span>
               <span

@@ -25,6 +25,30 @@ beforeEach(() => {
   setActivePinia(createPinia());
 });
 
+describe("useZoneControls tileState", () => {
+  it("rests while muted, so the tile never animates next to the MUTED label", () => {
+    const snapcast = useSnapcastStore();
+    snapcast.streams.push(makeStream("s1", "playing"));
+    const zone = useZoneControls(() => makeGroup({ muted: true }));
+
+    expect(zone.tileState.value).toBe("idle");
+  });
+
+  it("follows playback while not muted", () => {
+    const snapcast = useSnapcastStore();
+    snapcast.streams.push(makeStream("s1", "playing"));
+    const zone = useZoneControls(() => makeGroup());
+
+    expect(zone.tileState.value).toBe("playing");
+  });
+
+  it("keeps reporting an unavailable stream while muted", () => {
+    const zone = useZoneControls(() => makeGroup({ stream_id: "missing", muted: true }));
+
+    expect(zone.tileState.value).toBe("unavailable");
+  });
+});
+
 describe("useZoneControls tileStyle", () => {
   it("ignores mute, so a muted zone's tile still shows what is playing", () => {
     const snapcast = useSnapcastStore();

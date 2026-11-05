@@ -85,7 +85,11 @@ export function useZoneControls(group: () => Group) {
     "--accent-2": statusAccent.value.deep,
     "--accent-soft": statusAccent.value.soft,
   }));
-  // The tile shows playback only. Mute lives on its label and mute button.
+  // The tile shows no mute state: that lives on the label and mute button.
+  // A muted zone just rests, so nothing animates next to the MUTED label.
+  const tileState = computed<PlayState>(() =>
+    group().muted && playState.value === "playing" ? "idle" : playState.value
+  );
   const tileStyle = computed(() => ({ "--accent": playAccent.value.main }));
 
   const sources = computed(() =>
@@ -192,6 +196,7 @@ export function useZoneControls(group: () => Group) {
     currentSourceIcon,
     accent,
     accentStyle,
+    tileState,
     tileStyle,
     sources,
     selectSource,
