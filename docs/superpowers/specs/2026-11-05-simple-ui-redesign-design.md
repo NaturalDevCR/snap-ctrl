@@ -31,7 +31,6 @@ screens) — gets one consistent, polished visual language.
    decorating each source/zone with its own gradient tile.
 4. Remove Classic UI and the view-mode toggle entirely once Simple covers
    everything (confirmed: it already does).
-5. Fix concrete rough edges found during review (see "Known issues to fix").
 
 ## Non-goals
 
@@ -78,6 +77,34 @@ Components consume these via Tailwind arbitrary-value utilities
   using a small spacing scale instead of ad hoc `gap-2`/`gap-2.5`/`gap-3`
   mixed arbitrarily.
 
+**Accent mechanism (traced this session):** today every zone's accent color
+comes from `useZoneControls()`'s `accent`/`accentStyle`, which call
+`getSourceAccent(getSourceHue(currentStream))` in `src/utils/source-style.ts`
+— a hash of the stream's display name picks a hue, so each *source* gets its
+own stable color. That hue-based color feeds the `--accent`/`--accent-2`/
+`--accent-soft` CSS custom properties consumed by `.sv-tile`, `.sv-glow`,
+`.sv-accent-text`, `.sv-accent-badge` and `.sv-link-on` in
+`src/components/simple/simple-view.css`, and by the per-source `accent` field
+`useZoneControls()` attaches to each entry in `sources` (consumed by
+`SimpleSourcePicker.vue`'s source list). `getSourceAccent`/`getSourceHue` are
+used nowhere else in the app (only `useZoneControls.ts` imports them from
+`source-style.ts`) — so this is a single, well-contained integration point.
+
+Per the "neutral, color for state" decision: `accent`/`accentStyle` change to
+derive from **play state** (playing/idle/muted), using the new
+`--status-playing`/`--status-idle`/`--status-muted` tokens, instead of from
+`getSourceHue(currentStream)`. The `--accent`/`--accent-2`/`--accent-soft`
+CSS variable names and the `.sv-tile`/`.sv-glow`/`.sv-accent-text`/
+`.sv-accent-badge`/`.sv-link-on` rules that read them stay as-is (they just
+receive different values now) — this keeps the existing "breathing glow while
+playing" and equalizer-swap behavior, just recolored to state instead of
+source identity. `SimpleSourcePicker.vue`'s per-source list entries drop
+their individual `accent` (every entry reads as neutral; a small "Playing"
+badge, not color, marks which source is active elsewhere). `getSourceAccent`
+and `getSourceHue` become dead code once `useZoneControls.ts` stops calling
+them — delete both functions and their tests
+(`src/utils/__tests__/source-style.test.ts`) rather than leave them unused.
+
 ### Toolbar (`SimpleZoneView.vue` header)
 
 Today: 5 same-size circular icon buttons in a row (mute-all, create, show
@@ -88,14 +115,7 @@ Secondary actions (filter groups, show empty groups, refresh) collapse into
 one "⋯" overflow menu on narrow viewports; on desktop they can stay inline
 but restyled with consistent sizing/spacing and the new tokens.
 
-### Source button (`SimpleSourceButton.vue`)
-
-Fix: currently renders the raw stream URI (e.g.
-`stream://LivingRoomTV?codec=pcm`) when a friendlier label is available.
-Resolve to the stream's `id` (its display name) consistently, same as the
-source picker already does internally.
-
-### `SimpleSourcePicker.vue`, `SimpleVolumeSlider.vue`, `SimpleZoneModal.vue`
+### `SimpleSourceButton.vue`, `SimpleSourcePicker.vue`, `SimpleVolumeSlider.vue`, `SimpleZoneModal.vue`
 
 Visual-only pass to the new tokens, spacing, and typography scale. No
 behavior changes — existing search, keyboard nav, link/mute/volume controls,
