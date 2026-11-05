@@ -304,7 +304,7 @@ function useHostSuggestion(host: string) {
               <button
                 v-if="settings.recentHosts.includes(suggestion)"
                 type="button"
-                class="inline-flex min-w-[44px] items-center justify-center px-2 text-[var(--text-tertiary)] opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100 focus:opacity-100 dark:hover:text-red-400"
+                class="inline-flex min-w-[44px] items-center justify-center px-2 text-[var(--text-tertiary)] opacity-0 pointer-coarse:opacity-100 transition-opacity hover:text-red-600 group-hover:opacity-100 focus:opacity-100 dark:hover:text-red-400"
                 :aria-label="`Forget ${suggestion}`"
                 @click="settings.removeRecentHost(suggestion)"
               >
@@ -315,7 +315,7 @@ function useHostSuggestion(host: string) {
 
           <button
             type="submit"
-            class="min-h-12 w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white shadow-sm shadow-blue-950/10 transition-all hover:bg-blue-500 active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-blue-500/25 dark:bg-blue-500 dark:hover:bg-blue-400"
+            class="min-h-12 w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white shadow-sm shadow-blue-950/10 transition-all hover:bg-blue-700 active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-blue-500/25 dark:bg-blue-500 dark:hover:bg-blue-400"
           >
             Connect to Snapcast
           </button>

@@ -20,7 +20,7 @@
           v-if="canCancel"
           @click="handleCancel"
           aria-label="Cancel"
-          class="w-11 h-11 -mr-2 inline-flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
+          class="w-11 h-11 -mr-2 -my-2 inline-flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
         >
           <span class="mdi mdi-close text-xl"></span>
         </button>
@@ -58,17 +58,17 @@
       </div>
 
       <div
-        class="px-6 py-4 bg-[var(--surface-2)] border-t border-[var(--border)] flex justify-end gap-3"
+        class="px-6 py-4 border-t border-[var(--border)] flex justify-end gap-3"
       >
         <button
           v-if="canCancel"
-          class="px-4 py-2 text-[var(--text-secondary)] font-medium hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+          class="px-4 py-2 min-h-11 text-[var(--text-secondary)] font-medium hover:bg-[var(--surface-2)] rounded-lg transition-colors"
           @click="handleCancel"
         >
           Cancel
         </button>
         <button
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
+          class="px-4 py-2 min-h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
           @click="handleUnlock"
         >
           Unlock
