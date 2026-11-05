@@ -1,7 +1,7 @@
 <template>
   <div
     id="app"
-    class="min-h-screen bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300"
+    class="min-h-screen bg-[var(--surface-0)] text-[var(--text-primary)] font-sans transition-colors duration-300"
   >
     <Toast />
 
@@ -52,7 +52,7 @@
 
       <header
         style="padding-top: env(safe-area-inset-top)"
-        class="sticky top-0 z-50 w-full backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border-b border-gray-200 dark:border-gray-800 transition-all duration-300 shadow-sm"
+        class="sticky top-0 z-50 w-full backdrop-blur-xl bg-[var(--surface-1)]/80 border-b border-[var(--border)] transition-all duration-300 shadow-sm"
       >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex items-center justify-between h-16 gap-4">
@@ -109,7 +109,7 @@
                 <button
                   v-if="snapcast.isConnected"
                   @click="showServerInfo = true"
-                  class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-gray-400 transition-colors cursor-pointer"
+                  class="w-11 h-11 flex items-center justify-center rounded-full hover:bg-[var(--surface-2)] text-[var(--text-secondary)] transition-colors cursor-pointer"
                 >
                   <span class="mdi mdi-information-outline text-xl"></span>
                 </button>
@@ -118,7 +118,7 @@
               <Tooltip text="Settings" position="bottom">
                 <button
                   @click="openAppSettings"
-                  class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-gray-400 transition-colors cursor-pointer"
+                  class="w-11 h-11 flex items-center justify-center rounded-full hover:bg-[var(--surface-2)] text-[var(--text-secondary)] transition-colors cursor-pointer"
                 >
                   <span class="mdi mdi-cog text-xl"></span>
                 </button>
@@ -133,7 +133,7 @@
               !isMobile &&
               auth.permissions.showBrowserPlayer
             "
-            class="py-3 border-t border-gray-200 dark:border-gray-800"
+            class="py-3 border-t border-[var(--border)]"
           >
             <BrowserPlayer />
           </div>
@@ -157,25 +157,18 @@
         </div>
 
         <SimpleZoneView
-          v-else-if="settings.viewMode === 'simple'"
+          v-else
           @group-settings="openGroupSettings"
           @create-group="openCreateGroup"
           @client-details="openClientDetails"
           @client-settings="openClientSettings"
-        />
-
-        <ZoneGrid
-          v-else
-          @zone-control="openZoneControl"
-          @group-settings="openGroupSettings"
-          @create-group="openCreateGroup"
         />
       </main>
 
       <!-- Footer -->
       <footer
         v-if="snapcast.isConnected"
-        class="mt-8 py-6 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800"
+        class="mt-8 py-6 text-center text-sm text-[var(--text-tertiary)] border-t border-[var(--border)]"
       >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p>
@@ -199,37 +192,6 @@
           </p>
         </div>
       </footer>
-
-      <!-- Zone Control Modal -->
-      <ZoneControlModal
-        v-if="zoneControlGroup"
-        :is-open="!!zoneControlGroup"
-        :group-id="zoneControlGroup!.id"
-        :group-name="getGroupName(zoneControlGroup!)"
-        :stream-id="zoneControlGroup!.stream_id"
-        :streams="displayStreams"
-        :stream-name="getStreamName(snapcast.streams.find(s => s.id === zoneControlGroup!.stream_id))"
-        :stream-status-icon="getStreamStatusIcon(snapcast.streams, zoneControlGroup!.stream_id)"
-        :stream-status-color="getStreamStatusColor(snapcast.streams, zoneControlGroup!.stream_id)"
-        :stream-status-tooltip="getStreamStatusTooltip(snapcast.streams, zoneControlGroup!.stream_id)"
-        :volume="getGroupVolume(zoneControlGroup!.id)"
-        :is-muted="zoneControlGroup!.muted"
-        :clients="zoneControlGroup!.clients"
-        :linked-client-ids="settings.groupVolumeLinks[zoneControlGroup!.id]?.linkedClientIds || []"
-        :show-settings-button="auth.permissions.showGroupSettings"
-        :show-client-settings-button="auth.permissions.showClientSettings"
-        :can-select-stream="auth.permissions.canSelectStream"
-        @close="closeZoneControl"
-        @update:volume="setGroupVolume(zoneControlGroup!.id, $event)"
-        @adjust-volume="adjustGroupVolume(zoneControlGroup!.id, $event)"
-        @toggle-mute="toggleGroupMute(zoneControlGroup!)"
-        @update-client-volume="setVolume"
-        @toggle-client-mute="toggleClientMute"
-        @open-settings="handleOpenSettingsFromZoneControl"
-        @open-client-settings="openClientSettings"
-        @open-client-details="openClientDetails"
-        @update:streamId="changeGroupStream(zoneControlGroup!, $event)"
-      />
 
       <!-- Group Settings Modal -->
       <GroupSettingsModal
@@ -270,7 +232,6 @@
 
     <!-- Server Info Modal -->
     <ServerInfo
-      v-if="showServerInfo"
       :is-open="showServerInfo"
       @close="showServerInfo = false"
     />
@@ -286,22 +247,12 @@ import { useSettingsStore } from "./stores/settings";
 import { useAuthStore } from "./stores/auth";
 import type { Client, Group } from "./stores/snapcast";
 import type { AuthPermissions } from "./stores/auth";
-import { getStreamName } from "@/utils/stream-name";
-import { getGroupDisplayName } from "@/utils/group-name";
-import {
-  getStreamStatusColor,
-  getStreamStatusIcon,
-  getStreamStatusTooltip,
-} from "@/utils/stream-status";
-import { averageGroupVolume } from "@/utils/group-volume";
 import BrowserPlayer from "@/components/BrowserPlayer.vue";
 import Toast from "@/components/Toast.vue";
 import LoadingSpinner from "@/components/LoadingSpinner.vue";
 import Tooltip from "@/components/Tooltip.vue";
 import ConnectionPanel from "@/components/ConnectionPanel.vue";
-import ZoneGrid from "@/components/ZoneGrid.vue";
 import SimpleZoneView from "@/components/simple/SimpleZoneView.vue";
-import ZoneControlModal from "@/components/ZoneControlModal.vue";
 import GroupSettingsModal from "@/components/GroupSettingsModal.vue";
 import ClientDetailsModal from "@/components/ClientDetailsModal.vue";
 import ClientSettingsModal from "@/components/ClientSettingsModal.vue";
@@ -334,96 +285,6 @@ const connectionStatus = computed(() => {
   if (snapcast.connectionError) return "setup";
   return "disconnected";
 });
-
-// Zone Control Modal State
-const zoneControlGroupId = ref<string | null>(null);
-
-const zoneControlGroup = computed(() => {
-  if (!zoneControlGroupId.value) return null;
-  return snapcast.groups.find((g) => g.id === zoneControlGroupId.value) || null;
-});
-
-function openZoneControl(group: Group) {
-  zoneControlGroupId.value = group.id;
-}
-
-function closeZoneControl() {
-  zoneControlGroupId.value = null;
-}
-
-function handleOpenSettingsFromZoneControl() {
-  // Don't close zone control to allow stacking (dialog over dialog)
-  if (zoneControlGroup.value) {
-    openGroupSettings(zoneControlGroup.value);
-  }
-}
-
-function getGroupName(group: Group): string {
-  return getGroupDisplayName(group, snapcast.streams);
-}
-
-const displayStreams = computed(() => {
-  return snapcast.streams.map((stream) => ({
-    id: stream.id,
-    name: getStreamName(stream),
-  }));
-});
-
-function toggleGroupMute(group: Group) {
-  snapcast.setGroupMute(group.id, !group.muted);
-}
-
-function changeGroupStream(group: Group, streamId: string) {
-  if (!streamId) return;
-  snapcast.setGroupStream(group.id, streamId);
-}
-
-function toggleClientMute(client: Client) {
-  snapcast.setClientVolume(
-    client.id,
-    client.config.volume.percent,
-    !client.config.volume.muted
-  );
-}
-
-function setVolume(client: Client, volume: number) {
-  snapcast.setClientVolume(client.id, volume, client.config.volume.muted);
-}
-
-function getGroupVolume(groupId: string): number {
-  const linkedIds = settings.groupVolumeLinks[groupId]?.linkedClientIds || [];
-  const group = snapcast.groups.find((g) => g.id === groupId);
-  return averageGroupVolume(group, linkedIds);
-}
-
-/**
- * Set group volume (adjusts all linked clients proportionally)
- */
-async function setGroupVolume(groupId: string, groupVolume: number) {
-  const linkConfig = settings.groupVolumeLinks[groupId];
-  const linkedIds = linkConfig?.linkedClientIds || [];
-
-  if (linkedIds.length === 0) return;
-
-  // Get reference volumes from settings (or current volumes as fallback)
-  const referenceVolumes = linkConfig?.referenceVolumes || {};
-
-  await snapcast.setGroupVolumeProportional(
-    groupId,
-    groupVolume,
-    linkedIds,
-    referenceVolumes
-  );
-}
-
-/**
- * Adjust group volume by delta
- */
-async function adjustGroupVolume(groupId: string, delta: number) {
-  const currentVolume = getGroupVolume(groupId);
-  const newVolume = Math.max(0, Math.min(100, currentVolume + delta));
-  await setGroupVolume(groupId, newVolume);
-}
 
 // Group settings modal state
 const groupSettingsModal = ref<{
