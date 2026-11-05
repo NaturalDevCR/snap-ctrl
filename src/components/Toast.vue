@@ -1,7 +1,8 @@
 <template>
   <Teleport to="body">
     <div
-      class="fixed top-4 right-4 z-[9999] flex flex-col gap-3 pointer-events-none w-full max-w-sm sm:w-auto sm:min-w-[320px]"
+      style="top: calc(1rem + env(safe-area-inset-top))"
+      class="fixed right-4 z-[9999] flex flex-col gap-3 pointer-events-none w-full max-w-sm sm:w-auto sm:min-w-[320px]"
       role="status"
       aria-live="polite"
       aria-atomic="false"
@@ -17,12 +18,12 @@
         <div
           v-for="notification in notifications.notifications"
           :key="notification.id"
-          class="pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-lg bg-white dark:bg-slate-900 border shadow-lg cursor-pointer hover:-translate-y-0.5 transition-all duration-300"
+          class="pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-lg bg-[var(--surface-1)] border shadow-lg cursor-pointer hover:-translate-y-0.5 transition-all duration-300"
           :class="{
-            'border-l-4 border-l-emerald-500 border-gray-200 dark:border-gray-800': notification.type === 'success',
-            'border-l-4 border-l-red-500 border-gray-200 dark:border-gray-800': notification.type === 'error',
-            'border-l-4 border-l-amber-500 border-gray-200 dark:border-gray-800': notification.type === 'warning',
-            'border-l-4 border-l-blue-500 border-gray-200 dark:border-gray-800': notification.type === 'info'
+            'border-l-4 border-l-emerald-500 border-[var(--border)]': notification.type === 'success',
+            'border-l-4 border-l-red-500 border-[var(--border)]': notification.type === 'error',
+            'border-l-4 border-l-amber-500 border-[var(--border)]': notification.type === 'warning',
+            'border-l-4 border-l-blue-500 border-[var(--border)]': notification.type === 'info'
           }"
           @click="notifications.remove(notification.id)"
         >
@@ -34,8 +35,8 @@
           }">
             <span class="mdi" :class="getIconClass(notification.type)"></span>
           </span>
-          <span class="flex-1 text-gray-700 dark:text-gray-200 text-sm leading-relaxed font-medium pt-0.5">{{ notification.message }}</span>
-          <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors shrink-0 -mr-1 -mt-1 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800" aria-label="Dismiss" @click.stop="notifications.remove(notification.id)">
+          <span class="flex-1 text-[var(--text-secondary)] text-sm leading-relaxed font-medium pt-0.5">{{ notification.message }}</span>
+          <button class="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors shrink-0 -mr-3 -my-2 w-11 h-11 inline-flex items-center justify-center rounded-full hover:bg-[var(--surface-2)]" aria-label="Dismiss" @click.stop="notifications.remove(notification.id)">
             <span class="mdi mdi-close text-lg"></span>
           </button>
         </div>
