@@ -63,7 +63,7 @@ const lastSeen = computed(() =>
           <div class="flex items-center gap-2">
             <span
               class="w-2 h-2 rounded-full"
-              :class="props.client.connected ? 'bg-green-500' : 'bg-red-500'"
+              :class="props.client.connected ? 'bg-[var(--status-playing)]' : 'bg-[var(--status-idle)]'"
             ></span>
             <span
               class="text-sm font-medium text-[var(--text-primary)]"

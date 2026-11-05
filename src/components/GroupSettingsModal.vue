@@ -394,8 +394,8 @@ async function deleteGroup() {
                   class="w-2 h-2 rounded-full flex-shrink-0"
                   :class="
                     c.connected
-                      ? 'bg-green-500'
-                      : 'bg-gray-400 dark:bg-gray-600'
+                      ? 'bg-[var(--status-playing)]'
+                      : 'bg-[var(--status-idle)]'
                   "
                 ></span>
                 <span class="break-words min-w-0">

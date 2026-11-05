@@ -204,7 +204,7 @@ async function refreshStatus() {
             >
               <button
                 type="button"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
+                class="w-full min-h-11 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
                 @click="settings.setShowEmptyGroups(!settings.showEmptyGroups); showOverflowMenu = false"
               >
                 <span class="mdi text-lg" :class="settings.showEmptyGroups ? 'mdi-eye' : 'mdi-eye-off'" aria-hidden="true"></span>
@@ -213,7 +213,7 @@ async function refreshStatus() {
               <button
                 v-if="auth.permissions.showGroupFilter"
                 type="button"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
+                class="w-full min-h-11 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
                 @click="showGroupFilter = true; showOverflowMenu = false"
               >
                 <span class="mdi mdi-filter-variant text-lg" aria-hidden="true"></span>
@@ -222,7 +222,7 @@ async function refreshStatus() {
               <button
                 type="button"
                 :disabled="refreshing"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
+                class="w-full min-h-11 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
                 @click="refreshStatus(); showOverflowMenu = false"
               >
                 <span class="mdi mdi-refresh text-lg" :class="{ 'animate-spin': refreshing }" aria-hidden="true"></span>

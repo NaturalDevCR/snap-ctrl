@@ -4,7 +4,7 @@
     @click.self="$emit('cancel')"
   >
     <div
-      class="bg-[var(--surface-1)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-[var(--border)] transform transition-all"
+      class="bg-[var(--surface-1)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90dvh] overflow-hidden border border-[var(--border)] transform transition-all"
       @click.stop
     >
       <div
@@ -22,7 +22,7 @@
         </button>
       </div>
 
-      <div class="p-6 space-y-6 overflow-y-auto custom-scrollbar max-h-[calc(90vh-140px)]">
+      <div class="p-6 space-y-6 overflow-y-auto custom-scrollbar max-h-[calc(90dvh-140px)]">
         <!-- Feature Permissions -->
         <div>
           <h4
