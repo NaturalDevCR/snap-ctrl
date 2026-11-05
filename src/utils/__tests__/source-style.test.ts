@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  getSourceAccent,
-  getSourceHue,
   getSourceIcon,
   getStreamScheme,
 } from "@/utils/source-style";
@@ -34,27 +32,3 @@ describe("getSourceIcon", () => {
     expect(getSourceIcon(undefined)).toBe("mdi-music-note");
   });
 });
-
-describe("getSourceHue", () => {
-  it("is stable and within 0-359", () => {
-    const s = { id: "a", uri: "pipe:///tmp/x?name=Spotify" };
-    const hue = getSourceHue(s);
-    expect(hue).toBe(getSourceHue({ ...s }));
-    expect(hue).toBeGreaterThanOrEqual(0);
-    expect(hue).toBeLessThan(360);
-  });
-
-  it("differs between differently named sources", () => {
-    expect(getSourceHue({ id: "a", uri: "pipe:///x?name=Spotify" })).not.toBe(
-      getSourceHue({ id: "b", uri: "pipe:///x?name=Radio" })
-    );
-  });
-});
-
-describe("getSourceAccent", () => {
-  it("darkens light hues so white text stays readable", () => {
-    expect(getSourceAccent(60).main).toBe("hsl(60 78% 40%)");
-    expect(getSourceAccent(220).main).toBe("hsl(220 78% 50%)");
-  });
-});
-

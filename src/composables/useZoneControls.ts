@@ -5,7 +5,7 @@ import { useAuthStore } from "@/stores/auth";
 import { getGroupDisplayName } from "@/utils/group-name";
 import { getStreamName } from "@/utils/stream-name";
 import { getStreamStatus } from "@/utils/stream-status";
-import { getSourceAccent, getSourceHue, getSourceIcon } from "@/utils/source-style";
+import { getSourceIcon } from "@/utils/source-style";
 import { averageClientVolume, linkedZoneClients } from "@/utils/zone-volume";
 import type { Client, Group } from "@/stores/snapcast";
 
@@ -51,14 +51,37 @@ export function useZoneControls(group: () => Group) {
   const currentSourceName = computed(() => getStreamName(currentStream.value));
   const currentSourceIcon = computed(() => getSourceIcon(currentStream.value));
 
-  // Each source has a stable accent color; the zone takes on the color of
-  // what it's playing (red while muted).
-  const palette = computed(() => getSourceAccent(getSourceHue(currentStream.value)));
-  const accent = computed(() => (group().muted ? "#ef4444" : palette.value.main));
+  // The zone's accent reflects its own state, not its source's identity:
+  // red while muted or unavailable, green while playing, neutral while idle.
+  const STATUS_ACCENT = {
+    playing: {
+      main: "var(--status-playing)",
+      deep: "var(--status-playing-deep)",
+      soft: "var(--status-playing-soft)",
+    },
+    idle: {
+      main: "var(--status-idle)",
+      deep: "var(--status-idle-deep)",
+      soft: "var(--status-idle-soft)",
+    },
+    attention: {
+      main: "var(--status-attention)",
+      deep: "var(--status-attention-deep)",
+      soft: "var(--status-attention-soft)",
+    },
+  } as const;
+
+  const statusAccent = computed(() => {
+    if (group().muted) return STATUS_ACCENT.attention;
+    if (playState.value === "playing") return STATUS_ACCENT.playing;
+    if (playState.value === "idle") return STATUS_ACCENT.idle;
+    return STATUS_ACCENT.attention; // unavailable
+  });
+  const accent = computed(() => statusAccent.value.main);
   const accentStyle = computed(() => ({
-    "--accent": palette.value.main,
-    "--accent-2": palette.value.deep,
-    "--accent-soft": palette.value.soft,
+    "--accent": statusAccent.value.main,
+    "--accent-2": statusAccent.value.deep,
+    "--accent-soft": statusAccent.value.soft,
   }));
 
   const sources = computed(() =>
@@ -66,7 +89,6 @@ export function useZoneControls(group: () => Group) {
       id: s.id,
       name: getStreamName(s),
       icon: getSourceIcon(s),
-      accent: getSourceAccent(getSourceHue(s)),
       state: playStateOf(s.id),
     }))
   );

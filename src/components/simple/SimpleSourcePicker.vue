@@ -2,13 +2,11 @@
 import { ref, computed, watch, nextTick } from "vue";
 import { useEscapeToClose } from "@/composables/useEscapeToClose";
 import { useBodyScrollLock } from "@/composables/useBodyScrollLock";
-import type { SourceAccent } from "@/utils/source-style";
 
 export interface PickerSource {
   id: string;
   name: string;
   icon: string;
-  accent: SourceAccent;
   state: "playing" | "idle" | "unavailable";
 }
 
@@ -172,16 +170,16 @@ function onListKeydown(event: KeyboardEvent) {
                   ? 'bg-slate-100 dark:bg-slate-800'
                   : 'hover:bg-slate-50 dark:hover:bg-slate-800/60'
               "
-              :style="{
-                '--chip': source.accent.main,
-                '--chip-2': source.accent.deep,
-                '--i': i,
-              }"
+              :style="{ '--i': i }"
               @click="choose(source.id)"
             >
               <span
                 class="relative w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all"
-                :class="source.id === currentId ? 'tile-on text-white' : 'tile-off'"
+                :class="
+                  source.id === currentId
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                    : 'bg-[var(--surface-2)] text-[var(--text-secondary)]'
+                "
                 aria-hidden="true"
               >
                 <span class="mdi text-xl" :class="source.icon"></span>
@@ -204,7 +202,7 @@ function onListKeydown(event: KeyboardEvent) {
               </span>
               <span
                 v-if="source.id === currentId"
-                class="mdi mdi-check-circle text-2xl shrink-0 check"
+                class="mdi mdi-check-circle text-2xl shrink-0 text-blue-600 dark:text-blue-400"
                 aria-hidden="true"
               ></span>
             </button>
@@ -221,18 +219,3 @@ function onListKeydown(event: KeyboardEvent) {
     </Transition>
   </Teleport>
 </template>
-
-<style scoped>
-.tile-on {
-  background-image: linear-gradient(135deg, var(--chip), var(--chip-2));
-  box-shadow: 0 8px 18px -8px var(--chip);
-}
-.tile-off {
-  color: var(--chip);
-  background: color-mix(in srgb, var(--chip) 14%, transparent);
-}
-.check {
-  color: var(--chip);
-}
-
-</style>
