@@ -11,6 +11,7 @@
   --text-tertiary: #566377;
   --border: #e2e8f0;
   --scrim: rgba(2, 6, 23, 0.6);
+  color-scheme: light;
 }
 
 .dark {
@@ -22,6 +23,7 @@
   --text-tertiary: #94a3b8;
   --border: #334155;
   --scrim: rgba(2, 6, 23, 0.6);
+  color-scheme: dark;
 }
 
 :root,
@@ -35,6 +37,22 @@
   --status-attention: #ef4444;
   --status-attention-deep: #dc2626;
   --status-attention-soft: rgba(239, 68, 68, 0.16);
+}
+
+/* In the base layer so a utility such as cursor-help still wins. Tailwind v4
+ * dropped the pointer cursor its preflight used to give buttons. */
+@layer base {
+  html {
+    background: var(--surface-0);
+  }
+
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+
+  input[type="checkbox"] {
+    accent-color: #2563eb;
+  }
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */

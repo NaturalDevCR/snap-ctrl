@@ -1,6 +1,7 @@
 <template>
   <div
     id="app"
+    style="padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right)"
     class="min-h-screen bg-[var(--surface-0)] text-[var(--text-primary)] font-sans transition-colors duration-300"
   >
     <Toast />
@@ -170,6 +171,7 @@
       <!-- Footer -->
       <footer
         v-if="snapcast.isConnected"
+        style="padding-bottom: calc(1.5rem + env(safe-area-inset-bottom))"
         class="mt-8 py-6 text-center text-sm text-[var(--text-tertiary)] border-t border-[var(--border)]"
       >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -458,17 +460,3 @@ onUnmounted(() => {
   snapcast.disconnect();
 });
 </script>
-
-<style scoped>
-/* .custom-scrollbar's rules now live in assets/main.css (global): Vue's
- * scoped CSS doesn't cross component boundaries, so this copy never
- * actually styled anything — App.vue's own template never uses the
- * class itself, only child components (GroupFilterModal, etc.) do. */
-button {
-  cursor: pointer;
-}
-
-button:disabled {
-  cursor: not-allowed;
-}
-</style>

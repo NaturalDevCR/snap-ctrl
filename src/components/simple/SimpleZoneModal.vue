@@ -66,7 +66,7 @@ watch(
           aria-modal="true"
           :aria-label="`${zone.zoneName.value}: volume and speakers`"
           tabindex="-1"
-          class="sv-sheet-panel relative w-full sm:max-w-lg max-h-[90vh] sm:max-h-[85vh] flex flex-col bg-[var(--surface-1)] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[var(--border)] overflow-hidden outline-none"
+          class="sv-sheet-panel relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[85dvh] flex flex-col bg-[var(--surface-1)] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[var(--border)] overflow-hidden outline-none"
           :class="{ 'is-playing': zone.playState.value === 'playing' && !group.muted }"
         >
           <div class="sv-glow" aria-hidden="true"></div>

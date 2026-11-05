@@ -1,10 +1,10 @@
 <template>
   <div
-    class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-gradient-to-br from-blue-600 to-indigo-700"
+    class="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto p-4 bg-gradient-to-br from-blue-600 to-indigo-700"
     @click.self="handleCancel"
   >
     <div
-      class="w-full max-w-md bg-[var(--surface-1)] rounded-2xl shadow-2xl border border-[var(--border)] p-8"
+      class="w-full max-w-md my-auto bg-[var(--surface-1)] rounded-2xl shadow-2xl border border-[var(--border)] p-8"
     >
       <div class="text-center mb-8">
         <div

@@ -71,7 +71,7 @@ const maxWidthClass = computed(
           role="dialog"
           aria-modal="true"
           :aria-label="title"
-          class="sv-sheet-panel relative w-full max-h-[85vh] sm:max-h-[80vh] flex flex-col bg-[var(--surface-1)] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[var(--border)] overflow-hidden outline-none"
+          class="sv-sheet-panel relative w-full max-h-[85dvh] sm:max-h-[80dvh] flex flex-col bg-[var(--surface-1)] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[var(--border)] overflow-hidden outline-none"
           :class="maxWidthClass"
         >
           <div class="sm:hidden pt-2.5 flex justify-center shrink-0" aria-hidden="true">

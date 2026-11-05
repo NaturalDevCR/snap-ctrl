@@ -109,7 +109,7 @@ function onListKeydown(event: KeyboardEvent) {
           role="dialog"
           aria-modal="true"
           :aria-label="`Choose a source for ${zoneName}`"
-          class="sv-sheet-panel relative w-full sm:max-w-md max-h-[82vh] sm:max-h-[75vh] flex flex-col bg-[var(--surface-1)] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[var(--border)] overflow-hidden"
+          class="sv-sheet-panel relative w-full sm:max-w-md max-h-[82dvh] sm:max-h-[75dvh] flex flex-col bg-[var(--surface-1)] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[var(--border)] overflow-hidden"
           @keydown="onListKeydown"
         >
           <!-- Grab handle (mobile affordance) -->

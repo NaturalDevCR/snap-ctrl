@@ -363,15 +363,15 @@ async function deleteGroup() {
         <div
           class="flex items-center gap-3 px-3 pb-2 text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wide border-b border-[var(--border)]"
         >
-          <div class="flex-1">Client</div>
-          <div class="w-24 text-center">In Group</div>
+          <div class="flex-1 min-w-0">Client</div>
+          <div class="w-14 sm:w-24 shrink-0 text-center">In Group</div>
           <div
-            class="w-24 text-center flex items-center justify-center gap-1"
+            class="w-14 sm:w-24 shrink-0 text-center flex items-center justify-center gap-1"
           >
             <Tooltip text="Link to group volume control">
               <span class="inline-flex items-center gap-1 cursor-help">
                 Linked
-                <span class="mdi mdi-information-outline text-xs"></span>
+                <span class="hidden sm:inline mdi mdi-information-outline text-xs"></span>
               </span>
             </Tooltip>
           </div>
@@ -387,7 +387,7 @@ async function deleteGroup() {
             <!-- Client name and volume -->
             <div class="flex-1 min-w-0">
               <div
-                class="font-medium text-[var(--text-primary)] flex items-center gap-2"
+                class="font-medium text-[var(--text-primary)] flex flex-wrap items-center gap-x-2 gap-y-1"
               >
                 <!-- Online/Offline Indicator -->
                 <span
@@ -398,12 +398,12 @@ async function deleteGroup() {
                       : 'bg-gray-400 dark:bg-gray-600'
                   "
                 ></span>
-                <span class="break-words">
+                <span class="break-words min-w-0">
                   {{ c.config.name || c.host.name }}
                 </span>
                 <span
                   v-if="!c.connected"
-                  class="ml-auto px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded flex-shrink-0"
+                  class="px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded flex-shrink-0"
                 >
                   Offline
                 </span>
@@ -414,7 +414,7 @@ async function deleteGroup() {
             </div>
 
             <!-- In Group checkbox -->
-            <div class="w-24 flex justify-center">
+            <div class="w-14 sm:w-24 shrink-0 flex justify-center">
               <label
                 class="min-h-11 min-w-11 flex items-center justify-center cursor-pointer"
               >
@@ -429,7 +429,7 @@ async function deleteGroup() {
             </div>
 
             <!-- Linked checkbox (only enabled if in group) -->
-            <div class="w-24 flex justify-center">
+            <div class="w-14 sm:w-24 shrink-0 flex justify-center">
               <label
                 class="min-h-11 min-w-11 flex items-center justify-center cursor-pointer"
               >
