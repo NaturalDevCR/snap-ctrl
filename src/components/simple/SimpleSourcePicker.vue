@@ -156,7 +156,7 @@ function onListKeydown(event: KeyboardEvent) {
           <div
             role="listbox"
             :aria-label="`Sources for ${zoneName}`"
-            class="flex-1 overflow-y-auto custom-scrollbar px-3 pb-4 sm:pb-3"
+            class="flex-1 overflow-y-auto custom-scrollbar px-3"
             style="padding-bottom: calc(1rem + env(safe-area-inset-bottom))"
           >
             <button

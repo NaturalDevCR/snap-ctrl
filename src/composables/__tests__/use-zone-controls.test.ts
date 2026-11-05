@@ -3,6 +3,7 @@ import { setActivePinia, createPinia } from "pinia";
 import { useZoneControls } from "@/composables/useZoneControls";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useSettingsStore } from "@/stores/settings";
+import { useAuthStore } from "@/stores/auth";
 import type { Client, Group, Stream } from "@/stores/snapcast";
 
 function makeStream(id: string, status: string): Stream {
@@ -91,5 +92,20 @@ describe("useZoneControls zoneVolume", () => {
     const zone = useZoneControls(() => makeGroup({ clients }));
 
     expect(zone.zoneVolume.value).toBe(60);
+  });
+
+  it("excludes speakers the client is not allowed to see", () => {
+    const auth = useAuthStore();
+    auth.enableAuthentication();
+    auth.updatePermissions({ ...auth.permissions, allowedClients: ["c1"] });
+    const zone = useZoneControls(() => makeGroup({ clients }));
+
+    expect(zone.zoneVolume.value).toBe(20);
+  });
+
+  it("is 0 for a zone with no speakers", () => {
+    const zone = useZoneControls(() => makeGroup({ clients: [] }));
+
+    expect(zone.zoneVolume.value).toBe(0);
   });
 });

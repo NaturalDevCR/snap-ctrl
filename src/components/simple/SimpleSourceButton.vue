@@ -40,7 +40,7 @@ const subtitle = computed(() => {
     @click="canChange && (showPicker = true)"
   >
     <span
-      class="sv-tile is-idle w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-white transition-all duration-500"
+      class="w-11 h-11 rounded-xl bg-[var(--surface-1)] text-[var(--text-secondary)] flex items-center justify-center shrink-0 transition-all duration-500"
       aria-hidden="true"
     >
       <Transition name="sv-swap" mode="out-in">

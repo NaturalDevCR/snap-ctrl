@@ -148,7 +148,7 @@ const showVolume = ref(false);
           <span class="mdi mdi-tune-vertical-variant text-xl sv-accent-text shrink-0" aria-hidden="true"></span>
 
           <span class="flex-1 min-w-0 flex items-center gap-3">
-            <span class="flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden" aria-hidden="true">
+            <span class="flex-1 h-1.5 rounded-full bg-[color-mix(in_srgb,var(--text-tertiary)_35%,transparent)] overflow-hidden" aria-hidden="true">
               <span
                 class="block h-full rounded-full transition-all duration-300"
                 :style="{

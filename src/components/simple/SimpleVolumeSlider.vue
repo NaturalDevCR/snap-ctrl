@@ -41,7 +41,8 @@ const fillColor = computed(() => {
 });
 
 const trackStyle = computed(() => ({
-  backgroundImage: `linear-gradient(to right, ${fillColor.value} 0%, ${fillColor.value} ${sliderValue.value}%, transparent ${sliderValue.value}%, transparent 100%)`,
+  "--fill": fillColor.value,
+  "--pct": `${sliderValue.value}%`,
 }));
 
 function onInput(e: Event) {
@@ -64,8 +65,7 @@ function nudge(direction: 1 | -1) {
   <div class="flex items-center gap-2 w-full" :class="{ 'opacity-60': disabled }">
     <button
       type="button"
-      class="shrink-0 flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:hover:bg-transparent disabled:hover:text-[var(--text-tertiary)]"
-      :class="size === 'lg' ? 'w-11 h-11' : 'w-11 h-11'"
+      class="w-11 h-11 shrink-0 flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:hover:bg-transparent disabled:hover:text-[var(--text-tertiary)]"
       :disabled="disabled || volume <= 0"
       :aria-label="`Decrease ${label}`"
       @click="nudge(-1)"
@@ -82,8 +82,8 @@ function nudge(direction: 1 | -1) {
       :disabled="disabled"
       :aria-label="label"
       :aria-valuetext="`${volume}%${muted ? ', muted' : ''}`"
-      class="simple-range flex-1 min-w-0 appearance-none rounded-full bg-[color-mix(in_srgb,var(--text-tertiary)_35%,transparent)] cursor-pointer touch-none disabled:cursor-not-allowed"
-      :class="size === 'lg' ? 'h-3 simple-range--lg' : 'h-2'"
+      class="simple-range h-11 w-full bg-transparent appearance-none flex-1 min-w-0 cursor-pointer touch-pan-y disabled:cursor-not-allowed"
+      :class="{ 'simple-range--lg': size === 'lg' }"
       :style="trackStyle"
       @input="onInput"
       @change="emit('commit')"
@@ -91,8 +91,7 @@ function nudge(direction: 1 | -1) {
 
     <button
       type="button"
-      class="shrink-0 flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:hover:bg-transparent disabled:hover:text-[var(--text-tertiary)]"
-      :class="size === 'lg' ? 'w-11 h-11' : 'w-11 h-11'"
+      class="w-11 h-11 shrink-0 flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:hover:bg-transparent disabled:hover:text-[var(--text-tertiary)]"
       :disabled="disabled || volume >= 100"
       :aria-label="`Increase ${label}`"
       @click="nudge(1)"
@@ -114,7 +113,27 @@ function nudge(direction: 1 | -1) {
 </template>
 
 <style scoped>
+.simple-range {
+  --track: color-mix(in srgb, var(--text-tertiary) 35%, transparent);
+}
+.simple-range::-webkit-slider-runnable-track {
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: linear-gradient(to right, var(--fill) var(--pct), var(--track) var(--pct));
+}
+.simple-range--lg::-webkit-slider-runnable-track {
+  height: 0.75rem;
+}
+.simple-range::-moz-range-track {
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: linear-gradient(to right, var(--fill) var(--pct), var(--track) var(--pct));
+}
+.simple-range--lg::-moz-range-track {
+  height: 0.75rem;
+}
 .simple-range::-webkit-slider-thumb {
+  margin-top: -0.5rem;
   appearance: none;
   width: 1.5rem;
   height: 1.5rem;
@@ -125,6 +144,7 @@ function nudge(direction: 1 | -1) {
   transition: transform 120ms ease;
 }
 .simple-range--lg::-webkit-slider-thumb {
+  margin-top: -0.5625rem;
   width: 1.875rem;
   height: 1.875rem;
 }
