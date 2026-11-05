@@ -139,31 +139,31 @@ function useHostSuggestion(host: string) {
     class="grid min-h-[60vh] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]"
   >
     <section
-      class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+      class="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-1)] shadow-sm"
     >
-      <div class="border-b border-gray-100 p-6 dark:border-slate-800 sm:p-8">
+      <div class="border-b border-[var(--border)] p-6 sm:p-8">
         <div class="mb-6 flex items-center gap-3">
           <div
-            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300"
+            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300"
           >
             <span class="mdi mdi-cast-audio text-2xl"></span>
           </div>
           <div>
-            <p class="text-sm font-semibold text-cyan-700 dark:text-cyan-300">
+            <p class="text-sm font-semibold text-blue-700 dark:text-blue-300">
               Snapcast server
             </p>
-            <p class="text-sm text-gray-500 dark:text-gray-400">
+            <p class="text-sm text-[var(--text-tertiary)]">
               Default target: localhost:1780
             </p>
           </div>
         </div>
 
         <h2
-          class="max-w-2xl text-3xl font-bold leading-tight text-gray-950 dark:text-white sm:text-4xl"
+          class="max-w-2xl text-3xl font-bold leading-tight text-[var(--text-primary)] sm:text-4xl"
         >
           {{ connectionPanelTitle }}
         </h2>
-        <p class="mt-3 max-w-2xl text-base leading-7 text-gray-600 dark:text-gray-300">
+        <p class="mt-3 max-w-2xl text-base leading-7 text-[var(--text-secondary)]">
           {{ connectionPanelDescription }}
         </p>
       </div>
@@ -172,7 +172,7 @@ function useHostSuggestion(host: string) {
         <!-- Initial Setup Info -->
         <div
           v-if="showingPermissionsSetup"
-          class="mb-6 rounded-xl border border-cyan-200 bg-cyan-50 p-4 text-cyan-800 dark:border-cyan-900/50 dark:bg-cyan-950/30 dark:text-cyan-200"
+          class="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-blue-800 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200"
         >
           <div class="flex items-start gap-3">
             <span
@@ -215,20 +215,20 @@ function useHostSuggestion(host: string) {
           <!-- HA addon mode: show read-only Snapcast info, no manual host entry -->
           <div v-if="haSnapcastInfo">
             <label
-              class="mb-2 block text-sm font-semibold text-gray-800 dark:text-gray-200"
+              class="mb-2 block text-sm font-semibold text-[var(--text-primary)]"
             >
               Home Assistant proxy
             </label>
             <div
-              class="flex min-h-12 items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300"
+              class="flex min-h-12 items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-secondary)]"
             >
-              <span class="mdi mdi-home-assistant text-lg text-cyan-600 dark:text-cyan-300"></span>
+              <span class="mdi mdi-home-assistant text-lg text-blue-600 dark:text-blue-300"></span>
               <span>
                 Snapcast:
-                <span class="font-mono text-gray-900 dark:text-white">
+                <span class="font-mono text-[var(--text-primary)]">
                   {{ haSnapcastInfo }}
                 </span>
-                <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                <span class="ml-2 text-xs text-[var(--text-tertiary)]">
                   via addon proxy
                 </span>
               </span>
@@ -238,13 +238,13 @@ function useHostSuggestion(host: string) {
           <div v-else>
             <label
               for="snapcast-host"
-              class="mb-2 block text-sm font-semibold text-gray-800 dark:text-gray-200"
+              class="mb-2 block text-sm font-semibold text-[var(--text-primary)]"
             >
               IP address or hostname
             </label>
             <div class="relative">
               <span
-                class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                class="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]"
               >
                 <span class="mdi mdi-server-network"></span>
               </span>
@@ -258,16 +258,16 @@ function useHostSuggestion(host: string) {
                 enterkeyhint="go"
                 aria-describedby="snapcast-host-help snapcast-host-error"
                 placeholder="192.168.1.42:1780 or snapcast.local:1780"
-                class="min-h-12 w-full rounded-xl border border-gray-300 bg-white py-3 pl-11 pr-4 text-base text-gray-950 outline-none transition-all placeholder:text-gray-400 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-cyan-400"
+                class="min-h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-1)] py-3 pl-11 pr-4 text-base text-[var(--text-primary)] outline-none transition-all placeholder:text-[var(--text-tertiary)] focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 dark:focus:border-blue-400"
                 @input="connectHostError = ''"
               />
             </div>
             <p
               id="snapcast-host-help"
-              class="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400"
+              class="mt-2 text-sm leading-6 text-[var(--text-tertiary)]"
             >
               Include the Snapcast JSON-RPC port. The default is
-              <span class="font-mono text-gray-700 dark:text-gray-200">
+              <span class="font-mono text-[var(--text-secondary)]">
                 1780
               </span>.
             </p>
@@ -290,13 +290,13 @@ function useHostSuggestion(host: string) {
               class="group inline-flex items-stretch overflow-hidden rounded-lg border transition-all"
               :class="
                 hostInput === suggestion
-                  ? 'border-cyan-300 bg-cyan-50 text-cyan-800 dark:border-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-200'
-                  : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300 hover:bg-gray-100 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300 dark:hover:bg-slate-700'
+                  ? 'border-blue-300 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-200'
+                  : 'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:border-[var(--text-tertiary)]'
               "
             >
               <button
                 type="button"
-                class="px-3 py-2 text-sm font-medium active:scale-[0.98]"
+                class="min-h-[44px] px-3 py-2 text-sm font-medium active:scale-[0.98]"
                 @click="useHostSuggestion(suggestion)"
               >
                 {{ suggestion }}
@@ -304,7 +304,7 @@ function useHostSuggestion(host: string) {
               <button
                 v-if="settings.recentHosts.includes(suggestion)"
                 type="button"
-                class="px-2 text-gray-400 opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100 focus:opacity-100 dark:hover:text-red-400"
+                class="inline-flex min-w-[44px] items-center justify-center px-2 text-[var(--text-tertiary)] opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100 focus:opacity-100 dark:hover:text-red-400"
                 :aria-label="`Forget ${suggestion}`"
                 @click="settings.removeRecentHost(suggestion)"
               >
@@ -315,7 +315,7 @@ function useHostSuggestion(host: string) {
 
           <button
             type="submit"
-            class="min-h-12 w-full rounded-xl bg-cyan-600 px-4 py-3 font-semibold text-white shadow-sm shadow-cyan-950/10 transition-all hover:bg-cyan-500 active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-cyan-500/25 dark:bg-cyan-500 dark:hover:bg-cyan-400"
+            class="min-h-12 w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white shadow-sm shadow-blue-950/10 transition-all hover:bg-blue-500 active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-blue-500/25 dark:bg-blue-500 dark:hover:bg-blue-400"
           >
             Connect to Snapcast
           </button>
@@ -324,45 +324,45 @@ function useHostSuggestion(host: string) {
     </section>
 
     <aside
-      class="rounded-2xl border border-gray-200 bg-gray-50 p-6 dark:border-slate-800 dark:bg-slate-900/60"
+      class="rounded-2xl border border-[var(--border)] bg-[var(--surface-0)] p-6"
     >
-      <h3 class="text-base font-semibold text-gray-950 dark:text-white">
+      <h3 class="text-base font-semibold text-[var(--text-primary)]">
         Where is Snapcast running?
       </h3>
       <div class="mt-5 space-y-4">
         <div class="flex gap-3">
           <span
-            class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-sm font-semibold text-cyan-700 dark:bg-slate-800 dark:text-cyan-300"
+            class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-1)] text-sm font-semibold text-blue-700 dark:text-blue-300"
           >
             1
           </span>
-          <p class="text-sm leading-6 text-gray-600 dark:text-gray-300">
+          <p class="text-sm leading-6 text-[var(--text-secondary)]">
             If this UI is installed on the same machine as Snapcast, keep
-            <span class="font-mono text-gray-800 dark:text-gray-100">
+            <span class="font-mono text-[var(--text-primary)]">
               localhost:1780
             </span>.
           </p>
         </div>
         <div class="flex gap-3">
           <span
-            class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-sm font-semibold text-cyan-700 dark:bg-slate-800 dark:text-cyan-300"
+            class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-1)] text-sm font-semibold text-blue-700 dark:text-blue-300"
           >
             2
           </span>
-          <p class="text-sm leading-6 text-gray-600 dark:text-gray-300">
+          <p class="text-sm leading-6 text-[var(--text-secondary)]">
             If Snapcast is on another device, use that device's LAN IP or
             hostname.
           </p>
         </div>
         <div class="flex gap-3">
           <span
-            class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-sm font-semibold text-cyan-700 dark:bg-slate-800 dark:text-cyan-300"
+            class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-1)] text-sm font-semibold text-blue-700 dark:text-blue-300"
           >
             3
           </span>
-          <p class="text-sm leading-6 text-gray-600 dark:text-gray-300">
+          <p class="text-sm leading-6 text-[var(--text-secondary)]">
             Make sure port
-            <span class="font-mono text-gray-800 dark:text-gray-100">1780</span>
+            <span class="font-mono text-[var(--text-primary)]">1780</span>
             is reachable from this browser.
           </p>
         </div>
