@@ -13,14 +13,6 @@ export interface GroupVolumeLink {
 
 export type ClientSourceVolumes = Record<string, Record<string, number>>;
 
-/**
- * Main-screen layout.
- * - "classic": the original zone grid + Zone Control dialog (every option).
- * - "simple": large, self-contained zone cards (source, volume, mute and
- *   speaker linking inline) aimed at everyday, non-technical use.
- */
-export type ViewMode = "classic" | "simple";
-
 export const useSettingsStore = defineStore(
   "settings",
   () => {
@@ -30,7 +22,6 @@ export const useSettingsStore = defineStore(
     const showEmptyGroups = ref(true);
     const volumeStep = ref(5);
     const hiddenGroups = ref<string[]>([]);
-    const viewMode = ref<ViewMode>("classic");
     // Group volume control links: which clients are linked to group volume
     const groupVolumeLinks = ref<Record<string, GroupVolumeLink>>({});
 
@@ -210,10 +201,6 @@ export const useSettingsStore = defineStore(
       showEmptyGroups.value = value;
     }
 
-    function setViewMode(mode: ViewMode) {
-      viewMode.value = mode === "simple" ? "simple" : "classic";
-    }
-
     function setVolumeStep(step: number) {
       volumeStep.value = Math.max(1, Math.min(20, step));
     }
@@ -240,7 +227,6 @@ export const useSettingsStore = defineStore(
       showDisconnectedClients,
       showEmptyGroups,
       volumeStep,
-      viewMode,
       hiddenGroups,
       groupVolumeLinks,
       setTheme,
@@ -249,7 +235,6 @@ export const useSettingsStore = defineStore(
       setShowDisconnectedClients,
       setShowEmptyGroups,
       setVolumeStep,
-      setViewMode,
       setHiddenGroups,
       setGroupVolumeLinks,
       customGroupOrder,
@@ -280,7 +265,6 @@ export const useSettingsStore = defineStore(
         "showDisconnectedClients",
         "showEmptyGroups",
         "volumeStep",
-        "viewMode",
         "hiddenGroups",
         "groupVolumeLinks",
         "customGroupOrder",
