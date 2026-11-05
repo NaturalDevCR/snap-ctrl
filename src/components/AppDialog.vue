@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, nextTick } from "vue";
+import { computed, ref, watch, nextTick, onUnmounted } from "vue";
 import { useEscapeToClose } from "@/composables/useEscapeToClose";
 import { useBodyScrollLock } from "@/composables/useBodyScrollLock";
 
@@ -30,13 +30,21 @@ watch(
     if (open) {
       returnFocusTo = document.activeElement as HTMLElement | null;
       await nextTick();
-      panelRef.value?.focus();
+      if (props.open) panelRef.value?.focus();
     } else {
       returnFocusTo?.focus?.();
       returnFocusTo = null;
     }
-  }
+  },
+  { immediate: true }
 );
+
+// A parent can unmount the dialog with `v-if` while it is still open, so the
+// `open` watcher never sees `false`: restore focus here as well.
+onUnmounted(() => {
+  returnFocusTo?.focus?.();
+  returnFocusTo = null;
+});
 
 const maxWidthClass = computed(
   () =>
