@@ -378,7 +378,7 @@ async function deleteGroup() {
         </div>
 
         <!-- Clients List -->
-        <div class="max-h-64 overflow-y-auto custom-scrollbar">
+        <div>
           <div
             v-for="c in snapcast.filteredClients"
             :key="c.id"

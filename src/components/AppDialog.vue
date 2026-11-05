@@ -94,7 +94,7 @@ const maxWidthClass = computed(
 
           <div
             v-if="$slots.footer"
-            class="px-6 py-4 border-t border-[var(--border)] bg-[var(--surface-2)] flex items-center shrink-0"
+            class="px-6 py-4 border-t border-[var(--border)] flex items-center shrink-0"
             style="padding-bottom: calc(1rem + env(safe-area-inset-bottom))"
           >
             <slot name="footer" />
