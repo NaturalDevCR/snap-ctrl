@@ -233,7 +233,7 @@ watch(
                 v-if="zone.speakers.value.length === 0"
                 class="py-8 text-center text-sm text-[var(--text-tertiary)]"
               >
-                No speakers in this zone yet.
+                {{ zone.noSpeakersMessage.value }}
               </p>
 
               <div

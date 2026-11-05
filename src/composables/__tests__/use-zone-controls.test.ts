@@ -149,3 +149,65 @@ describe("useZoneControls zoneVolume", () => {
     expect(zone.zoneVolume.value).toBe(0);
   });
 });
+
+describe("useZoneControls canChangeSource", () => {
+  function allowSources(...allowedSources: string[]) {
+    const auth = useAuthStore();
+    auth.enableAuthentication();
+    auth.updatePermissions({ ...auth.permissions, allowedSources });
+    return auth;
+  }
+
+  it("is true with another source to switch to", () => {
+    useSnapcastStore().streams.push(makeStream("s1", "idle"), makeStream("s2", "idle"));
+    const zone = useZoneControls(() => makeGroup());
+
+    expect(zone.canChangeSource.value).toBe(true);
+  });
+
+  it("is false when the zone already plays the only allowed source", () => {
+    useSnapcastStore().streams.push(makeStream("s1", "idle"), makeStream("s2", "idle"));
+    allowSources("s1");
+    const zone = useZoneControls(() => makeGroup());
+
+    expect(zone.canChangeSource.value).toBe(false);
+  });
+
+  it("is true when the zone sits on a disallowed source with one allowed source", () => {
+    useSnapcastStore().streams.push(makeStream("s1", "idle"), makeStream("s2", "idle"));
+    allowSources("s2");
+    const zone = useZoneControls(() => makeGroup());
+
+    expect(zone.sources.value).toHaveLength(1);
+    expect(zone.canChangeSource.value).toBe(true);
+  });
+
+  it("is false without the source selection permission", () => {
+    useSnapcastStore().streams.push(makeStream("s1", "idle"), makeStream("s2", "idle"));
+    const auth = allowSources();
+    auth.updatePermissions({ ...auth.permissions, canSelectStream: false });
+    const zone = useZoneControls(() => makeGroup());
+
+    expect(zone.canChangeSource.value).toBe(false);
+  });
+});
+
+describe("useZoneControls noSpeakersMessage", () => {
+  it("says the zone is empty when it has no clients", () => {
+    const zone = useZoneControls(() => makeGroup({ clients: [] }));
+
+    expect(zone.noSpeakersMessage.value).toBe("No speakers in this zone yet.");
+  });
+
+  it("does not call the zone empty when its clients are hidden from this device", () => {
+    const auth = useAuthStore();
+    auth.enableAuthentication();
+    auth.updatePermissions({ ...auth.permissions, allowedClients: ["other"] });
+    const zone = useZoneControls(() => makeGroup({ clients: [makeClient("c1", 20)] }));
+
+    expect(zone.speakers.value).toHaveLength(0);
+    expect(zone.noSpeakersMessage.value).toBe(
+      "This zone's speakers aren't available on this device."
+    );
+  });
+});

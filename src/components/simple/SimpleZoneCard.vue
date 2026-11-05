@@ -115,9 +115,11 @@ const showVolume = ref(false);
       <!-- Source -->
       <SimpleSourceButton :group="group" />
 
-      <!-- Volume summary → opens the Volume & Speakers sheet -->
-      <div v-if="zone.speakers.value.length > 0" class="flex items-center gap-2.5">
+      <!-- Zone mute, plus a summary that opens the Volume & Speakers sheet.
+           Without visible speakers the sheet would only repeat this card. -->
+      <div class="flex items-center gap-2.5">
         <button
+          v-if="zone.canAdjustVolume.value || zone.speakers.value.length > 0"
           type="button"
           class="w-12 h-12 shrink-0 flex items-center justify-center rounded-2xl border transition-all duration-300 active:scale-90 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
           :class="
@@ -140,6 +142,7 @@ const showVolume = ref(false);
         </button>
 
         <button
+          v-if="zone.speakers.value.length > 0"
           type="button"
           class="group/vol flex-1 min-w-0 h-12 flex items-center gap-3 pl-3 pr-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] hover:bg-[var(--surface-1)] hover:shadow-md hover:border-[var(--text-tertiary)] text-left transition-all duration-300 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
           aria-haspopup="dialog"
@@ -166,12 +169,12 @@ const showVolume = ref(false);
           <span class="mdi mdi-chevron-right text-lg text-slate-400 group-hover/vol:translate-x-0.5 transition-transform" aria-hidden="true"></span>
           <span class="sr-only">Open volume and speakers for {{ zone.zoneName.value }}</span>
         </button>
-      </div>
 
-      <p v-else class="flex items-center gap-2 text-sm text-[var(--text-tertiary)]">
-        <span class="mdi mdi-speaker-off text-lg" aria-hidden="true"></span>
-        No speakers in this zone yet.
-      </p>
+        <p v-else class="flex-1 min-w-0 flex items-center gap-2 text-sm text-[var(--text-tertiary)]">
+          <span class="mdi mdi-speaker-off text-lg" aria-hidden="true"></span>
+          {{ zone.noSpeakersMessage.value }}
+        </p>
+      </div>
     </div>
 
     <SimpleZoneModal

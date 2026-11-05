@@ -101,6 +101,12 @@ export function useZoneControls(group: () => Group) {
     }))
   );
 
+  // A zone can sit on a source this device may not pick, so one allowed
+  // source can still be a real choice. Count what it could switch to.
+  const canChangeSource = computed(
+    () => canSelectStream.value && sources.value.some((s) => s.id !== group().stream_id)
+  );
+
   function selectSource(streamId: string) {
     if (!canSelectStream.value || streamId === group().stream_id) return;
     snapcast.setGroupStream(group().id, streamId);
@@ -109,6 +115,12 @@ export function useZoneControls(group: () => Group) {
   // ---- Speakers & volume ---------------------------------------------------
   const speakers = computed<Client[]>(() =>
     auth.filterAllowedEntities("client", group().clients)
+  );
+
+  const noSpeakersMessage = computed(() =>
+    group().clients.length > 0
+      ? "This zone's speakers aren't available on this device."
+      : "No speakers in this zone yet."
   );
 
   const linkedIds = computed(
@@ -199,9 +211,11 @@ export function useZoneControls(group: () => Group) {
     tileState,
     tileStyle,
     sources,
+    canChangeSource,
     selectSource,
     // volume
     speakers,
+    noSpeakersMessage,
     linkedClients,
     hasMasterVolume,
     masterVolume,

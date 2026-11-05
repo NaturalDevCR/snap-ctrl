@@ -9,35 +9,32 @@ const props = defineProps<{ group: Group }>();
 const zone = useZoneControls(() => props.group);
 const showPicker = ref(false);
 
-// Nothing to choose between with a single allowed source (or none).
-const canChange = computed(
-  () => zone.canSelectStream.value && zone.sources.value.length > 1
-);
-
 const subtitle = computed(() => {
   if (!zone.canSelectStream.value) return "Changing the source is disabled";
   const n = zone.sources.value.length;
-  return n > 1 ? `${n} sources available` : "Only source available";
+  if (n === 0) return "No sources available";
+  if (!zone.canChangeSource.value) return "Only source available";
+  return `${n} source${n === 1 ? "" : "s"} available`;
 });
 </script>
 
 <template>
   <component
-    :is="canChange ? 'button' : 'div'"
-    :type="canChange ? 'button' : undefined"
+    :is="zone.canChangeSource.value ? 'button' : 'div'"
+    :type="zone.canChangeSource.value ? 'button' : undefined"
     class="w-full flex items-center gap-3 p-2 pr-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] text-left transition-all duration-300"
     :class="
-      canChange
+      zone.canChangeSource.value
         ? 'hover:bg-[var(--surface-1)] hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500'
         : ''
     "
-    :aria-haspopup="canChange ? 'dialog' : undefined"
+    :aria-haspopup="zone.canChangeSource.value ? 'dialog' : undefined"
     :aria-label="
-      canChange
+      zone.canChangeSource.value
         ? `Source: ${zone.currentSourceName.value}. Change source`
         : undefined
     "
-    @click="canChange && (showPicker = true)"
+    @click="zone.canChangeSource.value && (showPicker = true)"
   >
     <span
       class="w-11 h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-secondary)] flex items-center justify-center shrink-0 transition-all duration-500"
@@ -65,7 +62,7 @@ const subtitle = computed(() => {
       </span>
     </span>
     <span
-      v-if="canChange"
+      v-if="zone.canChangeSource.value"
       class="shrink-0 inline-flex items-center gap-0.5 text-sm font-semibold text-blue-600 dark:text-blue-400"
     >
       Change
@@ -79,7 +76,7 @@ const subtitle = computed(() => {
   </component>
 
   <SimpleSourcePicker
-    v-if="canChange"
+    v-if="zone.canChangeSource.value"
     :open="showPicker"
     :zone-name="zone.zoneName.value"
     :sources="zone.sources.value"
