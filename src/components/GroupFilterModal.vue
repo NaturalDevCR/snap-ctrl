@@ -73,10 +73,10 @@ function isHidden(groupId: string): boolean {
                phone or tablet, which is most of this app's install
                base. Kept small/inline rather than hidden behind a
                gesture. -->
-          <div class="flex flex-col shrink-0">
+          <div class="flex flex-row shrink-0">
             <button
               type="button"
-              class="w-6 h-5 flex items-center justify-center rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] disabled:opacity-25 disabled:pointer-events-none"
+              class="w-11 h-11 flex items-center justify-center rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] disabled:opacity-25 disabled:pointer-events-none"
               :disabled="index === 0"
               :aria-label="`Move ${getGroupName(group)} up`"
               @click.stop="moveZoneUp(index)"
@@ -85,7 +85,7 @@ function isHidden(groupId: string): boolean {
             </button>
             <button
               type="button"
-              class="w-6 h-5 flex items-center justify-center rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] disabled:opacity-25 disabled:pointer-events-none"
+              class="w-11 h-11 flex items-center justify-center rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] disabled:opacity-25 disabled:pointer-events-none"
               :disabled="index === orderedZonesForFilter.length - 1"
               :aria-label="`Move ${getGroupName(group)} down`"
               @click.stop="moveZoneDown(index)"
@@ -94,30 +94,34 @@ function isHidden(groupId: string): boolean {
             </button>
           </div>
           <span
-            class="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--surface-2)] text-[var(--text-secondary)] text-sm font-bold shrink-0"
+            class="w-8 h-8 rounded-full hidden sm:flex items-center justify-center bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-secondary)] text-sm font-bold shrink-0"
           >
             {{ getGroupName(group).charAt(0).toUpperCase() }}
           </span>
-          <span class="font-medium text-[var(--text-primary)] truncate">{{
+          <span class="min-w-0 font-medium text-[var(--text-primary)] truncate">{{
             getGroupName(group)
           }}</span>
         </div>
         <button
           type="button"
-          class="w-6 h-6 rounded-full border flex items-center justify-center transition-colors shrink-0"
-          :class="
-            !isHidden(group.id)
-              ? 'bg-blue-500 border-blue-500 text-white'
-              : 'border-gray-300 dark:border-gray-600'
-          "
+          class="w-11 h-11 flex items-center justify-center shrink-0"
           :aria-pressed="!isHidden(group.id)"
           :aria-label="isHidden(group.id) ? `Show ${getGroupName(group)}` : `Hide ${getGroupName(group)}`"
           @click.stop="toggleVisibility(group.id)"
         >
           <span
-            v-if="!isHidden(group.id)"
-            class="mdi mdi-check text-sm"
-          ></span>
+            class="w-6 h-6 rounded-full border flex items-center justify-center transition-colors"
+            :class="
+              !isHidden(group.id)
+                ? 'bg-blue-500 border-blue-500 text-white'
+                : 'border-gray-300 dark:border-gray-600'
+            "
+          >
+            <span
+              v-if="!isHidden(group.id)"
+              class="mdi mdi-check text-sm"
+            ></span>
+          </span>
         </button>
       </div>
     </div>
