@@ -323,7 +323,7 @@ async function deleteGroup() {
               >Exponent (Curve)</label
             >
             <span
-              class="text-xs font-mono bg-[var(--surface-1)] px-2 py-0.5 rounded text-[var(--text-secondary)]"
+              class="text-xs font-mono bg-[var(--surface-2)] px-2 py-0.5 rounded text-[var(--text-secondary)]"
             >
               {{ volumeExponent ?? settings.globalVolumeExponent }}
             </span>
