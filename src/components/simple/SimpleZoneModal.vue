@@ -256,7 +256,7 @@ watch(
                       :class="
                         zone.isLinked(client)
                           ? 'sv-link-on text-white'
-                          : 'bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-tertiary)]'
+                          : 'bg-[var(--surface-1)] border border-[var(--border)] text-[var(--text-secondary)]'
                       "
                       aria-hidden="true"
                     >
@@ -286,7 +286,7 @@ watch(
                   <button
                     v-if="zone.canLinkClients.value"
                     type="button"
-                    class="shrink-0 h-11 min-w-11 px-3 inline-flex items-center gap-1.5 rounded-full border text-xs font-semibold transition-all duration-300 active:scale-90"
+                    class="shrink-0 h-11 min-w-11 px-3 inline-flex items-center justify-center gap-1.5 rounded-full border text-xs font-semibold transition-all duration-300 active:scale-90"
                     :class="
                       zone.isLinked(client)
                         ? 'sv-link-on border-transparent text-white'
@@ -304,7 +304,7 @@ watch(
                         aria-hidden="true"
                       ></span>
                     </Transition>
-                    <span class="max-[360px]:hidden">{{ zone.isLinked(client) ? "Linked" : "Link" }}</span>
+                    <span class="max-[420px]:hidden">{{ zone.isLinked(client) ? "Linked" : "Link" }}</span>
                   </button>
 
                   <Tooltip v-if="zone.showClientSettings.value" text="Speaker settings">

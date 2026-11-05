@@ -94,7 +94,7 @@ async function refreshStatus() {
 <template>
   <div class="space-y-8">
     <!-- Hero header -->
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 hero-in">
+    <div class="relative z-30 flex flex-col sm:flex-row sm:items-end justify-between gap-4 hero-in">
       <div>
         <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-[var(--text-primary)]">
           Your zones

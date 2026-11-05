@@ -56,7 +56,7 @@
       >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex items-center justify-between h-16 gap-4">
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 sm:gap-4 min-w-0">
               <div class="flex items-center gap-3">
                 <img
                   src="/pwa-192x192.png"
@@ -76,7 +76,7 @@
               </div>
 
               <div
-                class="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border transition-colors duration-300"
+                class="flex items-center gap-2 px-3 py-1 max-[420px]:gap-0 max-[420px]:px-2 max-[420px]:py-2 rounded-full text-xs font-medium border transition-colors duration-300"
                 :class="{
                   'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/30':
                     snapcast.isConnected,
@@ -97,10 +97,12 @@
                     class="relative inline-flex rounded-full h-2 w-2 bg-current"
                   ></span>
                 </span>
-                <span v-if="connectionStatus === 'connecting'">Connecting...</span>
-                <span v-else-if="connectionStatus === 'connected'">Connected</span>
-                <span v-else-if="connectionStatus === 'setup'">Setup needed</span>
-                <span v-else>Disconnected</span>
+                <span class="max-[420px]:sr-only">
+                  <template v-if="connectionStatus === 'connecting'">Connecting...</template>
+                  <template v-else-if="connectionStatus === 'connected'">Connected</template>
+                  <template v-else-if="connectionStatus === 'setup'">Setup needed</template>
+                  <template v-else>Disconnected</template>
+                </span>
               </div>
             </div>
 
