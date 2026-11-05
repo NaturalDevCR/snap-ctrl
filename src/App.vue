@@ -51,6 +51,7 @@
       />
 
       <header
+        style="padding-top: env(safe-area-inset-top)"
         class="sticky top-0 z-50 w-full backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border-b border-gray-200 dark:border-gray-800 transition-all duration-300 shadow-sm"
       >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

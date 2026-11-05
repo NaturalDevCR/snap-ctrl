@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, watch, nextTick } from "vue";
 import { useEscapeToClose } from "@/composables/useEscapeToClose";
 import { useBodyScrollLock } from "@/composables/useBodyScrollLock";
 
@@ -21,6 +21,23 @@ useEscapeToClose(
 );
 useBodyScrollLock(() => props.open);
 
+const panelRef = ref<HTMLElement | null>(null);
+let returnFocusTo: HTMLElement | null = null;
+
+watch(
+  () => props.open,
+  async (open) => {
+    if (open) {
+      returnFocusTo = document.activeElement as HTMLElement | null;
+      await nextTick();
+      panelRef.value?.focus();
+    } else {
+      returnFocusTo?.focus?.();
+      returnFocusTo = null;
+    }
+  }
+);
+
 const maxWidthClass = computed(
   () =>
     ({ sm: "sm:max-w-sm", md: "sm:max-w-md", lg: "sm:max-w-lg" })[props.size]
@@ -41,12 +58,13 @@ const maxWidthClass = computed(
         ></div>
 
         <div
+          ref="panelRef"
+          tabindex="-1"
           role="dialog"
           aria-modal="true"
           :aria-label="title"
-          class="sv-sheet-panel relative w-full max-h-[85vh] sm:max-h-[80vh] flex flex-col bg-[var(--surface-1)] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[var(--border)] overflow-hidden"
+          class="sv-sheet-panel relative w-full max-h-[85vh] sm:max-h-[80vh] flex flex-col bg-[var(--surface-1)] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[var(--border)] overflow-hidden outline-none"
           :class="maxWidthClass"
-          style="padding-bottom: env(safe-area-inset-bottom)"
         >
           <div class="sm:hidden pt-2.5 flex justify-center shrink-0" aria-hidden="true">
             <div class="w-10 h-1.5 rounded-full bg-[var(--surface-2)]"></div>
@@ -67,13 +85,17 @@ const maxWidthClass = computed(
             </button>
           </div>
 
-          <div class="flex-1 overflow-y-auto custom-scrollbar p-6">
+          <div
+            class="flex-1 overflow-y-auto custom-scrollbar p-6"
+            :style="$slots.footer ? undefined : { paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }"
+          >
             <slot />
           </div>
 
           <div
             v-if="$slots.footer"
             class="px-6 py-4 border-t border-[var(--border)] bg-[var(--surface-2)] flex items-center shrink-0"
+            style="padding-bottom: calc(1rem + env(safe-area-inset-bottom))"
           >
             <slot name="footer" />
           </div>
