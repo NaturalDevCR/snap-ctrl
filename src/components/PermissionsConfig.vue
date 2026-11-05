@@ -1,22 +1,22 @@
 <template>
   <div
-    class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+    class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-[var(--scrim)] backdrop-blur-sm"
     @click.self="$emit('cancel')"
   >
     <div
-      class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-gray-200 dark:border-gray-800 transform transition-all"
+      class="bg-[var(--surface-1)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-[var(--border)] transform transition-all"
       @click.stop
     >
       <div
-        class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between"
+        class="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between"
       >
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+        <h3 class="text-lg font-bold text-[var(--text-primary)]">
           Configure Permissions
         </h3>
         <button
           @click="$emit('cancel')"
           aria-label="Close"
-          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          class="w-11 h-11 -mr-2 flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-2)] transition-colors"
         >
           <span class="mdi mdi-close text-xl"></span>
         </button>
@@ -26,16 +26,16 @@
         <!-- Feature Permissions -->
         <div>
           <h4
-            class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2"
+            class="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2"
           >
             <span class="mdi mdi-shield-check-outline"></span>
             Feature Permissions
           </h4>
           <div class="space-y-3">
             <label
-              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
-              <span class="font-medium text-gray-900 dark:text-white"
+              <span class="font-medium text-[var(--text-primary)]"
                 >Allow Volume Adjustments</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
@@ -51,9 +51,9 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
-              <span class="font-medium text-gray-900 dark:text-white"
+              <span class="font-medium text-[var(--text-primary)]"
                 >Allow Renaming Groups</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
@@ -69,9 +69,9 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
-              <span class="font-medium text-gray-900 dark:text-white"
+              <span class="font-medium text-[var(--text-primary)]"
                 >Allow Renaming Clients</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
@@ -87,9 +87,9 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
-              <span class="font-medium text-gray-900 dark:text-white"
+              <span class="font-medium text-[var(--text-primary)]"
                 >Allow Stream Selection</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
@@ -105,9 +105,9 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
-              <span class="font-medium text-gray-900 dark:text-white"
+              <span class="font-medium text-[var(--text-primary)]"
                 >Allow Per-Source Volume Config</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
@@ -123,9 +123,9 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
-              <span class="font-medium text-gray-900 dark:text-white"
+              <span class="font-medium text-[var(--text-primary)]"
                 >Allow Client Assignment</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
@@ -141,9 +141,9 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
-              <span class="font-medium text-gray-900 dark:text-white"
+              <span class="font-medium text-[var(--text-primary)]"
                 >Allow Client Linking</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
@@ -157,46 +157,22 @@
                 ></div>
               </div>
             </label>
-
-            <label
-              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-            >
-              <div>
-                <span class="block font-medium text-gray-900 dark:text-white"
-                  >Allow Changing Layout</span
-                >
-                <span class="block text-xs text-gray-500 dark:text-gray-400"
-                  >Turn off to lock this device to its current Classic/Simple
-                  layout</span
-                >
-              </div>
-              <div class="relative inline-flex items-center cursor-pointer shrink-0">
-                <input
-                  type="checkbox"
-                  v-model="localPermissions.canChangeView"
-                  class="sr-only peer"
-                />
-                <div
-                  class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
-                ></div>
-              </div>
-            </label>
           </div>
         </div>
 
         <!-- UI Visibility Permissions -->
         <div>
           <h4
-            class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2"
+            class="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2"
           >
             <span class="mdi mdi-eye-outline"></span>
             UI Visibility
           </h4>
           <div class="space-y-3">
             <label
-              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
-              <span class="font-medium text-gray-900 dark:text-white"
+              <span class="font-medium text-[var(--text-primary)]"
                 >Show Group Settings</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
@@ -212,9 +188,9 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
-              <span class="font-medium text-gray-900 dark:text-white"
+              <span class="font-medium text-[var(--text-primary)]"
                 >Show Client Settings</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
@@ -230,9 +206,9 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
-              <span class="font-medium text-gray-900 dark:text-white"
+              <span class="font-medium text-[var(--text-primary)]"
                 >Show Group Filter</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
@@ -248,9 +224,9 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
-              <span class="font-medium text-gray-900 dark:text-white"
+              <span class="font-medium text-[var(--text-primary)]"
                 >Show Create Group</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
@@ -266,9 +242,9 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
-              <span class="font-medium text-gray-900 dark:text-white"
+              <span class="font-medium text-[var(--text-primary)]"
                 >Show Browser Player</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
@@ -288,12 +264,12 @@
         <!-- Entity Restrictions -->
         <div>
           <h4
-            class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2"
+            class="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2"
           >
             <span class="mdi mdi-filter-outline"></span>
             Access Restrictions
           </h4>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+          <p class="text-xs text-[var(--text-tertiary)] mb-4">
             Leave empty to allow all. Select specific items to restrict access.
           </p>
 
@@ -301,20 +277,20 @@
             <!-- Allowed Groups -->
             <div>
               <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
               >
                 Allowed Groups
-                <span class="text-xs text-gray-500 dark:text-gray-400"
+                <span class="text-xs text-[var(--text-tertiary)]"
                   >({{ localPermissions.allowedGroups.length || "All" }})</span
                 >
               </label>
               <div
-                class="max-h-32 overflow-y-auto custom-scrollbar space-y-1 p-2 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                class="max-h-32 overflow-y-auto custom-scrollbar space-y-1 p-2 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]"
               >
                 <label
                   v-for="group in availableGroups"
                   :key="group.id"
-                  class="flex items-center gap-2 p-2 hover:bg-white dark:hover:bg-slate-700 rounded cursor-pointer transition-colors"
+                  class="flex items-center gap-2 p-2 min-h-11 hover:bg-[var(--surface-1)] rounded cursor-pointer transition-colors"
                 >
                   <input
                     type="checkbox"
@@ -322,13 +298,13 @@
                     v-model="localPermissions.allowedGroups"
                     class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                   />
-                  <span class="text-sm text-gray-900 dark:text-white">{{
+                  <span class="text-sm text-[var(--text-primary)]">{{
                     getGroupName(group)
                   }}</span>
                 </label>
                 <div
                   v-if="availableGroups.length === 0"
-                  class="text-sm text-gray-500 dark:text-gray-400 text-center py-2"
+                  class="text-sm text-[var(--text-tertiary)] text-center py-2"
                 >
                   No groups available
                 </div>
@@ -338,20 +314,20 @@
             <!-- Allowed Sources -->
             <div>
               <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
               >
                 Allowed Sources
-                <span class="text-xs text-gray-500 dark:text-gray-400"
+                <span class="text-xs text-[var(--text-tertiary)]"
                   >({{ localPermissions.allowedSources.length || "All" }})</span
                 >
               </label>
               <div
-                class="max-h-32 overflow-y-auto custom-scrollbar space-y-1 p-2 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                class="max-h-32 overflow-y-auto custom-scrollbar space-y-1 p-2 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]"
               >
                 <label
                   v-for="source in availableSources"
                   :key="source.id"
-                  class="flex items-center gap-2 p-2 hover:bg-white dark:hover:bg-slate-700 rounded cursor-pointer transition-colors"
+                  class="flex items-center gap-2 p-2 min-h-11 hover:bg-[var(--surface-1)] rounded cursor-pointer transition-colors"
                 >
                   <input
                     type="checkbox"
@@ -359,13 +335,13 @@
                     v-model="localPermissions.allowedSources"
                     class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                   />
-                  <span class="text-sm text-gray-900 dark:text-white">{{
+                  <span class="text-sm text-[var(--text-primary)]">{{
                     getSourceName(source)
                   }}</span>
                 </label>
                 <div
                   v-if="availableSources.length === 0"
-                  class="text-sm text-gray-500 dark:text-gray-400 text-center py-2"
+                  class="text-sm text-[var(--text-tertiary)] text-center py-2"
                 >
                   No sources available
                 </div>
@@ -375,20 +351,20 @@
             <!-- Allowed Clients -->
             <div>
               <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
               >
                 Allowed Clients
-                <span class="text-xs text-gray-500 dark:text-gray-400"
+                <span class="text-xs text-[var(--text-tertiary)]"
                   >({{ localPermissions.allowedClients.length || "All" }})</span
                 >
               </label>
               <div
-                class="max-h-32 overflow-y-auto custom-scrollbar space-y-1 p-2 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                class="max-h-32 overflow-y-auto custom-scrollbar space-y-1 p-2 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]"
               >
                 <label
                   v-for="client in availableClients"
                   :key="client.id"
-                  class="flex items-center gap-2 p-2 hover:bg-white dark:hover:bg-slate-700 rounded cursor-pointer transition-colors"
+                  class="flex items-center gap-2 p-2 min-h-11 hover:bg-[var(--surface-1)] rounded cursor-pointer transition-colors"
                 >
                   <input
                     type="checkbox"
@@ -396,13 +372,13 @@
                     v-model="localPermissions.allowedClients"
                     class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                   />
-                  <span class="text-sm text-gray-900 dark:text-white">{{
+                  <span class="text-sm text-[var(--text-primary)]">{{
                     client.config.name || client.host.name
                   }}</span>
                 </label>
                 <div
                   v-if="availableClients.length === 0"
-                  class="text-sm text-gray-500 dark:text-gray-400 text-center py-2"
+                  class="text-sm text-[var(--text-tertiary)] text-center py-2"
                 >
                   No clients available
                 </div>
@@ -413,16 +389,16 @@
       </div>
 
       <div
-        class="px-6 py-4 bg-gray-50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3"
+        class="px-6 py-4 bg-[var(--surface-2)] border-t border-[var(--border)] flex justify-end gap-3"
       >
         <button
-          class="px-4 py-2 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+          class="px-4 min-h-11 text-[var(--text-secondary)] font-medium hover:bg-[var(--border)] rounded-lg transition-colors"
           @click="$emit('cancel')"
         >
           Cancel
         </button>
         <button
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
+          class="px-4 min-h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
           @click="handleSave"
         >
           Save Permissions
@@ -461,9 +437,6 @@ const snapcast = useSnapcastStore();
 
 const localPermissions = ref<AuthPermissions>({
   ...props.initialPermissions,
-  // Permissions saved before this flag existed don't carry it; show the
-  // toggle in its effective (allowed) state rather than unchecked.
-  canChangeView: props.initialPermissions.canChangeView !== false,
 });
 
 // Make these computed so they update reactively when snapcast data changes

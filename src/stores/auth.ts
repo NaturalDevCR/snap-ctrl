@@ -10,9 +10,6 @@ export interface AuthPermissions {
   canConfigurePSV: boolean;
   canAssignClients: boolean;
   canLinkClients: boolean;
-  // Optional because permissions persisted before this flag existed won't
-  // carry it — a missing value is treated as allowed (see hasFeaturePermission).
-  canChangeView?: boolean;
 
   // UI Visibility permissions
   showGroupSettings: boolean;
@@ -41,7 +38,6 @@ export const useAuthStore = defineStore(
       canConfigurePSV: true,
       canAssignClients: true,
       canLinkClients: true,
-      canChangeView: true,
       showGroupSettings: true,
       showClientSettings: true,
       showGroupFilter: true,
@@ -124,7 +120,6 @@ export const useAuthStore = defineStore(
         | "canConfigurePSV"
         | "canAssignClients"
         | "canLinkClients"
-        | "canChangeView"
       >
     ): boolean {
       if (!isAuthEnabled.value) return true;
@@ -192,7 +187,6 @@ export const useAuthStore = defineStore(
         canConfigurePSV: true,
         canAssignClients: true,
         canLinkClients: true,
-        canChangeView: true,
         showGroupSettings: true,
         showClientSettings: true,
         showGroupFilter: true,
