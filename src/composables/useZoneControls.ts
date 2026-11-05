@@ -41,7 +41,7 @@ export function useZoneControls(group: () => Group) {
   const playState = computed(() => playStateOf(group().stream_id));
   const statusLabel = computed(() => {
     if (playState.value === "playing") return "Playing";
-    if (playState.value === "idle") return "Paused";
+    if (playState.value === "idle") return "Idle";
     return "Unavailable";
   });
 
@@ -80,6 +80,10 @@ export function useZoneControls(group: () => Group) {
     group().muted ? STATUS_ACCENT.attention : playAccent.value
   );
   const accent = computed(() => statusAccent.value.main);
+  // Idle and muted fills stay neutral: --status-idle fades into the track.
+  const volumeFill = computed(() =>
+    group().muted || playState.value === "idle" ? "var(--fill-neutral)" : accent.value
+  );
   const accentStyle = computed(() => ({
     "--accent": statusAccent.value.main,
     "--accent-2": statusAccent.value.deep,
@@ -207,6 +211,7 @@ export function useZoneControls(group: () => Group) {
     currentSourceName,
     currentSourceIcon,
     accent,
+    volumeFill,
     accentStyle,
     tileState,
     tileStyle,

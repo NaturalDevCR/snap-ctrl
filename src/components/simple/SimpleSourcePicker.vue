@@ -193,9 +193,9 @@ function onListKeydown(event: KeyboardEvent) {
                   <span
                     class="w-1.5 h-1.5 rounded-full"
                     :class="{
-                      'bg-green-500': source.state === 'playing',
-                      'bg-amber-400': source.state === 'idle',
-                      'bg-red-500': source.state === 'unavailable',
+                      'bg-[var(--status-playing)]': source.state === 'playing',
+                      'bg-[var(--status-idle)]': source.state === 'idle',
+                      'bg-[var(--status-attention)]': source.state === 'unavailable',
                     }"
                   ></span>
                   {{ stateLabel[source.state] }}

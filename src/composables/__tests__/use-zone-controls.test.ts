@@ -211,3 +211,41 @@ describe("useZoneControls noSpeakersMessage", () => {
     );
   });
 });
+
+describe("useZoneControls statusLabel", () => {
+  it("calls an idle stream Idle, like the source picker", () => {
+    useSnapcastStore().streams.push(makeStream("s1", "idle"));
+    const zone = useZoneControls(() => makeGroup());
+
+    expect(zone.statusLabel.value).toBe("Idle");
+  });
+});
+
+describe("useZoneControls volumeFill", () => {
+  it("is neutral while idle, where the idle status color fades into the track", () => {
+    useSnapcastStore().streams.push(makeStream("s1", "idle"));
+    const zone = useZoneControls(() => makeGroup());
+
+    expect(zone.volumeFill.value).toBe("var(--fill-neutral)");
+  });
+
+  it("is neutral while muted, even while playing", () => {
+    useSnapcastStore().streams.push(makeStream("s1", "playing"));
+    const zone = useZoneControls(() => makeGroup({ muted: true }));
+
+    expect(zone.volumeFill.value).toBe("var(--fill-neutral)");
+  });
+
+  it("follows the zone accent while playing", () => {
+    useSnapcastStore().streams.push(makeStream("s1", "playing"));
+    const zone = useZoneControls(() => makeGroup());
+
+    expect(zone.volumeFill.value).toBe("var(--status-playing)");
+  });
+
+  it("follows the zone accent while unavailable", () => {
+    const zone = useZoneControls(() => makeGroup({ stream_id: "missing" }));
+
+    expect(zone.volumeFill.value).toBe("var(--status-attention)");
+  });
+});

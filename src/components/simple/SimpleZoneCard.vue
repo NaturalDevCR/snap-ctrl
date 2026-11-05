@@ -80,14 +80,14 @@ const showVolume = ref(false);
             <span class="relative flex w-2 h-2 shrink-0" aria-hidden="true">
               <span
                 v-if="zone.tileState.value === 'playing'"
-                class="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping"
+                class="absolute inline-flex h-full w-full rounded-full bg-[var(--status-playing)] opacity-75 animate-ping"
               ></span>
               <span
                 class="relative inline-flex w-2 h-2 rounded-full"
                 :class="{
-                  'bg-green-500': zone.playState.value === 'playing',
-                  'bg-amber-400': zone.playState.value === 'idle',
-                  'bg-red-500': zone.playState.value === 'unavailable',
+                  'bg-[var(--status-playing)]': zone.playState.value === 'playing',
+                  'bg-[var(--status-idle)]': zone.playState.value === 'idle',
+                  'bg-[var(--status-attention)]': zone.playState.value === 'unavailable',
                 }"
               ></span>
             </span>
@@ -124,7 +124,7 @@ const showVolume = ref(false);
           class="w-12 h-12 shrink-0 flex items-center justify-center rounded-2xl border transition-all duration-300 active:scale-90 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
           :class="
             group.muted
-              ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/30'
+              ? 'bg-[var(--status-attention)] border-[var(--status-attention)] text-white shadow-lg shadow-red-500/30'
               : 'bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--surface-1)]'
           "
           :disabled="!zone.canAdjustVolume.value"
@@ -156,13 +156,13 @@ const showVolume = ref(false);
                 class="block h-full rounded-full transition-all duration-300"
                 :style="{
                   width: `${zone.zoneVolume.value}%`,
-                  background: group.muted ? '#94a3b8' : zone.accent.value,
+                  background: zone.volumeFill.value,
                 }"
               ></span>
             </span>
             <span
               class="tabular-nums text-sm font-bold w-9 text-right"
-              :class="group.muted ? 'text-slate-400 line-through' : 'text-[var(--text-secondary)]'"
+              :class="group.muted ? 'text-[var(--text-tertiary)] line-through' : 'text-[var(--text-secondary)]'"
             >{{ zone.zoneVolume.value }}%</span>
           </span>
 

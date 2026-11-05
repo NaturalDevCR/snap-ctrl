@@ -103,11 +103,11 @@ async function refreshStatus() {
           <span class="relative flex w-2.5 h-2.5" aria-hidden="true">
             <span
               v-if="playingCount > 0"
-              class="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping"
+              class="absolute inline-flex h-full w-full rounded-full bg-[var(--status-playing)] opacity-75 animate-ping"
             ></span>
             <span
               class="relative inline-flex w-2.5 h-2.5 rounded-full"
-              :class="playingCount > 0 ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'"
+              :class="playingCount > 0 ? 'bg-[var(--status-playing)]' : 'bg-[var(--status-idle)]'"
             ></span>
           </span>
           <span aria-live="polite">{{ summary }}</span>
@@ -121,7 +121,7 @@ async function refreshStatus() {
           class="h-11 px-4 inline-flex items-center gap-2 rounded-full border text-sm font-semibold shadow-sm transition-all duration-300 active:scale-95"
           :class="
             allMuted
-              ? 'bg-red-500 border-red-500 text-white shadow-red-500/30 hover:bg-red-600'
+              ? 'bg-[var(--status-attention-deep)] border-[var(--status-attention-deep)] text-white shadow-red-500/30 hover:brightness-90'
               : 'bg-[var(--surface-1)] border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--surface-2)]'
           "
           :aria-pressed="allMuted"

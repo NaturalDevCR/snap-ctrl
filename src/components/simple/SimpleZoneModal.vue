@@ -164,7 +164,7 @@ watch(
                   class="h-11 px-4 shrink-0 inline-flex items-center gap-2 rounded-full border text-sm font-semibold transition-all duration-300 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
                   :class="
                     group.muted
-                      ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/30'
+                      ? 'bg-[var(--status-attention-deep)] border-[var(--status-attention-deep)] text-white shadow-lg shadow-red-500/30'
                       : 'bg-[var(--surface-1)] border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--surface-0)]'
                   "
                   :disabled="!zone.canAdjustVolume.value"
@@ -192,7 +192,7 @@ watch(
                 :exponent="zone.exponent.value"
                 :step="zone.volumeStep.value"
                 :disabled="!zone.canAdjustVolume.value"
-                :accent="zone.accent.value"
+                :accent="zone.volumeFill.value"
                 @update:volume="zone.setMasterVolume"
               />
 
@@ -263,7 +263,7 @@ watch(
                       {{ zone.speakerName(client).charAt(0) }}
                       <span
                         class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[var(--surface-1)]"
-                        :class="client.connected ? 'bg-green-500' : 'bg-slate-400 dark:bg-slate-600'"
+                        :class="client.connected ? 'bg-[var(--status-playing)]' : 'bg-[var(--status-idle)]'"
                       ></span>
                     </span>
                     <span class="flex-1 min-w-0" :class="{ 'opacity-60': !client.connected }">
@@ -322,7 +322,7 @@ watch(
                     class="shrink-0 w-11 h-11 flex items-center justify-center rounded-full border transition-all duration-300 active:scale-90 disabled:cursor-not-allowed disabled:opacity-60"
                     :class="
                       client.config.volume.muted
-                        ? 'bg-red-500 border-red-500 text-white'
+                        ? 'bg-[var(--status-attention)] border-[var(--status-attention)] text-white'
                         : 'bg-[var(--surface-1)] border-[var(--border)] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
                     "
                     :disabled="!zone.canAdjustVolume.value"
@@ -350,7 +350,7 @@ watch(
                     :exponent="zone.exponent.value"
                     :step="zone.volumeStep.value"
                     :disabled="!zone.canAdjustVolume.value"
-                    :accent="zone.accent.value"
+                    :accent="zone.volumeFill.value"
                     @update:volume="zone.setSpeakerVolume(client, $event)"
                   />
                 </div>

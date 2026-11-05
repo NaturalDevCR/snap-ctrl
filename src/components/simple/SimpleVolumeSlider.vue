@@ -35,10 +35,9 @@ const emit = defineEmits<{
 
 const sliderValue = computed(() => volumeToSlider(props.volume, props.exponent));
 
-const fillColor = computed(() => {
-  if (props.disabled) return "#94a3b8";
-  return props.muted ? "#94a3b8" : props.accent;
-});
+const fillColor = computed(() =>
+  props.disabled || props.muted ? "var(--fill-neutral)" : props.accent
+);
 
 const trackStyle = computed(() => ({
   "--fill": fillColor.value,
