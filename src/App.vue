@@ -108,9 +108,8 @@
             </div>
 
             <div class="flex items-center gap-2">
-              <Tooltip text="Server Info" position="bottom">
+              <Tooltip v-if="snapcast.isConnected" text="Server Info" position="bottom">
                 <button
-                  v-if="snapcast.isConnected"
                   @click="showServerInfo = true"
                   class="w-11 h-11 flex items-center justify-center rounded-full hover:bg-[var(--surface-2)] text-[var(--text-secondary)] transition-colors cursor-pointer"
                 >
@@ -181,7 +180,7 @@
               href="https://github.com/jdavidoa91"
               target="_blank"
               rel="noopener noreferrer"
-              class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              class="inline-flex min-h-11 items-center hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >Josue O.A</a
             >
             /
@@ -189,7 +188,7 @@
               href="https://github.com/NaturalDevCR"
               target="_blank"
               rel="noopener noreferrer"
-              class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              class="inline-flex min-h-11 items-center hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >NaturalDevCR</a
             >
             <span class="opacity-50 ml-2">v{{ appVersion }}</span>

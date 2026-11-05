@@ -29,8 +29,6 @@ const props = withDefaults(
 const emit = defineEmits<{
   /** Fired continuously while dragging and on every -/+ tap. */
   "update:volume": [value: number];
-  /** Fired once a gesture ends (slider released, or a -/+ tap). */
-  commit: [];
 }>();
 
 const sliderValue = computed(() => volumeToSlider(props.volume, props.exponent));
@@ -56,7 +54,6 @@ function nudge(direction: 1 | -1) {
     Math.min(100, Math.round(sliderValue.value + direction * props.step))
   );
   emit("update:volume", sliderToVolume(next, props.exponent));
-  emit("commit");
 }
 </script>
 
@@ -85,7 +82,6 @@ function nudge(direction: 1 | -1) {
       :class="{ 'simple-range--lg': size === 'lg' }"
       :style="trackStyle"
       @input="onInput"
-      @change="emit('commit')"
     />
 
     <button

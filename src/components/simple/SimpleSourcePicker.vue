@@ -63,6 +63,7 @@ watch(
       returnFocusTo = document.activeElement as HTMLElement | null;
       query.value = "";
       await nextTick();
+      if (!props.open) return;
       if (showSearch.value) {
         searchRef.value?.focus();
       } else {

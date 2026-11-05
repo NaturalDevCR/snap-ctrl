@@ -71,7 +71,7 @@ function isHidden(groupId: string): boolean {
                never fires on touch devices — there's no browser
                fallback — so these are the only way to reorder on a
                phone or tablet, which is most of this app's install
-               base. Kept small/inline rather than hidden behind a
+               base. Kept inline rather than hidden behind a
                gesture. -->
           <div class="flex flex-row shrink-0">
             <button
@@ -81,7 +81,7 @@ function isHidden(groupId: string): boolean {
               :aria-label="`Move ${getGroupName(group)} up`"
               @click.stop="moveZoneUp(index)"
             >
-              <span class="mdi mdi-chevron-up text-sm"></span>
+              <span class="mdi mdi-chevron-up text-xl"></span>
             </button>
             <button
               type="button"
@@ -90,7 +90,7 @@ function isHidden(groupId: string): boolean {
               :aria-label="`Move ${getGroupName(group)} down`"
               @click.stop="moveZoneDown(index)"
             >
-              <span class="mdi mdi-chevron-down text-sm"></span>
+              <span class="mdi mdi-chevron-down text-xl"></span>
             </button>
           </div>
           <span

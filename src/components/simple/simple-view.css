@@ -24,10 +24,6 @@
 .sv-accent-text {
   color: var(--accent);
 }
-.sv-accent-badge {
-  color: var(--accent);
-  background: var(--accent-soft);
-}
 .sv-link-on {
   background: #2563eb;
 }

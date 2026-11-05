@@ -14,7 +14,7 @@ export type PlayState = "playing" | "idle" | "unavailable";
 /**
  * Everything the Simple view needs to show and control one zone. The
  * zone card and its Volume & Speakers sheet both use it, so they always
- * agree on permissions, linked speakers and source colors.
+ * agree on permissions, linked speakers and status colors.
  */
 export function useZoneControls(group: () => Group) {
   const snapcast = useSnapcastStore();

@@ -37,7 +37,7 @@ watch(
     if (open) {
       returnFocusTo = document.activeElement as HTMLElement | null;
       await nextTick();
-      panelRef.value?.focus();
+      if (props.open) panelRef.value?.focus();
     } else {
       returnFocusTo?.focus?.();
       returnFocusTo = null;

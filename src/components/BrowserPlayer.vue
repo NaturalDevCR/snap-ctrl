@@ -1,16 +1,17 @@
 <template>
   <div
-    class="relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-lg md:rounded-xl px-3 py-2 overflow-hidden transition-all duration-300 shadow-sm"
-    :class="{
-      'border-blue-500 dark:border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.1)]':
-        connected,
-    }"
+    class="relative bg-[var(--surface-1)]/60 backdrop-blur-xl border rounded-lg md:rounded-xl px-3 py-2 overflow-hidden transition-all duration-300 shadow-sm"
+    :class="
+      connected
+        ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
+        : 'border-[var(--border)]'
+    "
   >
     <div class="flex items-center justify-between gap-3 relative z-10">
       <!-- Left: Status & Info -->
       <div class="flex items-center gap-3 flex-1 min-w-0">
         <div
-          class="relative w-8 h-8 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center text-lg text-gray-600 dark:text-gray-300 shrink-0"
+          class="relative w-8 h-8 bg-[var(--surface-2)] rounded-lg flex items-center justify-center text-lg text-[var(--text-secondary)] shrink-0"
         >
           <span class="mdi mdi-headphones"></span>
           <div
@@ -30,74 +31,70 @@
         </div>
 
         <div class="min-w-0 flex flex-col justify-center">
-          <div class="flex items-center gap-2">
-            <h3
-              class="m-0 text-xs font-bold text-gray-900 dark:text-white truncate leading-tight"
+          <h3
+            class="m-0 text-xs font-bold text-[var(--text-primary)] truncate leading-tight"
+          >
+            Browser Player
+          </h3>
+          <div class="text-[10px] font-medium truncate leading-tight">
+            <span
+              v-if="connected"
+              class="text-green-600 dark:text-green-400 flex items-center gap-1"
             >
-              Browser Player
-            </h3>
-            <div class="text-[10px] font-medium truncate leading-tight">
-              <span
-                v-if="connected"
-                class="text-green-600 dark:text-green-400 flex items-center gap-1"
-              >
-                <span class="mdi mdi-circle-small text-sm"></span> Live
-              </span>
-              <span
-                v-else-if="connecting"
-                class="text-yellow-600 dark:text-yellow-400"
-                >Connecting...</span
-              >
-              <span v-else class="text-gray-500 dark:text-gray-400">Ready</span>
-            </div>
+              <span class="mdi mdi-circle-small text-sm"></span> Live
+            </span>
+            <span
+              v-else-if="connecting"
+              class="text-yellow-600 dark:text-yellow-400"
+              >Connecting...</span
+            >
+            <span v-else class="text-[var(--text-tertiary)]">Ready</span>
           </div>
+        </div>
 
-          <div class="flex items-center gap-2 mt-0.5">
-            <!-- Stream Selector -->
-            <div v-if="availableStreams.length > 0" class="flex items-center">
-              <select
-                v-model="currentStreamId"
-                aria-label="Source"
-                class="text-[10px] bg-gray-100 dark:bg-slate-700 border-none rounded px-1.5 py-0.5 text-gray-700 dark:text-gray-200 focus:ring-1 focus:ring-blue-500 outline-none cursor-pointer max-w-[120px] truncate"
-                @click.stop
-              >
-                <option
-                  v-for="stream in availableStreams"
-                  :key="stream.id"
-                  :value="stream.id"
-                >
-                  {{ getStreamName(stream) }}
-                </option>
-              </select>
-            </div>
-            
-            <div v-if="connected" class="flex items-center">
-              <select
-                v-model="bufferSetting"
-                class="text-[10px] bg-gray-100 dark:bg-slate-700 border-none rounded px-1.5 py-0.5 text-gray-700 dark:text-gray-200 focus:ring-1 focus:ring-blue-500 outline-none cursor-pointer max-w-[80px] truncate"
-                aria-label="Jitter buffer (safety margin)"
-                title="Jitter Buffer (Safety Margin)"
-                @click.stop
-              >
-                <option :value="0">Buffer: 0ms</option>
-                <option :value="500">Buffer: 0.5s</option>
-                <option :value="1000">Buffer: 1s</option>
-                <option :value="2000">Buffer: 2s</option>
-              </select>
-            </div>
+        <div class="flex items-center gap-2 min-w-0">
+          <!-- Stream Selector -->
+          <select
+            v-if="availableStreams.length > 0"
+            v-model="currentStreamId"
+            aria-label="Source"
+            class="h-11 text-xs bg-[var(--surface-2)] border-none rounded-lg px-2 text-[var(--text-secondary)] focus:ring-1 focus:ring-blue-500 outline-none cursor-pointer max-w-[120px] truncate"
+            @click.stop
+          >
+            <option
+              v-for="stream in availableStreams"
+              :key="stream.id"
+              :value="stream.id"
+            >
+              {{ getStreamName(stream) }}
+            </option>
+          </select>
 
-            <div v-if="connected" class="flex gap-1 items-center">
-              <span
-                class="text-[9px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded font-mono uppercase font-bold tracking-wider"
-                title="Current Decoder"
-                >{{ codec || "PCM" }}</span
-              >
-              <span
-                class="hidden md:inline-block text-[9px] px-1 py-0.5 bg-gray-100 dark:bg-slate-700 rounded text-gray-600 dark:text-gray-300 font-mono"
-                title="Latency"
-                >{{ latency }}ms</span
-              >
-            </div>
+          <select
+            v-if="connected"
+            v-model="bufferSetting"
+            class="h-11 text-xs bg-[var(--surface-2)] border-none rounded-lg px-2 text-[var(--text-secondary)] focus:ring-1 focus:ring-blue-500 outline-none cursor-pointer max-w-[104px] truncate"
+            aria-label="Jitter buffer (safety margin)"
+            title="Jitter Buffer (Safety Margin)"
+            @click.stop
+          >
+            <option :value="0">Buffer: 0ms</option>
+            <option :value="500">Buffer: 0.5s</option>
+            <option :value="1000">Buffer: 1s</option>
+            <option :value="2000">Buffer: 2s</option>
+          </select>
+
+          <div v-if="connected" class="flex gap-1 items-center">
+            <span
+              class="text-[9px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded font-mono uppercase font-bold tracking-wider"
+              title="Current Decoder"
+              >{{ codec || "PCM" }}</span
+            >
+            <span
+              class="hidden md:inline-block text-[9px] px-1 py-0.5 bg-[var(--surface-2)] rounded text-[var(--text-secondary)] font-mono"
+              title="Latency"
+              >{{ latency }}ms</span
+            >
           </div>
         </div>
       </div>
@@ -110,7 +107,7 @@
           :class="{ 'opacity-50 pointer-events-none': !connected }"
         >
           <button
-            class="bg-transparent border-none text-base cursor-pointer p-1 rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-400"
+            class="w-11 h-11 flex items-center justify-center bg-transparent border-none text-lg rounded-full transition-colors hover:bg-[var(--surface-2)] text-[var(--text-tertiary)]"
             @click="toggleMute"
             :disabled="!connected"
             :aria-label="isMuted ? 'Unmute' : 'Mute'"
@@ -122,20 +119,18 @@
           </button>
 
           <!-- Volume Slider (Desktop only) -->
-          <div
-            class="hidden md:flex flex-1 h-4 items-center relative group w-20 lg:w-24"
-          >
+          <div class="hidden md:flex h-11 items-center relative w-20 lg:w-24">
             <input
               type="range"
               v-model.number="sliderValue"
               min="0"
               max="100"
               aria-label="Browser player volume"
-              class="w-full h-1 bg-gray-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-sm [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125 relative z-10"
+              class="app-range relative z-10"
               :disabled="!connected || isMuted"
             />
             <div
-              class="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-blue-600 dark:bg-blue-500 rounded-full pointer-events-none"
+              class="absolute left-0 top-1/2 -translate-y-1/2 h-2 bg-blue-600 dark:bg-blue-500 rounded-full pointer-events-none"
               :style="{ width: `${sliderValue}%` }"
             ></div>
           </div>
@@ -143,7 +138,7 @@
 
         <!-- Play Button -->
         <button
-          class="w-8 h-8 rounded-full border-none bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-base flex items-center justify-center cursor-pointer transition-all shadow-sm hover:scale-105 hover:shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+          class="w-11 h-11 rounded-full border-none bg-[var(--text-primary)] text-[var(--surface-1)] text-lg flex items-center justify-center transition-all shadow-sm hover:scale-105 hover:shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
           :class="{ '!bg-blue-600 dark:!bg-blue-500 !text-white': connected }"
           @click="handleConnect"
           :disabled="connecting"
@@ -175,7 +170,7 @@
   >
     <div
       v-if="currentGroup"
-      class="mt-2 mx-1 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-900/30 rounded-lg px-3 py-2 flex items-center justify-between shadow-sm"
+      class="mt-2 mx-1 bg-[var(--surface-1)] border border-blue-200 dark:border-blue-900/30 rounded-lg px-3 py-2 flex items-center justify-between shadow-sm"
     >
       <div class="flex items-center gap-2 min-w-0">
         <span
@@ -184,17 +179,17 @@
           <span class="mdi mdi-speaker-group text-xs"></span>
         </span>
         <div class="min-w-0">
-          <p class="text-xs font-bold text-gray-900 dark:text-white truncate">
+          <p class="text-xs font-bold text-[var(--text-primary)] truncate">
             {{ currentGroup.name }}
           </p>
-          <p class="text-[10px] text-gray-500 dark:text-gray-400 truncate">
+          <p class="text-[10px] text-[var(--text-tertiary)] truncate">
             {{ connected ? "Temporary Audio Zone" : "Stale Browser Player" }}
           </p>
         </div>
       </div>
       <button
         @click="cleanTemporaryGroup"
-        class="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 rounded transition-colors"
+        class="shrink-0 min-h-11 min-w-11 inline-flex items-center justify-center gap-1 px-3 text-xs font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 rounded-lg transition-colors"
         title="Remove this temporary zone"
       >
         <span class="mdi mdi-delete-outline"></span>

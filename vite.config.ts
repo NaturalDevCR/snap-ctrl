@@ -27,8 +27,8 @@ export default defineConfig({
         theme_color: "#0f172a",
         // The app defaults to dark mode (settings.ts: theme ref default is
         // "dark") — a white splash background here would flash white
-        // before the actual dark UI paints on launch. Matches
-        // App.vue's dark:bg-slate-950.
+        // before the actual dark UI paints on launch. Matches the dark
+        // theme's --surface-0 in assets/main.css.
         background_color: "#020617",
         display: "standalone",
         // No orientation lock: the layout is already responsive (grid

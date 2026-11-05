@@ -28,7 +28,7 @@ const showVolume = ref(false);
     :style="zone.accentStyle.value"
     :aria-label="zone.zoneName.value"
   >
-    <!-- Ambient glow in the source's color; "breathes" while playing. -->
+    <!-- Ambient glow in the zone's status color; "breathes" while playing. -->
     <div class="sv-glow" aria-hidden="true"></div>
 
     <div class="relative p-5 sm:p-6 flex flex-col gap-4">
