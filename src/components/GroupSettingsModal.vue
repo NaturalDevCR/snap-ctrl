@@ -68,10 +68,10 @@ async function removeOfflineClients() {
   // Server.DeleteClient permanently forgets the client (name, volume,
   // latency) — it isn't just "hide until it reconnects". One misplaced tap
   // here on a shared/kiosk device wipes that config for good.
-  const noun = offline.length === 1 ? "client" : "clients";
+  const noun = offline.length === 1 ? "speaker" : "speakers";
   if (
     !window.confirm(
-      `Permanently remove ${offline.length} offline ${noun} from this group? This forgets their saved name and volume — they'll show up as a brand-new client if they reconnect.`
+      `Permanently remove ${offline.length} offline ${noun} from this zone? This forgets their saved name and volume — they'll show up as a brand-new speaker if they reconnect.`
     )
   ) {
     return;
@@ -183,7 +183,7 @@ async function deleteGroup() {
   // a shared/kiosk device — is otherwise enough to do both.
   if (
     !window.confirm(
-      `Delete "${name.value || group.name || "this group"}"? Its clients will be ungrouped, and any offline clients in it will be permanently forgotten.`
+      `Delete "${name.value || group.name || "this zone"}"? Its speakers will be removed from the zone, and any offline speakers in it will be permanently forgotten.`
     )
   ) {
     return;
@@ -212,7 +212,7 @@ async function deleteGroup() {
 <template>
   <AppDialog
     :open="props.open"
-    title="Group Settings"
+    title="Zone settings"
     size="lg"
     @close="emit('close')"
   >
@@ -220,12 +220,12 @@ async function deleteGroup() {
       <div>
         <label
           class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
-          >Group Name</label
+          >Zone name</label
         >
         <input
           class="w-full px-4 py-2.5 min-h-11 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
           v-model.trim="name"
-          placeholder="Custom group name"
+          placeholder="Custom zone name"
           :disabled="!auth.permissions.canRenameGroups"
         />
       </div>
@@ -233,7 +233,7 @@ async function deleteGroup() {
       <div v-if="auth.permissions.canSelectStream">
         <label
           class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
-          >Stream</label
+          >Source</label
         >
         <div class="relative">
           <select
@@ -346,7 +346,7 @@ async function deleteGroup() {
         <div class="flex items-center justify-between mb-4">
           <label
             class="block text-sm font-medium text-[var(--text-secondary)]"
-            >Clients</label
+            >Speakers</label
           >
           <!-- Clean Offline Button (in header) -->
           <button
@@ -363,12 +363,12 @@ async function deleteGroup() {
         <div
           class="flex items-center gap-3 px-3 pb-2 text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wide border-b border-[var(--border)]"
         >
-          <div class="flex-1 min-w-0">Client</div>
-          <div class="w-14 sm:w-24 shrink-0 text-center">In Group</div>
+          <div class="flex-1 min-w-0">Speaker</div>
+          <div class="w-14 sm:w-24 shrink-0 text-center">In Zone</div>
           <div
             class="w-14 sm:w-24 shrink-0 text-center flex items-center justify-center gap-1"
           >
-            <Tooltip text="Link to group volume control">
+            <Tooltip text="Link to zone volume control">
               <span class="inline-flex items-center gap-1 cursor-help">
                 Linked
                 <span class="hidden sm:inline mdi mdi-information-outline text-xs"></span>
@@ -455,10 +455,10 @@ async function deleteGroup() {
         >
           <p class="text-xs text-blue-700 dark:text-blue-300">
             <span class="mdi mdi-information text-sm"></span>
-            {{ linkedClientIds.length }} client{{
+            {{ linkedClientIds.length }} speaker{{
               linkedClientIds.length === 1 ? "" : "s"
             }}
-            linked. Their volumes will adjust proportionally with the group
+            linked. Their volumes will adjust proportionally with the zone
             volume control.
           </p>
         </div>
@@ -466,32 +466,27 @@ async function deleteGroup() {
     </div>
 
     <template #footer>
-      <div class="w-full flex items-center justify-between">
-        <Tooltip text="Delete group">
+      <div class="w-full flex items-center justify-between gap-3">
+        <button
+          class="px-3 py-2 min-h-11 inline-flex items-center gap-1.5 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+          @click="deleteGroup"
+        >
+          <span class="mdi mdi-delete" aria-hidden="true"></span>
+          Delete zone
+        </button>
+        <div class="flex gap-3">
           <button
-            class="w-11 h-11 flex items-center justify-center rounded-full text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-            @click="deleteGroup"
+            class="px-4 py-2 min-h-11 text-[var(--text-secondary)] font-medium hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+            @click="emit('close')"
           >
-            <span class="mdi mdi-delete text-xl"></span>
+            Cancel
           </button>
-        </Tooltip>
-        <div class="flex gap-2">
-          <Tooltip text="Cancel">
-            <button
-              class="w-11 h-11 flex items-center justify-center rounded-full text-[var(--text-secondary)] hover:bg-[var(--surface-2)] transition-colors"
-              @click="emit('close')"
-            >
-              <span class="mdi mdi-close text-xl"></span>
-            </button>
-          </Tooltip>
-          <Tooltip text="Save Changes">
-            <button
-              class="w-11 h-11 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors"
-              @click="apply"
-            >
-              <span class="mdi mdi-check text-xl"></span>
-            </button>
-          </Tooltip>
+          <button
+            class="px-4 py-2 min-h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
+            @click="apply"
+          >
+            Save
+          </button>
         </div>
       </div>
     </template>

@@ -181,8 +181,8 @@ function useHostSuggestion(host: string) {
             <div>
               <p class="text-sm font-semibold">Initial setup</p>
               <p class="mt-1 text-sm leading-6">
-                Connect to your server to load groups, sources, and
-                clients. You'll configure permissions after connecting.
+                Connect to your server to load zones, sources, and
+                speakers. You'll configure permissions after connecting.
               </p>
             </div>
           </div>

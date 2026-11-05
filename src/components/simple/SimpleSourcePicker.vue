@@ -114,7 +114,7 @@ function onListKeydown(event: KeyboardEvent) {
         >
           <!-- Grab handle (mobile affordance) -->
           <div class="sm:hidden pt-2.5 flex justify-center" aria-hidden="true">
-            <div class="w-10 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700"></div>
+            <div class="w-10 h-1.5 rounded-full bg-[var(--handle)]"></div>
           </div>
 
           <div class="px-5 pt-4 sm:pt-5 pb-3 flex items-start gap-3">

@@ -396,7 +396,7 @@ export const useSnapcastStore = defineStore(
       } catch (error) {
         console.error("Failed to set client name:", error);
         if (cl && prev !== null) cl.config.name = prev;
-        notifyError("Rename client", error);
+        notifyError("Rename speaker", error);
       }
     }
 
@@ -499,7 +499,7 @@ export const useSnapcastStore = defineStore(
       } catch (error) {
         console.error("Failed to set group stream:", error);
         if (g && prev !== null) g.stream_id = prev;
-        notifyError("Switch stream", error);
+        notifyError("Switch source", error);
       }
     }
 
@@ -526,7 +526,7 @@ export const useSnapcastStore = defineStore(
       } catch (error) {
         console.error("Failed to set group clients:", error);
         if (g && prevClients) g.clients = prevClients;
-        notifyError("Update group clients", error);
+        notifyError("Update zone speakers", error);
       }
     }
 
@@ -578,7 +578,7 @@ export const useSnapcastStore = defineStore(
           return;
         }
         console.error("Failed to delete client:", error);
-        notifyError("Delete client", error);
+        notifyError("Delete speaker", error);
         throw error;
       }
     }

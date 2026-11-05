@@ -79,19 +79,19 @@
            <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
              {{ groupsCount }}
            </div>
-           <div class="text-xs text-[var(--text-tertiary)]">Groups</div>
+           <div class="text-xs text-[var(--text-tertiary)]">Zones</div>
          </div>
          <div>
            <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
              {{ clientsCount }}
            </div>
-           <div class="text-xs text-[var(--text-tertiary)]">Clients</div>
+           <div class="text-xs text-[var(--text-tertiary)]">Speakers</div>
          </div>
          <div>
            <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
              {{ streamsCount }}
            </div>
-           <div class="text-xs text-[var(--text-tertiary)]">Streams</div>
+           <div class="text-xs text-[var(--text-tertiary)]">Sources</div>
          </div>
       </div>
     </div>

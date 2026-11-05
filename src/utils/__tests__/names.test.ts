@@ -8,7 +8,7 @@ describe("getStreamName", () => {
   });
 
   it("returns the id when stream is null", () => {
-    expect(getStreamName(null)).toBe("Unknown Stream");
+    expect(getStreamName(null)).toBe("Unknown Source");
   });
 
   it("parses string URI with query", () => {
@@ -74,7 +74,7 @@ describe("getGroupDisplayName", () => {
     ).toBe("Kitchen");
   });
 
-  it("falls back to first client name with ' Group' suffix", () => {
+  it("falls back to first client name with ' Zone' suffix", () => {
     expect(
       getGroupDisplayName(
         {
@@ -85,7 +85,7 @@ describe("getGroupDisplayName", () => {
         },
         []
       )
-    ).toBe("Speaker Group");
+    ).toBe("Speaker Zone");
   });
 
   it("falls back to client count when no client names", () => {
@@ -99,12 +99,12 @@ describe("getGroupDisplayName", () => {
         },
         []
       )
-    ).toBe("3 Clients");
+    ).toBe("3 Speakers");
   });
 
   it("falls back to truncated id when group is empty", () => {
     expect(getGroupDisplayName({ id: "abc123def456", name: "" }, [])).toBe(
-      "Group abc123de"
+      "Zone abc123de"
     );
   });
 });

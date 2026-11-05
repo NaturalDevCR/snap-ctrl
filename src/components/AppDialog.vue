@@ -75,7 +75,7 @@ const maxWidthClass = computed(
           :class="maxWidthClass"
         >
           <div class="sm:hidden pt-2.5 flex justify-center shrink-0" aria-hidden="true">
-            <div class="w-10 h-1.5 rounded-full bg-[var(--surface-2)]"></div>
+            <div class="w-10 h-1.5 rounded-full bg-[var(--handle)]"></div>
           </div>
 
           <div class="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between shrink-0">

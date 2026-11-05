@@ -54,7 +54,7 @@
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
-                >Allow Renaming Groups</span
+                >Allow Renaming Zones</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
@@ -72,7 +72,7 @@
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
-                >Allow Renaming Clients</span
+                >Allow Renaming Speakers</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
@@ -90,7 +90,7 @@
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
-                >Allow Stream Selection</span
+                >Allow Source Selection</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
@@ -126,7 +126,7 @@
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
-                >Allow Client Assignment</span
+                >Allow Speaker Assignment</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
@@ -144,7 +144,7 @@
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
-                >Allow Client Linking</span
+                >Allow Speaker Linking</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
@@ -173,7 +173,7 @@
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
-                >Show Group Settings</span
+                >Show Zone Settings</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
@@ -191,7 +191,7 @@
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
-                >Show Client Settings</span
+                >Show Speaker Settings</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
@@ -209,7 +209,7 @@
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
-                >Show Group Filter</span
+                >Show Manage Zones</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
@@ -227,7 +227,7 @@
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
-                >Show Create Group</span
+                >Show Add Zone</span
               >
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
@@ -279,7 +279,7 @@
               <label
                 class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
               >
-                Allowed Groups
+                Allowed Zones
                 <span class="text-xs text-[var(--text-tertiary)]"
                   >({{ localPermissions.allowedGroups.length || "All" }})</span
                 >
@@ -306,7 +306,7 @@
                   v-if="availableGroups.length === 0"
                   class="text-sm text-[var(--text-tertiary)] text-center py-2"
                 >
-                  No groups available
+                  No zones available
                 </div>
               </div>
             </div>
@@ -353,7 +353,7 @@
               <label
                 class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
               >
-                Allowed Clients
+                Allowed Speakers
                 <span class="text-xs text-[var(--text-tertiary)]"
                   >({{ localPermissions.allowedClients.length || "All" }})</span
                 >
@@ -380,7 +380,7 @@
                   v-if="availableClients.length === 0"
                   class="text-sm text-[var(--text-tertiary)] text-center py-2"
                 >
-                  No clients available
+                  No speakers available
                 </div>
               </div>
             </div>
@@ -468,7 +468,7 @@ function getSourceName(source: { uri: unknown; id: string }): string {
 
 function getGroupName(group: { id: string; name: string }): string {
   const fullGroup = snapcast.groups.find((g) => g.id === group.id);
-  if (!fullGroup) return `Group ${group.id.substring(0, 8)}`;
+  if (!fullGroup) return `Zone ${group.id.substring(0, 8)}`;
   return getGroupDisplayName(fullGroup, snapcast.streams);
 }
 

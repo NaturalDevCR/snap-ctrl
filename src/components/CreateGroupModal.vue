@@ -80,12 +80,12 @@ async function createGroup() {
 </script>
 
 <template>
-  <AppDialog :open="props.open" title="Create New Group" size="lg" @close="emit('close')">
+  <AppDialog :open="props.open" title="Add zone" size="lg" @close="emit('close')">
     <div class="space-y-6">
       <div>
         <label
           class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
-          >Stream</label
+          >Source</label
         >
         <div class="relative">
           <select
@@ -111,7 +111,7 @@ async function createGroup() {
       <div>
         <label
           class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
-          >Select Clients</label
+          >Choose speakers</label
         >
         <div class="space-y-2">
           <label
@@ -141,7 +141,7 @@ async function createGroup() {
               <span
                 v-if="clientCurrentGroup.has(c.id)"
                 class="px-1.5 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded max-w-full truncate"
-                :title="`Currently in ${clientCurrentGroup.get(c.id)} — adding it here moves it out of that group`"
+                :title="`Currently in ${clientCurrentGroup.get(c.id)} — adding it here moves it out of that zone`"
               >
                 From: {{ clientCurrentGroup.get(c.id) }}
               </span>
@@ -170,7 +170,7 @@ async function createGroup() {
           v-if="availableClients.length === 0"
           class="mt-3 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-900/30"
         >
-          No clients connected yet. Start a Snapcast client and it will
+          No speakers connected yet. Start a Snapcast client and it will
           appear here.
         </p>
       </div>
@@ -189,7 +189,7 @@ async function createGroup() {
           @click="createGroup"
           :disabled="clientIds.length === 0"
         >
-          Create Group
+          Add zone
         </button>
       </div>
     </template>

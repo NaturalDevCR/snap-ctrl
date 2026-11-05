@@ -3,9 +3,9 @@
  * Handles both string URIs and parsed URI objects returned by Server.GetStatus.
  */
 export function getStreamName(stream: { uri?: unknown; id?: string } | null | undefined): string {
-  if (!stream) return "Unknown Stream";
+  if (!stream) return "Unknown Source";
   const uri = stream.uri;
-  if (!uri) return stream.id ?? "Unknown Stream";
+  if (!uri) return stream.id ?? "Unknown Source";
 
   if (typeof uri === "string") {
     const q = uri.split("?")[1] || "";
@@ -18,13 +18,13 @@ export function getStreamName(stream: { uri?: unknown; id?: string } | null | un
     const query = u.query;
     if (typeof query === "string") {
       const params = new URLSearchParams(query);
-      return params.get("name") || (u.path ?? stream.id ?? "Unknown Stream");
+      return params.get("name") || (u.path ?? stream.id ?? "Unknown Source");
     }
     if (query && typeof query === "object") {
       const name = (query as { name?: string }).name;
-      return name || (u.path ?? stream.id ?? "Unknown Stream");
+      return name || (u.path ?? stream.id ?? "Unknown Source");
     }
-    return u.path ?? stream.id ?? "Unknown Stream";
+    return u.path ?? stream.id ?? "Unknown Source";
   }
-  return stream.id ?? "Unknown Stream";
+  return stream.id ?? "Unknown Source";
 }

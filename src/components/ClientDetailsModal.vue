@@ -27,7 +27,7 @@ const lastSeen = computed(() =>
 <template>
   <AppDialog
     :open="props.open && !!props.client"
-    title="Client Details"
+    title="Speaker details"
     title-icon="mdi-information-outline"
     @close="emit('close')"
   >

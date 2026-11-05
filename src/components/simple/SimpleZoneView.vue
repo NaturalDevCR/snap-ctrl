@@ -143,7 +143,7 @@ async function refreshStatus() {
 
         <!-- Desktop: inline. Mobile: collapsed into the overflow menu below. -->
         <div class="hidden sm:flex items-center gap-2">
-          <Tooltip :text="settings.showEmptyGroups ? 'Hide empty groups' : 'Show empty groups'">
+          <Tooltip :text="settings.showEmptyGroups ? 'Hide empty zones' : 'Show empty zones'">
             <button
               type="button"
               class="w-11 h-11 flex items-center justify-center rounded-full border shadow-sm transition-all active:scale-90"
@@ -159,7 +159,7 @@ async function refreshStatus() {
             </button>
           </Tooltip>
 
-          <Tooltip v-if="auth.permissions.showGroupFilter" text="Filter Groups">
+          <Tooltip v-if="auth.permissions.showGroupFilter" text="Manage zones">
             <button
               type="button"
               class="w-11 h-11 flex items-center justify-center rounded-full border shadow-sm transition-all active:scale-90"
@@ -208,7 +208,7 @@ async function refreshStatus() {
                 @click="settings.setShowEmptyGroups(!settings.showEmptyGroups); showOverflowMenu = false"
               >
                 <span class="mdi text-lg" :class="settings.showEmptyGroups ? 'mdi-eye' : 'mdi-eye-off'" aria-hidden="true"></span>
-                {{ settings.showEmptyGroups ? "Hide empty groups" : "Show empty groups" }}
+                {{ settings.showEmptyGroups ? "Hide empty zones" : "Show empty zones" }}
               </button>
               <button
                 v-if="auth.permissions.showGroupFilter"
@@ -217,7 +217,7 @@ async function refreshStatus() {
                 @click="showGroupFilter = true; showOverflowMenu = false"
               >
                 <span class="mdi mdi-filter-variant text-lg" aria-hidden="true"></span>
-                Filter groups
+                Manage zones
               </button>
               <button
                 type="button"
@@ -269,7 +269,7 @@ async function refreshStatus() {
         </template>
         <template v-else>
           Every zone is hidden by your current filters. Turn on "Show Empty
-          Groups" in Settings or check the group filter.
+          Zones" in Settings or check Manage zones.
         </template>
       </p>
     </div>

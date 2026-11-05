@@ -46,13 +46,13 @@ function isHidden(groupId: string): boolean {
 </script>
 
 <template>
-  <AppDialog :open="props.open" title="Manage Groups" @close="emit('close')">
+  <AppDialog :open="props.open" title="Manage zones" @close="emit('close')">
     <div class="-m-2">
       <div
         v-if="snapcast.groups.length === 0"
         class="p-4 text-center text-[var(--text-tertiary)]"
       >
-        No groups available
+        No zones available
       </div>
       <div
         v-for="(group, index) in orderedZonesForFilter"

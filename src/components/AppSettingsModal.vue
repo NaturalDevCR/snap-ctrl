@@ -132,7 +132,7 @@ function lockNow() {
           class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer"
         >
           <span class="font-medium text-[var(--text-primary)]"
-            >Show Empty Groups</span
+            >Show Empty Zones</span
           >
           <div class="relative inline-flex items-center cursor-pointer">
             <input

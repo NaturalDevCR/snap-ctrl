@@ -2,7 +2,6 @@
 import { ref, watch } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useAuthStore } from "@/stores/auth";
-import Tooltip from "@/components/Tooltip.vue";
 import AppDialog from "@/components/AppDialog.vue";
 import type { Client } from "@/stores/snapcast";
 
@@ -47,7 +46,7 @@ async function deleteClient() {
   const displayName = name.value || id;
   if (
     !window.confirm(
-      `Permanently forget "${displayName}"? This deletes its saved name, volume, and latency — it'll show up as a brand-new client if it reconnects. This cannot be undone.`
+      `Permanently forget "${displayName}"? This deletes its saved name, volume, and latency — it'll show up as a brand-new speaker if it reconnects. This cannot be undone.`
     )
   ) {
     return;
@@ -83,7 +82,7 @@ async function save() {
 <template>
   <AppDialog
     :open="props.open"
-    title="Client Settings"
+    title="Speaker settings"
     @close="emit('close')"
   >
     <div class="space-y-6">
@@ -117,32 +116,28 @@ async function save() {
         <div v-if="clientId && !isClientConnected(clientId)">
           <button
             @click="deleteClient"
-            class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+            class="w-full px-4 py-2 min-h-11 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <span class="mdi mdi-delete"></span>
-            Delete Offline Client
+            Delete Offline Speaker
           </button>
           <p class="mt-2 text-xs text-red-600 dark:text-red-400 text-center">
             This action cannot be undone
           </p>
         </div>
-        <div class="flex justify-end gap-2">
-          <Tooltip text="Cancel">
-            <button
-              class="w-11 h-11 flex items-center justify-center rounded-full text-[var(--text-secondary)] hover:bg-[var(--surface-2)] transition-colors"
-              @click="emit('close')"
-            >
-              <span class="mdi mdi-close text-xl"></span>
-            </button>
-          </Tooltip>
-          <Tooltip text="Save Changes">
-            <button
-              class="w-11 h-11 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors"
-              @click="save"
-            >
-              <span class="mdi mdi-check text-xl"></span>
-            </button>
-          </Tooltip>
+        <div class="flex justify-end gap-3">
+          <button
+            class="px-4 py-2 min-h-11 text-[var(--text-secondary)] font-medium hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+            @click="emit('close')"
+          >
+            Cancel
+          </button>
+          <button
+            class="px-4 py-2 min-h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
+            @click="save"
+          >
+            Save
+          </button>
         </div>
       </div>
     </template>

@@ -57,7 +57,7 @@
             <div v-if="availableStreams.length > 0" class="flex items-center">
               <select
                 v-model="currentStreamId"
-                aria-label="Stream"
+                aria-label="Source"
                 class="text-[10px] bg-gray-100 dark:bg-slate-700 border-none rounded px-1.5 py-0.5 text-gray-700 dark:text-gray-200 focus:ring-1 focus:ring-blue-500 outline-none cursor-pointer max-w-[120px] truncate"
                 @click.stop
               >
@@ -188,14 +188,14 @@
             {{ currentGroup.name }}
           </p>
           <p class="text-[10px] text-gray-500 dark:text-gray-400 truncate">
-            {{ connected ? "Temporary Audio Group" : "Stale Browser Player" }}
+            {{ connected ? "Temporary Audio Zone" : "Stale Browser Player" }}
           </p>
         </div>
       </div>
       <button
         @click="cleanTemporaryGroup"
         class="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 rounded transition-colors"
-        title="Remove this temporary group"
+        title="Remove this temporary zone"
       >
         <span class="mdi mdi-delete-outline"></span>
         Cleanup
@@ -405,13 +405,13 @@ async function cleanTemporaryGroup() {
       }
 
       if (cleaned) {
-        notifications.success("Temporary group cleaned up");
+        notifications.success("Temporary zone cleaned up");
       } else {
-        notifications.error("Cleanup failed. The client may already be gone.");
+        notifications.error("Cleanup failed. The speaker may already be gone.");
       }
     } catch (e) {
       console.error("Failed to clean up group:", e);
-      notifications.error("Failed to clean up group");
+      notifications.error("Failed to clean up zone");
     }
   }
 }

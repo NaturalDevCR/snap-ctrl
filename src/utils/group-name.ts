@@ -31,9 +31,9 @@ export function getGroupDisplayName(
 
   if (group.clients && group.clients.length > 0) {
     const first = group.clients[0];
-    if (first?.config?.name) return `${first.config.name} Group`;
-    return `${group.clients.length} Clients`;
+    if (first?.config?.name) return `${first.config.name} Zone`;
+    return `${group.clients.length} Speakers`;
   }
 
-  return `Group ${group.id.substring(0, 8)}`;
+  return `Zone ${group.id.substring(0, 8)}`;
 }
