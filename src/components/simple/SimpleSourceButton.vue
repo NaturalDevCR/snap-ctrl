@@ -76,7 +76,7 @@ const subtitle = computed(() => {
   </component>
 
   <SimpleSourcePicker
-    v-if="zone.canChangeSource.value"
+    v-if="zone.canChangeSource.value || showPicker"
     :open="showPicker"
     :zone-name="zone.zoneName.value"
     :sources="zone.sources.value"

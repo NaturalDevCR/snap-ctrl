@@ -12,13 +12,13 @@ SnapCtrl now has one interface. Upgrading changes what every device shows, so re
 
 - **Removed**: The Classic layout, the **Layout** picker in App Settings, and the **Allow Changing Layout** permission. Every device now uses this UI, including devices that were locked to Classic.
 - **Changed**: A visual redesign across the whole app: one set of color, surface and border tokens in light and dark mode, and settings dialogs that open as bottom sheets on phones. Status colors now mean state only: green for playing, red for muted or unavailable, neutral for idle. A zone's tile shows playback only, and a muted zone's tile rests like an idle one.
-- **Changed**: The app now says **zone**, **speaker** and **source** everywhere, instead of group, client and stream. This includes settings, permissions and notifications, so *Allow Stream Selection* is now *Allow Source Selection*, and *Show Group Settings* is now *Show Zone Settings*. Saved permissions carry over unchanged.
+- **Changed**: The app now says **zone**, **speaker** and **source** instead of group, client and stream. This includes settings, permissions and notifications, so *Allow Stream Selection* is now *Allow Source Selection*, and *Show Group Settings* is now *Show Zone Settings*. Saved permissions carry over unchanged.
 - **Changed**: Zone settings and speaker settings now have labeled **Cancel** and **Save** buttons, and deleting a zone is a labeled button.
 - **Changed**: The Browser Player's controls are larger and now sit on one row.
 - **Fixed**: Larger touch targets across the app, with the mobile toolbar collapsed into an overflow menu.
 - **Fixed**: A zone with no visible speakers can still be muted, and when a zone's speakers are hidden on this device, it says so instead of calling the zone empty.
 - **Fixed**: A zone on a source this device isn't allowed to pick can now switch to its one allowed source.
-- **Fixed**: Phone layouts: Zone settings rows no longer overlap at 375px, toasts stay on screen, the passcode screen scrolls on short screens, and sheets account for mobile browser bars and landscape notches.
+- **Fixed**: Phone layouts: Zone settings rows no longer overlap at 375px, toasts stay on screen, the passcode screen scrolls on short screens, and sheets account for mobile browser bars and the iPhone home indicator.
 - **Fixed**: Dark mode no longer shows white native checkboxes, and switches are visible when off.
 - **Fixed**: The Server Info button has an accessible name.
 
