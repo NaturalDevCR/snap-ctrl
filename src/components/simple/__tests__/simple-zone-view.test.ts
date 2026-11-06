@@ -136,4 +136,43 @@ describe("SimpleZoneView overflow menu", () => {
     finishRefresh();
     await vi.waitFor(() => expect(isMenuOpen()).toBe(false));
   });
+
+  it("does not close a menu the user dismissed and reopened during the refresh", async () => {
+    let finishRefresh = () => {};
+    vi.spyOn(useSnapcastStore(), "getServerStatus").mockReturnValue(
+      new Promise<void>((resolve) => {
+        finishRefresh = resolve;
+      })
+    );
+    await openMenu();
+    menuButton("Refresh status").click();
+    await nextTick();
+
+    document.body.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+    await nextTick();
+    expect(isMenuOpen()).toBe(false);
+    await openMenu();
+
+    finishRefresh();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await nextTick();
+
+    expect(isMenuOpen()).toBe(true);
+  });
+
+  it("returns focus to the trigger when Manage zones closes", async () => {
+    await openMenu();
+    const row = menuButton("Manage zones");
+    row.focus();
+
+    row.click();
+    await nextTick();
+    await nextTick();
+    expect(isMenuOpen()).toBe(false);
+
+    document.querySelector<HTMLElement>('[role="dialog"] [aria-label="Close"]')!.click();
+    await nextTick();
+
+    expect(document.activeElement).toBe(trigger());
+  });
 });

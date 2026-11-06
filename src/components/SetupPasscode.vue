@@ -4,7 +4,9 @@
     @click.self="handleCancel"
   >
     <div
-      class="w-full max-w-md my-auto bg-[var(--surface-1)] rounded-2xl shadow-2xl border border-[var(--border)] p-8"
+      ref="panelRef"
+      tabindex="-1"
+      class="w-full max-w-md my-auto bg-[var(--surface-1)] rounded-2xl shadow-2xl border border-[var(--border)] p-8 outline-none"
     >
       <div class="text-center mb-8">
         <div
@@ -104,6 +106,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useEscapeToClose } from "@/composables/useEscapeToClose";
+import { useFocusTrap } from "@/composables/useFocusTrap";
 
 const props = withDefaults(
   defineProps<{
@@ -128,6 +131,9 @@ const emit = defineEmits<{
 const passcode = ref("");
 const confirmPasscode = ref("");
 const error = ref("");
+const panelRef = ref<HTMLElement | null>(null);
+// Mounted by `v-if` and open for its whole lifetime.
+useFocusTrap(panelRef, () => true);
 
 function handleSubmit() {
   error.value = "";

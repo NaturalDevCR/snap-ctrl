@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useSettingsStore } from "@/stores/settings";
 import { useAuthStore } from "@/stores/auth";
@@ -27,6 +27,14 @@ const refreshing = ref(false);
 const showGroupFilter = ref(false);
 const showOverflowMenu = ref(false);
 const overflowMenuRef = ref<HTMLElement | null>(null);
+const overflowTriggerRef = ref<HTMLElement | null>(null);
+
+// Counts every open or close, so a slow refresh can tell whether the menu it
+// started in is still the one on screen.
+let menuChanges = 0;
+watch(showOverflowMenu, () => {
+  menuChanges++;
+});
 
 // The menu only exists below Tailwind's `sm` breakpoint.
 const smBreakpoint = window.matchMedia("(min-width: 40rem)");
@@ -99,7 +107,17 @@ async function refreshStatus() {
 }
 
 async function refreshFromOverflowMenu() {
+  const changesAtStart = menuChanges;
   await refreshStatus();
+  // Leave a menu the user dismissed and reopened meanwhile alone.
+  if (menuChanges === changesAtStart) closeOverflowMenu();
+}
+
+function openManageZonesFromMenu() {
+  // The menu row is about to be removed, so park focus on the trigger: the
+  // dialog restores focus to whatever held it when it opened.
+  overflowTriggerRef.value?.focus();
+  showGroupFilter.value = true;
   closeOverflowMenu();
 }
 </script>
@@ -202,6 +220,7 @@ async function refreshFromOverflowMenu() {
         <!-- Mobile: a single overflow trigger replaces the three buttons above. -->
         <div ref="overflowMenuRef" class="relative ml-auto sm:hidden">
           <button
+            ref="overflowTriggerRef"
             type="button"
             class="w-11 h-11 flex items-center justify-center rounded-full bg-[var(--surface-1)] border border-[var(--border)] text-[var(--text-secondary)] shadow-sm transition-all active:scale-90"
             :aria-expanded="showOverflowMenu"
@@ -227,7 +246,7 @@ async function refreshFromOverflowMenu() {
                 v-if="auth.permissions.showGroupFilter"
                 type="button"
                 class="w-full min-h-11 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
-                @click="showGroupFilter = true; showOverflowMenu = false"
+                @click="openManageZonesFromMenu"
               >
                 <span class="mdi mdi-filter-variant text-lg" aria-hidden="true"></span>
                 Manage zones

@@ -8,7 +8,7 @@ carries auto-generated notes with the full commit list.
 
 ### v0.8.1
 
-- **Fixed**: Tab and Shift+Tab now stay inside the open dialog, zone sheet or source picker, including when one is stacked on another.
+- **Fixed**: Tab and Shift+Tab now stay inside the open dialog, sheet or prompt, including when one is stacked on another, and Tab returns to it if focus is lost.
 - **Fixed**: Slider fills line up with the thumb near 0 and 100.
 - **Fixed**: The exponent sliders show a filled track, and the Zone settings one starts at the global exponent when the zone has no value of its own, instead of at the slider's midpoint.
 - **Fixed**: In dark mode, a switch's off track is no longer brighter than its on track. Switches now show a focus outline for keyboard use only.
@@ -18,7 +18,7 @@ carries auto-generated notes with the full commit list.
 - **Fixed**: The glow behind a playing zone fades out smoothly instead of ending in a hard edge.
 - **Fixed**: The hint in the Volume & speakers sheet no longer names a label that's hidden on phones.
 - **Changed**: Disabled name fields look disabled, and disabled speaker checkboxes show a not-allowed cursor.
-- **Changed**: Settings rows, recent host chips and the Change Permissions and Lock Now buttons use one hover fill.
+- **Changed**: Permission rows, recent host chips and the Change Permissions and Lock Now buttons use one hover fill.
 
 ### v0.8.0
 

@@ -4,7 +4,9 @@
     @click.self="handleCancel"
   >
     <div
-      class="bg-[var(--surface-1)] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-[var(--border)] transform transition-all"
+      ref="panelRef"
+      tabindex="-1"
+      class="bg-[var(--surface-1)] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-[var(--border)] transform transition-all outline-none"
       @click.stop
     >
       <div
@@ -82,6 +84,7 @@
 import { ref, onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { useEscapeToClose } from "@/composables/useEscapeToClose";
+import { useFocusTrap } from "@/composables/useFocusTrap";
 
 const props = withDefaults(
   defineProps<{
@@ -102,6 +105,7 @@ const auth = useAuthStore();
 const passcode = ref("");
 const error = ref("");
 const passcodeInput = ref<HTMLInputElement | null>(null);
+const panelRef = ref<HTMLElement | null>(null);
 
 onMounted(() => {
   // Auto-focus the input
@@ -141,4 +145,6 @@ function handleCancel() {
 // handleCancel already no-ops when !canCancel, so Escape is always safe to
 // wire up here — it just won't do anything when cancelling isn't allowed.
 useEscapeToClose(() => true, handleCancel);
+// Mounted by `v-if` and open for its whole lifetime.
+useFocusTrap(panelRef, () => true);
 </script>

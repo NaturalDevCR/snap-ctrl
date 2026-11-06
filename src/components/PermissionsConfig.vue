@@ -4,7 +4,9 @@
     @click.self="$emit('cancel')"
   >
     <div
-      class="bg-[var(--surface-1)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90dvh] overflow-hidden border border-[var(--border)] transform transition-all"
+      ref="panelRef"
+      tabindex="-1"
+      class="bg-[var(--surface-1)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90dvh] overflow-hidden border border-[var(--border)] transform transition-all outline-none"
       @click.stop
     >
       <div
@@ -415,6 +417,7 @@ import type { AuthPermissions } from "@/stores/auth";
 import { getStreamName } from "@/utils/stream-name";
 import { getGroupDisplayName } from "@/utils/group-name";
 import { useEscapeToClose } from "@/composables/useEscapeToClose";
+import { useFocusTrap } from "@/composables/useFocusTrap";
 
 const props = defineProps<{
   initialPermissions: AuthPermissions;
@@ -432,6 +435,9 @@ useEscapeToClose(
   () => true,
   () => emit("cancel")
 );
+
+const panelRef = ref<HTMLElement | null>(null);
+useFocusTrap(panelRef, () => true);
 
 const snapcast = useSnapcastStore();
 

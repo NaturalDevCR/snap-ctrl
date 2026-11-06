@@ -29,6 +29,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.restoreAllMocks();
   app.unmount();
   document.body.innerHTML = "";
 });
@@ -143,6 +144,5 @@ describe("AppDialog", () => {
     );
 
     expect(document.activeElement).toBe(panel()!.querySelector('[aria-label="Close"]'));
-    vi.restoreAllMocks();
   });
 });

@@ -155,15 +155,59 @@ describe("useFocusTrap", () => {
     expect(pressTab().defaultPrevented).toBe(false);
   });
 
-  it("stops trapping after unmount", () => {
-    const { button } = mountTrap(THREE_BUTTONS);
+  it("removes its keydown listener on unmount", () => {
+    const add = vi.spyOn(document, "addEventListener");
+    const remove = vi.spyOn(document, "removeEventListener");
+    mountTrap(THREE_BUTTONS);
+    const added = add.mock.calls.find(([type]) => type === "keydown")![1];
+
     apps.pop()!.unmount();
-    const outside = document.createElement("button");
-    document.body.appendChild(outside);
-    outside.focus();
+
+    expect(remove).toHaveBeenCalledWith("keydown", added);
+  });
+
+  it("skips controls with visibility: hidden at the edges", () => {
+    const { button } = mountTrap(`
+      <button data-name="first"></button>
+      <button data-name="last"></button>
+      <button data-name="invisible" style="visibility: hidden"></button>
+    `);
+    button("last").focus();
+
+    pressTab();
+    expect(document.activeElement).toBe(button("first"));
+
+    pressTab(true);
+    expect(document.activeElement).toBe(button("last"));
+  });
+
+  it("sends Tab back into the panel when focus fell to the body", () => {
+    const { button } = mountTrap(THREE_BUTTONS);
+    button("middle").focus();
+    button("middle").remove();
+    (document.activeElement as HTMLElement).blur();
+    expect(document.activeElement).toBe(document.body);
+
+    const event = pressTab();
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(button("first"));
+  });
+
+  it("sends Shift+Tab to the last control when focus fell to the body", () => {
+    const { button } = mountTrap(THREE_BUTTONS);
+    (document.activeElement as HTMLElement | null)?.blur();
+
+    pressTab(true);
+
+    expect(document.activeElement).toBe(button("last"));
+  });
+
+  it("leaves a body Tab alone while closed", () => {
+    mountTrap(THREE_BUTTONS, false);
 
     expect(pressTab().defaultPrevented).toBe(false);
-    expect(button("last")).not.toBeNull();
+    expect(document.activeElement).toBe(document.body);
   });
 
   it("ignores focus outside the panel", () => {
@@ -190,6 +234,29 @@ describe("useFocusTrap", () => {
       expect(document.activeElement).toBe(upper.button("last"));
 
       expect(lower.panel.contains(document.activeElement)).toBe(false);
+    });
+
+    it("recovers body focus only into the topmost trap", () => {
+      const lower = mountTrap(THREE_BUTTONS);
+      const upper = mountTrap(THREE_BUTTONS);
+      (document.activeElement as HTMLElement | null)?.blur();
+
+      pressTab();
+
+      expect(document.activeElement).toBe(upper.button("first"));
+      expect(lower.panel.contains(document.activeElement)).toBe(false);
+    });
+
+    it("hands body recovery back when the upper dialog closes", async () => {
+      const lower = mountTrap(THREE_BUTTONS);
+      const upper = mountTrap(THREE_BUTTONS);
+      upper.open.value = false;
+      await nextTick();
+      (document.activeElement as HTMLElement | null)?.blur();
+
+      pressTab();
+
+      expect(document.activeElement).toBe(lower.button("first"));
     });
 
     it("hands the trap back when the upper dialog closes", async () => {
