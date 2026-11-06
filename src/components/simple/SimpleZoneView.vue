@@ -28,6 +28,9 @@ const showGroupFilter = ref(false);
 const showOverflowMenu = ref(false);
 const overflowMenuRef = ref<HTMLElement | null>(null);
 
+// The menu only exists below Tailwind's `sm` breakpoint.
+const smBreakpoint = window.matchMedia("(min-width: 40rem)");
+
 function closeOverflowMenu() {
   showOverflowMenu.value = false;
 }
@@ -36,8 +39,14 @@ function onDocumentPointerDown(event: PointerEvent) {
   if (!overflowMenuRef.value?.contains(event.target as Node)) closeOverflowMenu();
 }
 
-onMounted(() => document.addEventListener("pointerdown", onDocumentPointerDown));
-onUnmounted(() => document.removeEventListener("pointerdown", onDocumentPointerDown));
+onMounted(() => {
+  document.addEventListener("pointerdown", onDocumentPointerDown);
+  smBreakpoint.addEventListener("change", closeOverflowMenu);
+});
+onUnmounted(() => {
+  document.removeEventListener("pointerdown", onDocumentPointerDown);
+  smBreakpoint.removeEventListener("change", closeOverflowMenu);
+});
 useEscapeToClose(() => showOverflowMenu.value, closeOverflowMenu);
 
 // Shared filtering/ordering, so hidden zones, custom order and the
@@ -88,6 +97,11 @@ async function refreshStatus() {
   } finally {
     refreshing.value = false;
   }
+}
+
+async function refreshFromOverflowMenu() {
+  await refreshStatus();
+  closeOverflowMenu();
 }
 </script>
 
@@ -223,7 +237,7 @@ async function refreshStatus() {
                 type="button"
                 :disabled="refreshing"
                 class="w-full min-h-11 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
-                @click="refreshStatus(); showOverflowMenu = false"
+                @click="refreshFromOverflowMenu"
               >
                 <span class="mdi mdi-refresh text-lg" :class="{ 'animate-spin': refreshing }" aria-hidden="true"></span>
                 Refresh status

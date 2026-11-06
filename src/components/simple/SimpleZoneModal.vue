@@ -3,6 +3,7 @@ import { ref, watch, nextTick } from "vue";
 import { useZoneControls } from "@/composables/useZoneControls";
 import { useEscapeToClose } from "@/composables/useEscapeToClose";
 import { useBodyScrollLock } from "@/composables/useBodyScrollLock";
+import { useFocusTrap } from "@/composables/useFocusTrap";
 import SimpleVolumeSlider from "@/components/simple/SimpleVolumeSlider.vue";
 import SimpleSourceButton from "@/components/simple/SimpleSourceButton.vue";
 import Tooltip from "@/components/Tooltip.vue";
@@ -30,6 +31,7 @@ function close() {
 
 useEscapeToClose(() => props.open, close);
 useBodyScrollLock(() => props.open);
+useFocusTrap(panelRef, () => props.open);
 
 watch(
   () => props.open,

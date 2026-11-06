@@ -183,7 +183,7 @@ function lockNow() {
                 max="5.0"
                 step="0.1"
                 class="app-range"
-                :style="{ '--pct': `${rangePosition(settings.globalVolumeExponent, 1, 5) * 100}%` }"
+                :style="{ '--p': rangePosition(settings.globalVolumeExponent, 1, 5) }"
               />
                <p class="mt-1 text-xs text-[var(--text-tertiary)]">
                  Higher values provide more precision at low volumes.

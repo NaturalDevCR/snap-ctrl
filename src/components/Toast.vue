@@ -1,8 +1,8 @@
 <template>
   <Teleport to="body">
     <div
-      style="top: calc(1rem + env(safe-area-inset-top))"
-      class="fixed left-4 right-4 z-[9999] flex flex-col gap-3 pointer-events-none sm:left-auto sm:w-auto sm:max-w-sm sm:min-w-[320px]"
+      style="top: calc(1rem + env(safe-area-inset-top)); right: calc(1rem + env(safe-area-inset-right))"
+      class="fixed left-4 z-[9999] flex flex-col gap-3 pointer-events-none sm:left-auto sm:w-auto sm:max-w-sm sm:min-w-[320px]"
       role="status"
       aria-live="polite"
       aria-atomic="false"

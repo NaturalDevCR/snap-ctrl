@@ -2,6 +2,7 @@
 import { computed, ref, watch, nextTick, onUnmounted } from "vue";
 import { useEscapeToClose } from "@/composables/useEscapeToClose";
 import { useBodyScrollLock } from "@/composables/useBodyScrollLock";
+import { useFocusTrap } from "@/composables/useFocusTrap";
 
 const props = withDefaults(
   defineProps<{
@@ -22,6 +23,7 @@ useEscapeToClose(
 useBodyScrollLock(() => props.open);
 
 const panelRef = ref<HTMLElement | null>(null);
+useFocusTrap(panelRef, () => props.open);
 let returnFocusTo: HTMLElement | null = null;
 
 watch(

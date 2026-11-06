@@ -206,10 +206,13 @@ input:focus-visible + .app-toggle {
   outline-offset: 2px;
 }
 
-/* Exponent sliders: 44px hit area around a thin track. Set --pct on the input
- * to fill the track up to the thumb. */
+/* Range sliders: 44px hit area around a thin track. Set --p (0 to 1) on the
+ * input to fill the track up to the thumb's center, which stops half a thumb
+ * short of each end. */
 .app-range {
   --track: color-mix(in srgb, var(--text-tertiary) 35%, transparent);
+  --thumb: 1.75rem;
+  --stop: calc(var(--thumb) / 2 + var(--p, 0) * (100% - var(--thumb)));
   appearance: none;
   width: 100%;
   height: 2.75rem;
@@ -220,25 +223,17 @@ input:focus-visible + .app-toggle {
 .app-range::-webkit-slider-runnable-track {
   height: 0.5rem;
   border-radius: 9999px;
-  background: linear-gradient(
-    to right,
-    var(--brand) var(--pct, 0%),
-    var(--track) var(--pct, 0%)
-  );
+  background: linear-gradient(to right, var(--brand) var(--stop), var(--track) var(--stop));
 }
 .app-range::-moz-range-track {
   height: 0.5rem;
   border-radius: 9999px;
-  background: linear-gradient(
-    to right,
-    var(--brand) var(--pct, 0%),
-    var(--track) var(--pct, 0%)
-  );
+  background: linear-gradient(to right, var(--brand) var(--stop), var(--track) var(--stop));
 }
 .app-range::-webkit-slider-thumb {
   appearance: none;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: var(--thumb);
+  height: var(--thumb);
   margin-top: -0.625rem;
   border-radius: 9999px;
   background: #fff;
@@ -246,8 +241,9 @@ input:focus-visible + .app-toggle {
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
 }
 .app-range::-moz-range-thumb {
-  width: 1.75rem;
-  height: 1.75rem;
+  box-sizing: border-box;
+  width: var(--thumb);
+  height: var(--thumb);
   border-radius: 9999px;
   background: #fff;
   border: 1px solid rgb(203 213 225);

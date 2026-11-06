@@ -2,6 +2,7 @@
 import { ref, computed, watch, nextTick } from "vue";
 import { useEscapeToClose } from "@/composables/useEscapeToClose";
 import { useBodyScrollLock } from "@/composables/useBodyScrollLock";
+import { useFocusTrap } from "@/composables/useFocusTrap";
 
 export interface PickerSource {
   id: string;
@@ -55,6 +56,7 @@ function choose(id: string) {
 
 useEscapeToClose(() => props.open, close);
 useBodyScrollLock(() => props.open);
+useFocusTrap(panelRef, () => props.open);
 
 watch(
   () => props.open,
@@ -110,7 +112,8 @@ function onListKeydown(event: KeyboardEvent) {
           role="dialog"
           aria-modal="true"
           :aria-label="`Choose a source for ${zoneName}`"
-          class="sv-sheet-panel relative w-full sm:max-w-md max-h-[82dvh] sm:max-h-[75dvh] flex flex-col bg-[var(--surface-1)] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[var(--border)] overflow-hidden"
+          tabindex="-1"
+          class="sv-sheet-panel relative w-full sm:max-w-md max-h-[82dvh] sm:max-h-[75dvh] flex flex-col bg-[var(--surface-1)] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[var(--border)] overflow-hidden outline-none"
           @keydown="onListKeydown"
         >
           <!-- Grab handle (mobile affordance) -->

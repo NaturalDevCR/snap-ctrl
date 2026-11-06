@@ -39,7 +39,7 @@ const fillColor = computed(() =>
 
 const trackStyle = computed(() => ({
   "--fill": fillColor.value,
-  "--pct": `${sliderValue.value}%`,
+  "--p": sliderValue.value / 100,
 }));
 
 function onInput(e: Event) {
@@ -110,11 +110,17 @@ function nudge(direction: 1 | -1) {
 <style scoped>
 .simple-range {
   --track: color-mix(in srgb, var(--text-tertiary) 35%, transparent);
+  --thumb: 1.5rem;
+  /* The thumb's center stops half a thumb short of each end of the track. */
+  --stop: calc(var(--thumb) / 2 + var(--p) * (100% - var(--thumb)));
+}
+.simple-range--lg {
+  --thumb: 1.875rem;
 }
 .simple-range::-webkit-slider-runnable-track {
   height: 0.5rem;
   border-radius: 9999px;
-  background: linear-gradient(to right, var(--fill) var(--pct), var(--track) var(--pct));
+  background: linear-gradient(to right, var(--fill) var(--stop), var(--track) var(--stop));
 }
 .simple-range--lg::-webkit-slider-runnable-track {
   height: 0.75rem;
@@ -122,7 +128,7 @@ function nudge(direction: 1 | -1) {
 .simple-range::-moz-range-track {
   height: 0.5rem;
   border-radius: 9999px;
-  background: linear-gradient(to right, var(--fill) var(--pct), var(--track) var(--pct));
+  background: linear-gradient(to right, var(--fill) var(--stop), var(--track) var(--stop));
 }
 .simple-range--lg::-moz-range-track {
   height: 0.75rem;
@@ -130,8 +136,8 @@ function nudge(direction: 1 | -1) {
 .simple-range::-webkit-slider-thumb {
   margin-top: -0.5rem;
   appearance: none;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: var(--thumb);
+  height: var(--thumb);
   border-radius: 9999px;
   background: #fff;
   border: 1px solid rgb(203 213 225);
@@ -140,23 +146,18 @@ function nudge(direction: 1 | -1) {
 }
 .simple-range--lg::-webkit-slider-thumb {
   margin-top: -0.5625rem;
-  width: 1.875rem;
-  height: 1.875rem;
 }
 .simple-range:not(:disabled):active::-webkit-slider-thumb {
   transform: scale(1.12);
 }
 .simple-range::-moz-range-thumb {
-  width: 1.5rem;
-  height: 1.5rem;
+  box-sizing: border-box;
+  width: var(--thumb);
+  height: var(--thumb);
   border-radius: 9999px;
   background: #fff;
   border: 1px solid rgb(203 213 225);
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
-}
-.simple-range--lg::-moz-range-thumb {
-  width: 1.875rem;
-  height: 1.875rem;
 }
 .simple-range:focus-visible {
   outline: 2px solid var(--brand);

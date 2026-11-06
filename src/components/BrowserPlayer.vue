@@ -119,20 +119,17 @@
           </button>
 
           <!-- Volume Slider (Desktop only) -->
-          <div class="hidden md:flex h-11 items-center relative w-20 lg:w-24">
+          <div class="hidden md:flex h-11 items-center w-20 lg:w-24">
             <input
               type="range"
               v-model.number="sliderValue"
               min="0"
               max="100"
               aria-label="Browser player volume"
-              class="app-range relative z-10"
+              class="app-range"
+              :style="{ '--p': sliderValue / 100 }"
               :disabled="!connected || isMuted"
             />
-            <div
-              class="absolute left-0 top-1/2 -translate-y-1/2 h-2 bg-blue-600 dark:bg-blue-500 rounded-full pointer-events-none"
-              :style="{ width: `${sliderValue}%` }"
-            ></div>
           </div>
         </div>
 
