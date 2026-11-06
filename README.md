@@ -2,8 +2,13 @@
 
 A modern, responsive, and feature-rich web interface for [Snapcast](https://github.com/badaix/snapcast), built with Vue 3 and Tailwind CSS.
 
-<img width="3598" height="1000" alt="image" src="https://github.com/user-attachments/assets/7e61aa70-4937-4e1e-b9c3-7ef8db096934" />
-<img width="3588" height="1000" alt="image" src="https://github.com/user-attachments/assets/cf8799a9-bd98-40e6-a932-7c15ed2fe6ba" />
+<img src="docs/screenshots/zones-dark.png" alt="Zone cards in dark mode: one zone playing, one muted, and the rest idle" />
+<img src="docs/screenshots/zones-light.png" alt="The same zones in light mode" />
+
+<p>
+  <img src="docs/screenshots/mobile-zones.png" alt="Zones on a phone" width="49%" />
+  <img src="docs/screenshots/mobile-volume.png" alt="Volume and speakers sheet on a phone" width="49%" />
+</p>
 
 ## Features
 

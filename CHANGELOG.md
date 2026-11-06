@@ -13,7 +13,10 @@ carries auto-generated notes with the full commit list.
 - **Fixed**: The exponent sliders show a filled track, and the Zone settings one starts at the global exponent when the zone has no value of its own, instead of at the slider's midpoint.
 - **Fixed**: In dark mode, a switch's off track is no longer brighter than its on track. Switches now show a focus outline for keyboard use only.
 - **Fixed**: The mobile overflow menu closes when the screen crosses the phone layout width, for example on rotation. **Refresh status** keeps it open with the spinner until the refresh finishes.
-- **Fixed**: Toasts stay clear of the right safe area on phones in landscape.
+- **Fixed**: Toasts stay clear of the right safe area on phones in landscape, and the page clears a landscape notch without cutting the header background.
+- **Fixed**: On short landscape screens the header scrolls away instead of covering a third of the page.
+- **Fixed**: The glow behind a playing zone fades out smoothly instead of ending in a hard edge.
+- **Fixed**: The hint in the Volume & speakers sheet no longer names a label that's hidden on phones.
 - **Changed**: Disabled name fields look disabled, and disabled speaker checkboxes show a not-allowed cursor.
 - **Changed**: Settings rows, recent host chips and the Change Permissions and Lock Now buttons use one hover fill.
 
