@@ -71,7 +71,6 @@ describe("useZoneControls accent", () => {
     snapcast.streams.push(makeStream("s1", "playing"));
     const zone = useZoneControls(() => makeGroup());
 
-    expect(zone.accent.value).toBe("var(--status-playing)");
     expect(zone.accentStyle.value).toEqual({
       "--accent": "var(--status-playing)",
       "--accent-2": "var(--status-playing-deep)",
@@ -84,7 +83,7 @@ describe("useZoneControls accent", () => {
     snapcast.streams.push(makeStream("s1", "idle"));
     const zone = useZoneControls(() => makeGroup());
 
-    expect(zone.accent.value).toBe("var(--status-idle)");
+    expect(zone.accentStyle.value["--accent"]).toBe("var(--status-idle)");
   });
 
   it("uses the attention status color when the group is muted, even while playing", () => {
@@ -92,13 +91,13 @@ describe("useZoneControls accent", () => {
     snapcast.streams.push(makeStream("s1", "playing"));
     const zone = useZoneControls(() => makeGroup({ muted: true }));
 
-    expect(zone.accent.value).toBe("var(--status-attention)");
+    expect(zone.accentStyle.value["--accent"]).toBe("var(--status-attention)");
   });
 
   it("uses the attention status color when the stream is unavailable", () => {
     const zone = useZoneControls(() => makeGroup({ stream_id: "missing" }));
 
-    expect(zone.accent.value).toBe("var(--status-attention)");
+    expect(zone.accentStyle.value["--accent"]).toBe("var(--status-attention)");
   });
 
   it("no longer attaches a per-source accent to picker sources", () => {
@@ -179,6 +178,26 @@ describe("useZoneControls canChangeSource", () => {
     const zone = useZoneControls(() => makeGroup());
 
     expect(zone.sources.value).toHaveLength(1);
+    expect(zone.canChangeSource.value).toBe(true);
+  });
+
+  it("is false with zero sources", () => {
+    const zone = useZoneControls(() => makeGroup());
+
+    expect(zone.sources.value).toHaveLength(0);
+    expect(zone.canChangeSource.value).toBe(false);
+  });
+
+  it("is false with zero sources and an empty stream_id", () => {
+    const zone = useZoneControls(() => makeGroup({ stream_id: "" }));
+
+    expect(zone.canChangeSource.value).toBe(false);
+  });
+
+  it("is true with an empty stream_id and a source to pick", () => {
+    useSnapcastStore().streams.push(makeStream("s1", "idle"));
+    const zone = useZoneControls(() => makeGroup({ stream_id: "" }));
+
     expect(zone.canChangeSource.value).toBe(true);
   });
 

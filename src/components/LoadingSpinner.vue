@@ -19,7 +19,3 @@ withDefaults(defineProps<Props>(), {
   inline: false
 })
 </script>
-
-<style scoped>
-/* Scoped styles removed in favor of Tailwind CSS */
-</style>

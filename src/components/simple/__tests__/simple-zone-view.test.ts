@@ -60,6 +60,35 @@ afterEach(() => {
 });
 
 describe("SimpleZoneView overflow menu", () => {
+  it("closes on a click outside", async () => {
+    await openMenu();
+
+    document.body.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+    await nextTick();
+
+    expect(isMenuOpen()).toBe(false);
+  });
+
+  it("does not close early on a click inside, so the row's click still lands", async () => {
+    await openMenu();
+    const row = menuButton("Hide empty zones");
+
+    row.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+    await nextTick();
+
+    expect(isMenuOpen()).toBe(true);
+    expect(row.isConnected).toBe(true);
+  });
+
+  it("closes on Escape", async () => {
+    await openMenu();
+
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    await nextTick();
+
+    expect(isMenuOpen()).toBe(false);
+  });
+
   it("closes when the viewport crosses the sm breakpoint", async () => {
     await openMenu();
 

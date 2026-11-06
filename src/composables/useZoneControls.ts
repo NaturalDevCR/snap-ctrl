@@ -4,17 +4,35 @@ import { useSettingsStore } from "@/stores/settings";
 import { useAuthStore } from "@/stores/auth";
 import { getGroupDisplayName } from "@/utils/group-name";
 import { getStreamName } from "@/utils/stream-name";
-import { getStreamStatus } from "@/utils/stream-status";
+import { getStreamStatus, parsePlayState, type PlayState } from "@/utils/stream-status";
 import { getSourceIcon } from "@/utils/source-style";
 import { averageClientVolume, linkedZoneClients } from "@/utils/zone-volume";
 import type { Client, Group } from "@/stores/snapcast";
 
-export type PlayState = "playing" | "idle" | "unavailable";
+// A zone's accent reflects its own state, not its source's identity: red
+// while muted or unavailable, green while playing, neutral while idle.
+const STATUS_ACCENT = {
+  playing: {
+    main: "var(--status-playing)",
+    deep: "var(--status-playing-deep)",
+    soft: "var(--status-playing-soft)",
+  },
+  idle: {
+    main: "var(--status-idle)",
+    deep: "var(--status-idle-deep)",
+    soft: "var(--status-idle-soft)",
+  },
+  attention: {
+    main: "var(--status-attention)",
+    deep: "var(--status-attention-deep)",
+    soft: "var(--status-attention-soft)",
+  },
+} as const;
 
 /**
- * Everything the Simple view needs to show and control one zone. The
- * zone card and its Volume & Speakers sheet both use it, so they always
- * agree on permissions, linked speakers and status colors.
+ * Everything needed to show and control one zone. The zone card and its
+ * Volume & Speakers sheet both use it, so they always agree on permissions,
+ * linked speakers and status colors.
  */
 export function useZoneControls(group: () => Group) {
   const snapcast = useSnapcastStore();
@@ -32,10 +50,7 @@ export function useZoneControls(group: () => Group) {
   const zoneName = computed(() => getGroupDisplayName(group(), snapcast.streams));
 
   function playStateOf(streamId: string): PlayState {
-    const status = getStreamStatus(snapcast.streams, streamId).toLowerCase();
-    if (status === "playing" || status === "kplaying") return "playing";
-    if (status === "idle" || status === "kidle") return "idle";
-    return "unavailable";
+    return parsePlayState(getStreamStatus(snapcast.streams, streamId));
   }
 
   const playState = computed(() => playStateOf(group().stream_id));
@@ -51,26 +66,6 @@ export function useZoneControls(group: () => Group) {
   const currentSourceName = computed(() => getStreamName(currentStream.value));
   const currentSourceIcon = computed(() => getSourceIcon(currentStream.value));
 
-  // The zone's accent reflects its own state, not its source's identity:
-  // red while muted or unavailable, green while playing, neutral while idle.
-  const STATUS_ACCENT = {
-    playing: {
-      main: "var(--status-playing)",
-      deep: "var(--status-playing-deep)",
-      soft: "var(--status-playing-soft)",
-    },
-    idle: {
-      main: "var(--status-idle)",
-      deep: "var(--status-idle-deep)",
-      soft: "var(--status-idle-soft)",
-    },
-    attention: {
-      main: "var(--status-attention)",
-      deep: "var(--status-attention-deep)",
-      soft: "var(--status-attention-soft)",
-    },
-  } as const;
-
   const playAccent = computed(() => {
     if (playState.value === "playing") return STATUS_ACCENT.playing;
     if (playState.value === "idle") return STATUS_ACCENT.idle;
@@ -79,10 +74,9 @@ export function useZoneControls(group: () => Group) {
   const statusAccent = computed(() =>
     group().muted ? STATUS_ACCENT.attention : playAccent.value
   );
-  const accent = computed(() => statusAccent.value.main);
   // Idle and muted fills stay neutral: --status-idle fades into the track.
   const volumeFill = computed(() =>
-    group().muted || playState.value === "idle" ? "var(--fill-neutral)" : accent.value
+    group().muted || playState.value === "idle" ? "var(--fill-neutral)" : statusAccent.value.main
   );
   const accentStyle = computed(() => ({
     "--accent": statusAccent.value.main,
@@ -210,7 +204,6 @@ export function useZoneControls(group: () => Group) {
     statusLabel,
     currentSourceName,
     currentSourceIcon,
-    accent,
     volumeFill,
     accentStyle,
     tileState,

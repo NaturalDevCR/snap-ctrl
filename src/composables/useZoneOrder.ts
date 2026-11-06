@@ -152,9 +152,9 @@ export function useZoneOrder<T extends ZoneLike>(
   }
 
   // HTML5 drag-and-drop (handleDragStart/Over/Drop above) never fires on
-  // touch devices at all — there's no browser fallback — so reordering
-  // was previously impossible on phones/tablets, arguably the most common
-  // devices for a household audio control app. These give every input
+  // touch devices at all — there's no browser fallback — and phones and
+  // tablets are arguably the most common devices for a household audio
+  // control app. These give every input
   // method (touch, mouse, keyboard-via-button-focus) a working way to
   // reorder, built on the same reorderInList() the drag handlers use so
   // both paths stay consistent.

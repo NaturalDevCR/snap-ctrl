@@ -2,8 +2,6 @@ import { defineStore } from "pinia";
 import { ref, watch } from "vue";
 import { logger } from "@/utils/logger";
 
-// Force HMR reload
-
 export interface GroupVolumeLink {
   linkedClientIds: string[];
   // Reference volumes (100% baseline) for each linked client
@@ -164,15 +162,7 @@ export const useSettingsStore = defineStore(
 
     // Note: reordering itself (move up/down, drag-and-drop) lives in
     // useZoneOrder.ts, which seeds an order from what's currently on
-    // screen when customGroupOrder is still empty. A version of
-    // moveUp/moveDown used to live here operating directly on
-    // customGroupOrder.indexOf(groupId) — which silently did nothing on a
-    // fresh install (empty array → index -1) and was never wired to any
-    // UI. Removed rather than fixed in place, since useZoneOrder already
-    // has the correct (seeded) version.
-
-    // Persisted client ordering per group id -> client id array
-    // Removed manual client ordering feature per request
+    // screen when customGroupOrder is still empty.
 
     function setTheme(newTheme: "light" | "dark") {
       theme.value = newTheme;

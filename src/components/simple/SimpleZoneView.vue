@@ -5,7 +5,7 @@ import { useSettingsStore } from "@/stores/settings";
 import { useAuthStore } from "@/stores/auth";
 import { useZoneOrder } from "@/composables/useZoneOrder";
 import { useEscapeToClose } from "@/composables/useEscapeToClose";
-import { getStreamStatus } from "@/utils/stream-status";
+import { getStreamStatus, parsePlayState } from "@/utils/stream-status";
 import SimpleZoneCard from "@/components/simple/SimpleZoneCard.vue";
 import GroupFilterModal from "@/components/GroupFilterModal.vue";
 import Tooltip from "@/components/Tooltip.vue";
@@ -63,8 +63,7 @@ const { sortedZones } = useZoneOrder(
 const canAdjustVolume = computed(() => auth.hasFeaturePermission("canAdjustVolumes"));
 
 function isPlaying(group: Group) {
-  const status = getStreamStatus(snapcast.streams, group.stream_id).toLowerCase();
-  return status === "playing" || status === "kplaying";
+  return parsePlayState(getStreamStatus(snapcast.streams, group.stream_id)) === "playing";
 }
 
 const playingCount = computed(
@@ -293,7 +292,7 @@ async function refreshFromOverflowMenu() {
 </template>
 
 <style scoped>
-/* Cards rise into place one after another on first render / view switch,
+/* Cards rise into place one after another on first render,
    and new zones animate in (or out) as groups change on the server. */
 .zone-enter-active {
   transition:

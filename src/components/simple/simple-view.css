@@ -1,5 +1,5 @@
 /*
- * Shared styles for the Simple view's zone tiles and ambient effects (zone
+ * Shared styles for the zone tiles and ambient effects (zone
  * card, Volume & Speakers sheet, source picker). Global rather than scoped
  * so the card and its sheets — which live in different components, some
  * teleported to <body> — share one definition. Everything is prefixed

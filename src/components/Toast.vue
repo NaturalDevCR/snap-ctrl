@@ -61,7 +61,3 @@ function getIconClass(type: NotificationType): string {
   }
 }
 </script>
-
-<style scoped>
-/* Scoped styles removed in favor of Tailwind CSS */
-</style>
