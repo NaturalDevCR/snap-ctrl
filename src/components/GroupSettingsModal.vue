@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useSettingsStore } from "@/stores/settings";
 import { useAuthStore } from "@/stores/auth";
 import { getStreamName } from "@/utils/stream-name";
 import { logger } from "@/utils/logger";
+import { rangePosition } from "@/utils/volume";
 import Tooltip from "@/components/Tooltip.vue";
 import AppDialog from "@/components/AppDialog.vue";
 import type { Client, Group } from "@/stores/snapcast";
@@ -30,6 +31,14 @@ const linkedClientIds = ref<string[]>([]);
 const perSourceVolumeEnabled = ref(false);
 const volumeMode = ref<"global" | "linear" | "nonlinear">("global");
 const volumeExponent = ref<number | null>(null);
+// With no override yet, the slider shows the global exponent it would use,
+// and saving keeps it unset until the slider is moved.
+const sliderExponent = computed({
+  get: () => volumeExponent.value ?? settings.globalVolumeExponent,
+  set: (value: number) => {
+    volumeExponent.value = value;
+  },
+});
 
 watch(
   () => props.open,
@@ -223,7 +232,7 @@ async function deleteGroup() {
           >Zone name</label
         >
         <input
-          class="w-full px-4 py-2.5 min-h-11 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full px-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)] disabled:bg-[var(--surface-1)] disabled:text-[var(--text-tertiary)] disabled:opacity-50 disabled:cursor-not-allowed"
           v-model.trim="name"
           placeholder="Custom zone name"
           :disabled="!auth.permissions.canRenameGroups"
@@ -238,7 +247,7 @@ async function deleteGroup() {
         <div class="relative">
           <select
             v-model="streamId"
-            class="w-full pl-4 pr-10 py-2.5 min-h-11 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)]"
+            class="w-full pl-4 pr-10 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)]"
           >
             <option
               v-for="s in snapcast.filteredStreams"
@@ -276,7 +285,7 @@ async function deleteGroup() {
             <input
               type="checkbox"
               v-model="perSourceVolumeEnabled"
-              class="sr-only peer"
+              class="sr-only"
             />
             <div
               class="app-toggle"
@@ -295,7 +304,7 @@ async function deleteGroup() {
           <div class="relative">
             <select
               v-model="volumeMode"
-              class="w-full pl-4 pr-10 py-2.5 min-h-11 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)]"
+              class="w-full pl-4 pr-10 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)]"
             >
               <option value="global">
                 Global Default ({{ settings.globalVolumeControlMode }})
@@ -325,16 +334,17 @@ async function deleteGroup() {
             <span
               class="text-xs font-mono bg-[var(--surface-2)] px-2 py-0.5 rounded text-[var(--text-secondary)]"
             >
-              {{ volumeExponent ?? settings.globalVolumeExponent }}
+              {{ sliderExponent }}
             </span>
           </div>
           <input
             type="range"
-            v-model.number="volumeExponent"
+            v-model.number="sliderExponent"
             min="1.0"
             max="5.0"
             step="0.1"
             class="app-range"
+            :style="{ '--pct': `${rangePosition(sliderExponent, 1, 5) * 100}%` }"
           />
           <p class="mt-1 text-xs text-[var(--text-tertiary)]">
             Higher values provide more precision at low volumes.
@@ -403,7 +413,7 @@ async function deleteGroup() {
                 </span>
                 <span
                   v-if="!c.connected"
-                  class="px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded flex-shrink-0"
+                  class="px-1.5 py-0.5 text-xs bg-[var(--surface-3)] text-[var(--text-secondary)] rounded flex-shrink-0"
                 >
                   Offline
                 </span>
@@ -416,13 +426,13 @@ async function deleteGroup() {
             <!-- In Group checkbox -->
             <div class="w-14 sm:w-24 shrink-0 flex justify-center">
               <label
-                class="min-h-11 min-w-11 flex items-center justify-center cursor-pointer"
+                class="min-h-11 min-w-11 flex items-center justify-center cursor-pointer has-[:disabled]:cursor-not-allowed"
               >
                 <input
                   type="checkbox"
                   :value="c.id"
                   v-model="clientIds"
-                  class="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                  class="w-5 h-5 rounded border-[var(--toggle-off)] text-blue-600 focus:ring-blue-500 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                   :disabled="!auth.permissions.canAssignClients"
                 />
               </label>
@@ -431,7 +441,7 @@ async function deleteGroup() {
             <!-- Linked checkbox (only enabled if in group) -->
             <div class="w-14 sm:w-24 shrink-0 flex justify-center">
               <label
-                class="min-h-11 min-w-11 flex items-center justify-center cursor-pointer"
+                class="min-h-11 min-w-11 flex items-center justify-center cursor-pointer has-[:disabled]:cursor-not-allowed"
               >
                 <input
                   type="checkbox"
@@ -441,7 +451,7 @@ async function deleteGroup() {
                     !clientIds.includes(c.id) ||
                     !auth.permissions.canLinkClients
                   "
-                  class="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                  class="w-5 h-5 rounded border-[var(--toggle-off)] text-green-600 focus:ring-green-500 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                 />
               </label>
             </div>

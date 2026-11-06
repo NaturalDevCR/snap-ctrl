@@ -114,7 +114,7 @@ function isHidden(groupId: string): boolean {
             :class="
               !isHidden(group.id)
                 ? 'bg-blue-500 border-blue-500 text-white'
-                : 'border-gray-300 dark:border-gray-600'
+                : 'border-[var(--toggle-off)]'
             "
           >
             <span

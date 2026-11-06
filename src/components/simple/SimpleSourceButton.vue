@@ -25,7 +25,7 @@ const subtitle = computed(() => {
     class="w-full flex items-center gap-3 p-2 pr-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] text-left transition-all duration-300"
     :class="
       zone.canChangeSource.value
-        ? 'hover:bg-[var(--surface-1)] hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500'
+        ? 'hover:bg-[var(--surface-1)] hover:shadow-md hover:border-[var(--text-tertiary)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500'
         : ''
     "
     :aria-haspopup="zone.canChangeSource.value ? 'dialog' : undefined"

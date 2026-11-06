@@ -153,7 +153,7 @@
 
     <div
       v-if="error"
-      class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-red-500 text-white px-3 py-1 rounded text-xs shadow-md animate-fade-in-up whitespace-nowrap z-20"
+      class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-[var(--status-attention-deep)] text-white px-3 py-1 rounded text-xs shadow-md animate-fade-in-up whitespace-nowrap z-20"
     >
       {{ error }}
     </div>

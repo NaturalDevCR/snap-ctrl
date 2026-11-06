@@ -33,7 +33,7 @@
           </h4>
           <div class="space-y-3">
             <label
-              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
                 >Allow Volume Adjustments</span
@@ -42,7 +42,7 @@
                 <input
                   type="checkbox"
                   v-model="localPermissions.canAdjustVolumes"
-                  class="sr-only peer"
+                  class="sr-only"
                 />
                 <div
                   class="app-toggle"
@@ -51,7 +51,7 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
                 >Allow Renaming Zones</span
@@ -60,7 +60,7 @@
                 <input
                   type="checkbox"
                   v-model="localPermissions.canRenameGroups"
-                  class="sr-only peer"
+                  class="sr-only"
                 />
                 <div
                   class="app-toggle"
@@ -69,7 +69,7 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
                 >Allow Renaming Speakers</span
@@ -78,7 +78,7 @@
                 <input
                   type="checkbox"
                   v-model="localPermissions.canRenameClients"
-                  class="sr-only peer"
+                  class="sr-only"
                 />
                 <div
                   class="app-toggle"
@@ -87,7 +87,7 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
                 >Allow Source Selection</span
@@ -96,7 +96,7 @@
                 <input
                   type="checkbox"
                   v-model="localPermissions.canSelectStream"
-                  class="sr-only peer"
+                  class="sr-only"
                 />
                 <div
                   class="app-toggle"
@@ -105,7 +105,7 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
                 >Allow Per-Source Volume Config</span
@@ -114,7 +114,7 @@
                 <input
                   type="checkbox"
                   v-model="localPermissions.canConfigurePSV"
-                  class="sr-only peer"
+                  class="sr-only"
                 />
                 <div
                   class="app-toggle"
@@ -123,7 +123,7 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
                 >Allow Speaker Assignment</span
@@ -132,7 +132,7 @@
                 <input
                   type="checkbox"
                   v-model="localPermissions.canAssignClients"
-                  class="sr-only peer"
+                  class="sr-only"
                 />
                 <div
                   class="app-toggle"
@@ -141,7 +141,7 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
                 >Allow Speaker Linking</span
@@ -150,7 +150,7 @@
                 <input
                   type="checkbox"
                   v-model="localPermissions.canLinkClients"
-                  class="sr-only peer"
+                  class="sr-only"
                 />
                 <div
                   class="app-toggle"
@@ -170,7 +170,7 @@
           </h4>
           <div class="space-y-3">
             <label
-              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
                 >Show Zone Settings</span
@@ -179,7 +179,7 @@
                 <input
                   type="checkbox"
                   v-model="localPermissions.showGroupSettings"
-                  class="sr-only peer"
+                  class="sr-only"
                 />
                 <div
                   class="app-toggle"
@@ -188,7 +188,7 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
                 >Show Speaker Settings</span
@@ -197,7 +197,7 @@
                 <input
                   type="checkbox"
                   v-model="localPermissions.showClientSettings"
-                  class="sr-only peer"
+                  class="sr-only"
                 />
                 <div
                   class="app-toggle"
@@ -206,7 +206,7 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
                 >Show Manage Zones</span
@@ -215,7 +215,7 @@
                 <input
                   type="checkbox"
                   v-model="localPermissions.showGroupFilter"
-                  class="sr-only peer"
+                  class="sr-only"
                 />
                 <div
                   class="app-toggle"
@@ -224,7 +224,7 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
                 >Show Add Zone</span
@@ -233,7 +233,7 @@
                 <input
                   type="checkbox"
                   v-model="localPermissions.showCreateGroup"
-                  class="sr-only peer"
+                  class="sr-only"
                 />
                 <div
                   class="app-toggle"
@@ -242,7 +242,7 @@
             </label>
 
             <label
-              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--border)] transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
               <span class="font-medium text-[var(--text-primary)]"
                 >Show Browser Player</span
@@ -251,7 +251,7 @@
                 <input
                   type="checkbox"
                   v-model="localPermissions.showBrowserPlayer"
-                  class="sr-only peer"
+                  class="sr-only"
                 />
                 <div
                   class="app-toggle"
@@ -296,7 +296,7 @@
                     type="checkbox"
                     :value="group.id"
                     v-model="localPermissions.allowedGroups"
-                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    class="w-4 h-4 text-blue-600 bg-[var(--surface-2)] border-[var(--toggle-off)] rounded focus:ring-blue-500 dark:focus:ring-blue-600 ring-offset-[var(--surface-2)] focus:ring-2"
                   />
                   <span class="text-sm text-[var(--text-primary)]">{{
                     getGroupName(group)
@@ -333,7 +333,7 @@
                     type="checkbox"
                     :value="source.id"
                     v-model="localPermissions.allowedSources"
-                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    class="w-4 h-4 text-blue-600 bg-[var(--surface-2)] border-[var(--toggle-off)] rounded focus:ring-blue-500 dark:focus:ring-blue-600 ring-offset-[var(--surface-2)] focus:ring-2"
                   />
                   <span class="text-sm text-[var(--text-primary)]">{{
                     getSourceName(source)
@@ -370,7 +370,7 @@
                     type="checkbox"
                     :value="client.id"
                     v-model="localPermissions.allowedClients"
-                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    class="w-4 h-4 text-blue-600 bg-[var(--surface-2)] border-[var(--toggle-off)] rounded focus:ring-blue-500 dark:focus:ring-blue-600 ring-offset-[var(--surface-2)] focus:ring-2"
                   />
                   <span class="text-sm text-[var(--text-primary)]">{{
                     client.config.name || client.host.name
@@ -392,7 +392,7 @@
         class="px-6 py-4 bg-[var(--surface-2)] border-t border-[var(--border)] flex justify-end gap-3"
       >
         <button
-          class="px-4 min-h-11 text-[var(--text-secondary)] font-medium hover:bg-[var(--border)] rounded-lg transition-colors"
+          class="px-4 min-h-11 text-[var(--text-secondary)] font-medium hover:bg-[var(--surface-3)] rounded-lg transition-colors"
           @click="$emit('cancel')"
         >
           Cancel

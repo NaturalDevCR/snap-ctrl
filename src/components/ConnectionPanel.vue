@@ -291,7 +291,7 @@ function useHostSuggestion(host: string) {
               :class="
                 hostInput === suggestion
                   ? 'border-blue-300 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-200'
-                  : 'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:border-[var(--text-tertiary)]'
+                  : 'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:bg-[var(--surface-3)]'
               "
             >
               <button

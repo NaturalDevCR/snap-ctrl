@@ -85,7 +85,7 @@
                     snapcast.isConnecting,
                   'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-900/30':
                     connectionStatus === 'setup',
-                  'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700':
+                  'bg-[var(--surface-2)] text-[var(--text-tertiary)] border-[var(--border)]':
                     connectionStatus === 'disconnected',
                 }"
               >

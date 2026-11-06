@@ -31,7 +31,7 @@
             v-model="passcode"
             type="password"
             :class="[
-              'w-full px-4 py-3 bg-[var(--surface-2)] min-h-[44px] border rounded-lg outline-none transition-colors text-[var(--text-primary)]',
+              'w-full px-4 py-3 bg-[var(--surface-2)] border rounded-lg outline-none transition-colors text-[var(--text-primary)]',
               error
                 ? 'border-red-500 focus:ring-2 focus:ring-red-500'
                 : 'border-[var(--border)] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400',
@@ -52,7 +52,7 @@
             v-model="confirmPasscode"
             type="password"
             :class="[
-              'w-full px-4 py-3 bg-[var(--surface-2)] min-h-[44px] border rounded-lg outline-none transition-colors text-[var(--text-primary)]',
+              'w-full px-4 py-3 bg-[var(--surface-2)] border rounded-lg outline-none transition-colors text-[var(--text-primary)]',
               error
                 ? 'border-red-500 focus:ring-2 focus:ring-red-500'
                 : 'border-[var(--border)] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400',

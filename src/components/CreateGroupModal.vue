@@ -90,7 +90,7 @@ async function createGroup() {
         <div class="relative">
           <select
             v-model="streamId"
-            class="w-full pl-4 pr-10 py-2.5 min-h-11 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)]"
+            class="w-full pl-4 pr-10 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)]"
           >
             <option
               v-for="s in snapcast.filteredStreams"
@@ -134,7 +134,7 @@ async function createGroup() {
               >
               <span
                 v-if="!c.connected"
-                class="px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded flex-shrink-0"
+                class="px-1.5 py-0.5 text-xs bg-[var(--surface-3)] text-[var(--text-secondary)] rounded flex-shrink-0"
               >
                 Offline
               </span>
@@ -153,7 +153,7 @@ async function createGroup() {
                 type="checkbox"
                 :value="c.id"
                 v-model="clientIds"
-                class="sr-only peer"
+                class="sr-only"
               />
               <div
                 class="app-toggle"

@@ -166,7 +166,7 @@ const showVolume = ref(false);
             >{{ zone.zoneVolume.value }}%</span>
           </span>
 
-          <span class="mdi mdi-chevron-right text-lg text-slate-400 group-hover/vol:translate-x-0.5 transition-transform" aria-hidden="true"></span>
+          <span class="mdi mdi-chevron-right text-lg text-[var(--text-tertiary)] group-hover/vol:translate-x-0.5 transition-transform" aria-hidden="true"></span>
           <span class="sr-only">Open volume and speakers for {{ zone.zoneName.value }}</span>
         </button>
 

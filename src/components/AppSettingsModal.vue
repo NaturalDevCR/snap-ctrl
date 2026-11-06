@@ -4,6 +4,7 @@ import { useSnapcastStore } from "@/stores/snapcast";
 import { useSettingsStore } from "@/stores/settings";
 import { useAuthStore } from "@/stores/auth";
 import AppDialog from "@/components/AppDialog.vue";
+import { rangePosition } from "@/utils/volume";
 
 const props = defineProps<{
   open: boolean;
@@ -61,7 +62,7 @@ function lockNow() {
           >Server Host</label
         >
         <input
-          class="w-full px-4 py-2.5 min-h-11 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)]"
+          class="w-full px-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)]"
           v-model="hostInput"
           placeholder="localhost:1780"
         />
@@ -100,7 +101,7 @@ function lockNow() {
                     : 'light'
                 )
               "
-              class="sr-only peer"
+              class="sr-only"
             />
             <div
               class="app-toggle"
@@ -120,7 +121,7 @@ function lockNow() {
             <input
               type="checkbox"
               v-model="settings.autoConnect"
-              class="sr-only peer"
+              class="sr-only"
             />
             <div
               class="app-toggle"
@@ -138,7 +139,7 @@ function lockNow() {
             <input
               type="checkbox"
               v-model="settings.showEmptyGroups"
-              class="sr-only peer"
+              class="sr-only"
             />
             <div
               class="app-toggle"
@@ -182,6 +183,7 @@ function lockNow() {
                 max="5.0"
                 step="0.1"
                 class="app-range"
+                :style="{ '--pct': `${rangePosition(settings.globalVolumeExponent, 1, 5) * 100}%` }"
               />
                <p class="mt-1 text-xs text-[var(--text-tertiary)]">
                  Higher values provide more precision at low volumes.
@@ -233,7 +235,7 @@ function lockNow() {
             <input
               type="checkbox"
               :checked="auth.isAuthEnabled"
-              class="sr-only peer"
+              class="sr-only"
               @change="handleAuthenticationToggle"
             />
             <div
@@ -245,7 +247,7 @@ function lockNow() {
         <button
           v-if="auth.isAuthEnabled"
           @click="emit('changePermissions')"
-          class="mt-3 w-full min-h-11 flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] hover:border-[var(--text-tertiary)] transition-colors"
+          class="mt-3 w-full min-h-11 flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] hover:bg-[var(--surface-3)] transition-colors"
         >
           <div class="flex items-center gap-2">
             <span class="mdi mdi-tune-variant text-lg"></span>
@@ -265,7 +267,7 @@ function lockNow() {
         <button
           v-if="auth.isAuthEnabled"
           @click="lockNow"
-          class="mt-3 w-full min-h-11 flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] hover:border-[var(--text-tertiary)] transition-colors"
+          class="mt-3 w-full min-h-11 flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] hover:bg-[var(--surface-3)] transition-colors"
         >
           <div class="flex items-center gap-2">
             <span class="mdi mdi-lock-outline text-lg"></span>

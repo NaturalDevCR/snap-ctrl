@@ -33,3 +33,8 @@ export function volumeToSlider(volumeValue: number, exponent: number): number {
   const normalized = volumeValue / 100;
   return Math.pow(normalized, 1 / exponent) * 100;
 }
+
+/** How far `value` sits along a range input's track, from 0 to 1. */
+export function rangePosition(value: number, min: number, max: number): number {
+  return Math.max(0, Math.min(1, (value - min) / (max - min)));
+}

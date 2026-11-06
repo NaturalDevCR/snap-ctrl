@@ -22,7 +22,7 @@ const props = withDefaults(
     step: 5,
     disabled: false,
     size: "lg",
-    accent: "#2563eb",
+    accent: "var(--brand)",
   }
 );
 
@@ -159,7 +159,7 @@ function nudge(direction: 1 | -1) {
   height: 1.875rem;
 }
 .simple-range:focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--brand);
   outline-offset: 4px;
 }
 </style>
