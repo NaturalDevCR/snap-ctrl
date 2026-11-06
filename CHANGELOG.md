@@ -6,6 +6,17 @@ carries auto-generated notes with the full commit list.
 
 > **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
 
+### v0.8.1
+
+- **Fixed**: Tab and Shift+Tab now stay inside the open dialog, zone sheet or source picker, including when one is stacked on another.
+- **Fixed**: Slider fills line up with the thumb near 0 and 100.
+- **Fixed**: The exponent sliders show a filled track, and the Zone settings one starts at the global exponent when the zone has no value of its own, instead of at the slider's midpoint.
+- **Fixed**: In dark mode, a switch's off track is no longer brighter than its on track. Switches now show a focus outline for keyboard use only.
+- **Fixed**: The mobile overflow menu closes when the screen crosses the phone layout width, for example on rotation. **Refresh status** keeps it open with the spinner until the refresh finishes.
+- **Fixed**: Toasts stay clear of the right safe area on phones in landscape.
+- **Changed**: Disabled name fields look disabled, and disabled speaker checkboxes show a not-allowed cursor.
+- **Changed**: Settings rows, recent host chips and the Change Permissions and Lock Now buttons use one hover fill.
+
 ### v0.8.0
 
 SnapCtrl now has one interface. Upgrading changes what every device shows, so read the first item before you update shared or wall-mounted devices.
