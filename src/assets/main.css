@@ -14,7 +14,8 @@
   --scrim: rgba(2, 6, 23, 0.6);
   --fill-neutral: #64748b;
   --handle: #cbd5e1;
-  --toggle-off: #94a3b8;
+  --toggle-off: #64748b;
+  --focus: #2563eb;
   color-scheme: light;
 }
 
@@ -31,6 +32,7 @@
   --fill-neutral: #94a3b8;
   --handle: #334155;
   --toggle-off: #475569;
+  --focus: #60a5fa;
   color-scheme: dark;
 }
 
@@ -202,7 +204,7 @@ input:checked + .app-toggle::after {
   transform: translateX(1.25rem);
 }
 input:focus-visible + .app-toggle {
-  outline: 2px solid var(--brand);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
@@ -248,4 +250,22 @@ input:focus-visible + .app-toggle {
   background: #fff;
   border: 1px solid rgb(203 213 225);
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
+}
+
+/* Page gutters that also clear a landscape notch. Backgrounds stay full-bleed
+   because the inset lives on the inner containers. */
+.page-gutter {
+  --gutter: 1rem;
+  padding-left: max(var(--gutter), env(safe-area-inset-left));
+  padding-right: max(var(--gutter), env(safe-area-inset-right));
+}
+@media (min-width: 640px) {
+  .page-gutter {
+    --gutter: 1.5rem;
+  }
+}
+@media (min-width: 1024px) {
+  .page-gutter {
+    --gutter: 2rem;
+  }
 }

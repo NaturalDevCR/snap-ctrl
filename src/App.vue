@@ -1,7 +1,6 @@
 <template>
   <div
     id="app"
-    style="padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right)"
     class="min-h-screen bg-[var(--surface-0)] text-[var(--text-primary)] font-sans transition-colors duration-300"
   >
     <Toast />
@@ -53,9 +52,9 @@
 
       <header
         style="padding-top: env(safe-area-inset-top)"
-        class="sticky top-0 z-50 w-full backdrop-blur-xl bg-[var(--surface-1)]/80 border-b border-[var(--border)] transition-all duration-300 shadow-sm"
+        class="sticky [@media(max-height:500px)]:static top-0 z-50 w-full backdrop-blur-xl bg-[var(--surface-1)]/80 border-b border-[var(--border)] transition-all duration-300 shadow-sm"
       >
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto page-gutter">
           <div class="flex items-center justify-between h-16 gap-4">
             <div class="flex items-center gap-2 sm:gap-4 min-w-0">
               <div class="flex items-center gap-3">
@@ -142,7 +141,7 @@
         </div>
       </header>
 
-      <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+      <main class="max-w-7xl mx-auto page-gutter py-8 lg:py-12">
         <ConnectionPanel
           v-if="!snapcast.isConnected && !snapcast.isConnecting"
           :showing-permissions-setup="showingPermissionsSetup"
@@ -173,7 +172,7 @@
         style="padding-bottom: calc(1.5rem + env(safe-area-inset-bottom))"
         class="mt-8 py-6 text-center text-sm text-[var(--text-tertiary)] border-t border-[var(--border)]"
       >
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto page-gutter">
           <p>
             Made with <span class="text-red-500">♥</span> by
             <a

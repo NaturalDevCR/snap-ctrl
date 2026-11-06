@@ -160,7 +160,7 @@ function nudge(direction: 1 | -1) {
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
 }
 .simple-range:focus-visible {
-  outline: 2px solid var(--brand);
+  outline: 2px solid var(--focus);
   outline-offset: 4px;
 }
 </style>

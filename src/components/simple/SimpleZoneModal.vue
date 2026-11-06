@@ -204,9 +204,7 @@ watch(
               >
                 <span class="mdi mdi-link-variant text-base -mt-0.5 sv-accent-text" aria-hidden="true"></span>
                 <span v-if="zone.canLinkClients.value">
-                  To control several speakers with one slider, tap
-                  <strong class="font-semibold text-[var(--text-secondary)]">Link</strong>
-                  on them below.
+                  To control several speakers with one slider, tap their link button below.
                 </span>
                 <span v-else>This zone has no linked speakers, so it has no zone volume.</span>
               </p>
