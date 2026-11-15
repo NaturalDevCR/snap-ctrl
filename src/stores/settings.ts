@@ -265,6 +265,14 @@ export const useSettingsStore = defineStore(
         "globalVolumeExponent",
         "groupVolumeControlConfig",
       ],
+      // No UI has ever exposed volumeStep, so a persisted 5 can only be the
+      // pre-0.8.2 default, never a deliberate choice: move it to the new
+      // default of 1 once, on load.
+      afterHydrate(context) {
+        if (context.store.volumeStep === 5) {
+          context.store.volumeStep = 1;
+        }
+      },
     },
   }
 );
