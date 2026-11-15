@@ -202,6 +202,7 @@ export function useZoneControls(group: () => Group) {
     zoneName,
     playState,
     statusLabel,
+    playAccent,
     currentSourceName,
     currentSourceIcon,
     volumeFill,
