@@ -6,6 +6,14 @@ carries auto-generated notes with the full commit list.
 
 > **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
 
+### v0.8.2
+
+- **Changed**: A zone card's source icon now tints to match the zone's own state (playing, idle, unavailable), so a grid of zones shows at a glance which one is active and on what, without reading text.
+- **Changed**: Picking a different source now asks for confirmation first, naming the zone, its current source and the new one, before switching.
+- **Changed**: The volume-summary row on a zone card is now labeled **Volume**, making clear it opens per-speaker volume control for that zone.
+- **Changed**: Pinch and double-tap zoom are disabled app-wide. Accidental zoom was breaking touch navigation; this trades away zoom for anyone who relied on it.
+- **Changed**: The volume −/+ buttons now move 1% per tap by default, instead of 5%.
+
 ### v0.8.1
 
 - **Fixed**: Tab and Shift+Tab now stay inside the open dialog, sheet or prompt, including when one is stacked on another, and Tab returns to it if focus is lost.
