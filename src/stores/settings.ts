@@ -18,7 +18,7 @@ export const useSettingsStore = defineStore(
     const autoConnect = ref(true);
     const showDisconnectedClients = ref(false);
     const showEmptyGroups = ref(true);
-    const volumeStep = ref(5);
+    const volumeStep = ref(1);
     const hiddenGroups = ref<string[]>([]);
     // Group volume control links: which clients are linked to group volume
     const groupVolumeLinks = ref<Record<string, GroupVolumeLink>>({});
