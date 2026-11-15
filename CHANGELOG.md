@@ -6,6 +6,10 @@ carries auto-generated notes with the full commit list.
 
 > **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
 
+### v0.8.3
+
+- **Fixed**: The volume −/+ buttons actually step by 1% now on installs that updated from before v0.8.2. The default changed in v0.8.2, but a value saved by an earlier version stayed in local storage and kept overriding it; that stored value is now migrated once on load.
+
 ### v0.8.2
 
 - **Changed**: A zone card's source icon now tints to match the zone's own state (playing, idle, unavailable), so a grid of zones shows at a glance which one is active and on what, without reading text.
