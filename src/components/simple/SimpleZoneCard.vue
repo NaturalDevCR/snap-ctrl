@@ -144,17 +144,17 @@ const showVolume = ref(false);
         <button
           v-if="zone.speakers.value.length > 0"
           type="button"
-          class="group/vol flex-1 min-w-0 h-12 flex items-center gap-3 pl-3 pr-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] hover:bg-[var(--surface-1)] hover:shadow-md hover:border-[var(--text-tertiary)] text-left transition-all duration-300 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+          class="group/vol flex-1 min-w-0 flex items-center gap-3 px-3 py-2.5 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] hover:bg-[var(--surface-1)] hover:shadow-md hover:border-[var(--text-tertiary)] text-left transition-all duration-300 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
           aria-haspopup="dialog"
           @click="showVolume = true"
         >
           <span class="mdi mdi-tune-vertical-variant text-xl sv-accent-text shrink-0" aria-hidden="true"></span>
 
-          <span class="flex-1 min-w-0 flex flex-col gap-1">
-            <span class="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
-              Volume &amp; speakers
+          <span class="flex-1 min-w-0 flex flex-col gap-1.5">
+            <span class="flex items-center justify-between gap-2">
+              <span class="truncate text-sm font-semibold text-[var(--text-primary)]">Volume</span>
               <span
-                class="tabular-nums text-sm font-bold"
+                class="tabular-nums text-sm font-bold shrink-0"
                 :class="group.muted ? 'text-[var(--text-tertiary)] line-through' : 'text-[var(--text-secondary)]'"
               >{{ zone.zoneVolume.value }}%</span>
             </span>

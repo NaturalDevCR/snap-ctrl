@@ -55,6 +55,6 @@ describe("SimpleZoneCard volume row", () => {
     snapcast.streams = [{ id: "s1", uri: "spotify:x", status: "idle" }];
     mount(baseGroup());
 
-    expect(host.textContent).toContain("Volume & speakers");
+    expect(host.textContent).toContain("Volume");
   });
 });
