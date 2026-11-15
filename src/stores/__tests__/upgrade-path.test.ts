@@ -41,6 +41,20 @@ describe("upgrading from a release with the Classic layout", () => {
     expect(stored("snapcast-settings")).not.toHaveProperty("viewMode");
   });
 
+  it("migrates a persisted volumeStep of 5 (the old default) to the new default of 1", () => {
+    localStorage.setItem("snapcast-settings", JSON.stringify({ volumeStep: 5 }));
+    installPinia();
+
+    expect(useSettingsStore().volumeStep).toBe(1);
+  });
+
+  it("leaves a persisted volumeStep untouched when it isn't the old default", () => {
+    localStorage.setItem("snapcast-settings", JSON.stringify({ volumeStep: 10 }));
+    installPinia();
+
+    expect(useSettingsStore().volumeStep).toBe(10);
+  });
+
   it("loads auth permissions saved with a stale canChangeView", () => {
     localStorage.setItem(
       "snapcast-auth",
