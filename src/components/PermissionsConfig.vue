@@ -13,150 +13,138 @@
         class="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between"
       >
         <h3 class="text-lg font-bold text-[var(--text-primary)]">
-          Configure Permissions
+          {{ t("Configure Permissions") }}
         </h3>
         <button
           @click="$emit('cancel')"
-          aria-label="Close"
+          :aria-label="t('Close')"
           class="w-11 h-11 -mr-2 flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-2)] transition-colors"
         >
           <span class="mdi mdi-close text-xl"></span>
         </button>
       </div>
 
-      <div class="p-6 space-y-6 overflow-y-auto custom-scrollbar max-h-[calc(90dvh-140px)]">
+      <div
+        class="p-6 space-y-6 overflow-y-auto custom-scrollbar max-h-[calc(90dvh-140px)]"
+      >
         <!-- Feature Permissions -->
         <div>
           <h4
             class="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2"
           >
             <span class="mdi mdi-shield-check-outline"></span>
-            Feature Permissions
+            {{ t("Feature Permissions") }}
           </h4>
           <div class="space-y-3">
             <label
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
-              <span class="font-medium text-[var(--text-primary)]"
-                >Allow Volume Adjustments</span
-              >
+              <span class="font-medium text-[var(--text-primary)]">{{
+                t("Allow Volume Adjustments")
+              }}</span>
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   v-model="localPermissions.canAdjustVolumes"
                   class="sr-only"
                 />
-                <div
-                  class="app-toggle"
-                ></div>
+                <div class="app-toggle"></div>
               </div>
             </label>
 
             <label
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
-              <span class="font-medium text-[var(--text-primary)]"
-                >Allow Renaming Zones</span
-              >
+              <span class="font-medium text-[var(--text-primary)]">{{
+                t("Allow Renaming Zones")
+              }}</span>
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   v-model="localPermissions.canRenameGroups"
                   class="sr-only"
                 />
-                <div
-                  class="app-toggle"
-                ></div>
+                <div class="app-toggle"></div>
               </div>
             </label>
 
             <label
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
-              <span class="font-medium text-[var(--text-primary)]"
-                >Allow Renaming Speakers</span
-              >
+              <span class="font-medium text-[var(--text-primary)]">{{
+                t("Allow Renaming Speakers")
+              }}</span>
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   v-model="localPermissions.canRenameClients"
                   class="sr-only"
                 />
-                <div
-                  class="app-toggle"
-                ></div>
+                <div class="app-toggle"></div>
               </div>
             </label>
 
             <label
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
-              <span class="font-medium text-[var(--text-primary)]"
-                >Allow Source Selection</span
-              >
+              <span class="font-medium text-[var(--text-primary)]">{{
+                t("Allow Source Selection")
+              }}</span>
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   v-model="localPermissions.canSelectStream"
                   class="sr-only"
                 />
-                <div
-                  class="app-toggle"
-                ></div>
+                <div class="app-toggle"></div>
               </div>
             </label>
 
             <label
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
-              <span class="font-medium text-[var(--text-primary)]"
-                >Allow Per-Source Volume Config</span
-              >
+              <span class="font-medium text-[var(--text-primary)]">{{
+                t("Allow Per-Source Volume Config")
+              }}</span>
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   v-model="localPermissions.canConfigurePSV"
                   class="sr-only"
                 />
-                <div
-                  class="app-toggle"
-                ></div>
+                <div class="app-toggle"></div>
               </div>
             </label>
 
             <label
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
-              <span class="font-medium text-[var(--text-primary)]"
-                >Allow Speaker Assignment</span
-              >
+              <span class="font-medium text-[var(--text-primary)]">{{
+                t("Allow Speaker Assignment")
+              }}</span>
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   v-model="localPermissions.canAssignClients"
                   class="sr-only"
                 />
-                <div
-                  class="app-toggle"
-                ></div>
+                <div class="app-toggle"></div>
               </div>
             </label>
 
             <label
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
-              <span class="font-medium text-[var(--text-primary)]"
-                >Allow Speaker Linking</span
-              >
+              <span class="font-medium text-[var(--text-primary)]">{{
+                t("Allow Speaker Linking")
+              }}</span>
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   v-model="localPermissions.canLinkClients"
                   class="sr-only"
                 />
-                <div
-                  class="app-toggle"
-                ></div>
+                <div class="app-toggle"></div>
               </div>
             </label>
           </div>
@@ -168,96 +156,86 @@
             class="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2"
           >
             <span class="mdi mdi-eye-outline"></span>
-            UI Visibility
+            {{ t("UI Visibility") }}
           </h4>
           <div class="space-y-3">
             <label
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
-              <span class="font-medium text-[var(--text-primary)]"
-                >Show Zone Settings</span
-              >
+              <span class="font-medium text-[var(--text-primary)]">{{
+                t("Show Zone Settings")
+              }}</span>
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   v-model="localPermissions.showGroupSettings"
                   class="sr-only"
                 />
-                <div
-                  class="app-toggle"
-                ></div>
+                <div class="app-toggle"></div>
               </div>
             </label>
 
             <label
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
-              <span class="font-medium text-[var(--text-primary)]"
-                >Show Speaker Settings</span
-              >
+              <span class="font-medium text-[var(--text-primary)]">{{
+                t("Show Speaker Settings")
+              }}</span>
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   v-model="localPermissions.showClientSettings"
                   class="sr-only"
                 />
-                <div
-                  class="app-toggle"
-                ></div>
+                <div class="app-toggle"></div>
               </div>
             </label>
 
             <label
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
-              <span class="font-medium text-[var(--text-primary)]"
-                >Show Manage Zones</span
-              >
+              <span class="font-medium text-[var(--text-primary)]">{{
+                t("Show Manage Zones")
+              }}</span>
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   v-model="localPermissions.showGroupFilter"
                   class="sr-only"
                 />
-                <div
-                  class="app-toggle"
-                ></div>
+                <div class="app-toggle"></div>
               </div>
             </label>
 
             <label
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
-              <span class="font-medium text-[var(--text-primary)]"
-                >Show Add Zone</span
-              >
+              <span class="font-medium text-[var(--text-primary)]">{{
+                t("Show Add Zone")
+              }}</span>
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   v-model="localPermissions.showCreateGroup"
                   class="sr-only"
                 />
-                <div
-                  class="app-toggle"
-                ></div>
+                <div class="app-toggle"></div>
               </div>
             </label>
 
             <label
               class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
             >
-              <span class="font-medium text-[var(--text-primary)]"
-                >Show Browser Player</span
-              >
+              <span class="font-medium text-[var(--text-primary)]">{{
+                t("Show Browser Player")
+              }}</span>
               <div class="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   v-model="localPermissions.showBrowserPlayer"
                   class="sr-only"
                 />
-                <div
-                  class="app-toggle"
-                ></div>
+                <div class="app-toggle"></div>
               </div>
             </label>
           </div>
@@ -269,10 +247,14 @@
             class="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2"
           >
             <span class="mdi mdi-filter-outline"></span>
-            Access Restrictions
+            {{ t("Access Restrictions") }}
           </h4>
           <p class="text-xs text-[var(--text-tertiary)] mb-4">
-            Leave empty to allow all. Select specific items to restrict access.
+            {{
+              t(
+                "Leave empty to allow all. Select specific items to restrict access.",
+              )
+            }}
           </p>
 
           <div class="space-y-4">
@@ -281,9 +263,11 @@
               <label
                 class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
               >
-                Allowed Zones
+                {{ t("Allowed Zones") }}
                 <span class="text-xs text-[var(--text-tertiary)]"
-                  >({{ localPermissions.allowedGroups.length || "All" }})</span
+                  >({{
+                    localPermissions.allowedGroups.length || t("All")
+                  }})</span
                 >
               </label>
               <div
@@ -308,7 +292,7 @@
                   v-if="availableGroups.length === 0"
                   class="text-sm text-[var(--text-tertiary)] text-center py-2"
                 >
-                  No zones available
+                  {{ t("No zones available") }}
                 </div>
               </div>
             </div>
@@ -318,9 +302,11 @@
               <label
                 class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
               >
-                Allowed Sources
+                {{ t("Allowed Sources") }}
                 <span class="text-xs text-[var(--text-tertiary)]"
-                  >({{ localPermissions.allowedSources.length || "All" }})</span
+                  >({{
+                    localPermissions.allowedSources.length || t("All")
+                  }})</span
                 >
               </label>
               <div
@@ -345,7 +331,7 @@
                   v-if="availableSources.length === 0"
                   class="text-sm text-[var(--text-tertiary)] text-center py-2"
                 >
-                  No sources available
+                  {{ t("No sources available") }}
                 </div>
               </div>
             </div>
@@ -355,9 +341,11 @@
               <label
                 class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
               >
-                Allowed Speakers
+                {{ t("Allowed Speakers") }}
                 <span class="text-xs text-[var(--text-tertiary)]"
-                  >({{ localPermissions.allowedClients.length || "All" }})</span
+                  >({{
+                    localPermissions.allowedClients.length || t("All")
+                  }})</span
                 >
               </label>
               <div
@@ -382,7 +370,7 @@
                   v-if="availableClients.length === 0"
                   class="text-sm text-[var(--text-tertiary)] text-center py-2"
                 >
-                  No speakers available
+                  {{ t("No speakers available") }}
                 </div>
               </div>
             </div>
@@ -397,13 +385,13 @@
           class="px-4 min-h-11 text-[var(--text-secondary)] font-medium hover:bg-[var(--surface-3)] rounded-lg transition-colors"
           @click="$emit('cancel')"
         >
-          Cancel
+          {{ t("Cancel") }}
         </button>
         <button
           class="px-4 min-h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
           @click="handleSave"
         >
-          Save Permissions
+          {{ t("Save Permissions") }}
         </button>
       </div>
     </div>
@@ -411,6 +399,7 @@
 </template>
 
 <script setup lang="ts">
+import { t } from "@/i18n";
 import { ref, computed } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import type { AuthPermissions } from "@/stores/auth";
@@ -433,7 +422,7 @@ const emit = defineEmits<{
 // lifetime is "open", so it just registers for as long as it exists.
 useEscapeToClose(
   () => true,
-  () => emit("cancel")
+  () => emit("cancel"),
 );
 
 const panelRef = ref<HTMLElement | null>(null);
@@ -474,7 +463,7 @@ function getSourceName(source: { uri: unknown; id: string }): string {
 
 function getGroupName(group: { id: string; name: string }): string {
   const fullGroup = snapcast.groups.find((g) => g.id === group.id);
-  if (!fullGroup) return `Zone ${group.id.substring(0, 8)}`;
+  if (!fullGroup) return t("Zone {p0}", { p0: group.id.substring(0, 8) });
   return getGroupDisplayName(fullGroup, snapcast.streams);
 }
 

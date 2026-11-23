@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { confirmSourceChange } from "@/utils/confirm-source";
+import { getGroupDisplayName } from "@/utils/group-name";
+import { t } from "@/i18n";
 import { computed, ref, watch } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useSettingsStore } from "@/stores/settings";
@@ -52,13 +55,15 @@ watch(
       streamId.value = group.stream_id;
       clientIds.value = group.clients.map((c) => c.id);
       linkedClientIds.value = [...linkedIds];
-      perSourceVolumeEnabled.value = settings.isPerSourceVolumeEnabled(group.id);
+      perSourceVolumeEnabled.value = settings.isPerSourceVolumeEnabled(
+        group.id,
+      );
       volumeMode.value =
         settings.groupVolumeControlConfig[group.id]?.mode || "global";
       volumeExponent.value =
         settings.groupVolumeControlConfig[group.id]?.exponent ?? null;
     }
-  }
+  },
 );
 
 function getOfflineClientsInGroup(): Client[] {
@@ -77,10 +82,13 @@ async function removeOfflineClients() {
   // Server.DeleteClient permanently forgets the client (name, volume,
   // latency) — it isn't just "hide until it reconnects". One misplaced tap
   // here on a shared/kiosk device wipes that config for good.
-  const noun = offline.length === 1 ? "speaker" : "speakers";
+  const noun = t(offline.length === 1 ? "Speaker" : "Speakers").toLowerCase();
   if (
     !window.confirm(
-      `Permanently remove ${offline.length} offline ${noun} from this zone? This forgets their saved name and volume — they'll show up as a brand-new speaker if they reconnect.`
+      t(
+        "Permanently remove {p0} offline {p1} from this zone? This forgets their saved name and volume — they'll show up as a brand-new speaker if they reconnect.",
+        { p0: offline.length, p1: noun },
+      ),
     )
   ) {
     return;
@@ -99,16 +107,51 @@ async function removeOfflineClients() {
   if (group) {
     clientIds.value = group.clients.map((c) => c.id);
     linkedClientIds.value = linkedClientIds.value.filter((id) =>
-      group.clients.some((c) => c.id === id)
+      group.clients.some((c) => c.id === id),
     );
   }
 }
 
 async function apply() {
   if (!groupId.value) return;
+  const targetId = groupId.value;
+  const targetHost = snapcast.host;
+  const nextStreamId = streamId.value;
+  const before = snapcast.groups.find((g) => g.id === targetId);
+  if (!before) return;
+  const changesSource = !!nextStreamId && nextStreamId !== before.stream_id;
+  if (changesSource) {
+    if (
+      !auth.hasFeaturePermission("canSelectStream") ||
+      !auth.isEntityAllowed("source", nextStreamId!)
+    )
+      return;
+    const source = snapcast.streams.find((s) => s.id === nextStreamId);
+    if (
+      !source ||
+      !(await confirmSourceChange(
+        getGroupDisplayName(before, snapcast.streams),
+        getStreamName(source),
+      ))
+    )
+      return;
+    if (
+      snapcast.host !== targetHost ||
+      !props.open ||
+      groupId.value !== targetId ||
+      !snapcast.groups.some((g) => g.id === targetId) ||
+      !auth.hasFeaturePermission("canSelectStream") ||
+      !auth.isEntityAllowed("group", targetId) ||
+      !auth.isEntityAllowed("source", nextStreamId!)
+    )
+      return;
+  }
 
   // Save per-source volume setting first
-  settings.setPerSourceVolumeEnabled(groupId.value, perSourceVolumeEnabled.value);
+  settings.setPerSourceVolumeEnabled(
+    groupId.value,
+    perSourceVolumeEnabled.value,
+  );
 
   // SNAPSHOT: If enabled, snapshot current volumes for current stream
   // immediately so the current state becomes the baseline.
@@ -122,15 +165,15 @@ async function apply() {
         settings.saveClientVolume(
           client.id,
           targetStream,
-          client.config.volume.percent
+          client.config.volume.percent,
         );
       });
     }
   }
 
   // Update stream
-  if (streamId.value) {
-    await snapcast.setGroupStream(groupId.value, streamId.value);
+  if (changesSource && nextStreamId) {
+    await snapcast.setGroupStream(targetId, nextStreamId);
   }
 
   // Update clients in group
@@ -167,14 +210,14 @@ async function apply() {
   settings.setGroupVolumeLinks(
     groupId.value,
     linkedClientIds.value,
-    referenceVolumes
+    referenceVolumes,
   );
 
   // Save volume control config
   settings.setGroupVolumeControlConfig(
     groupId.value,
     volumeMode.value,
-    volumeExponent.value ?? undefined
+    volumeExponent.value ?? undefined,
   );
 
   emit("close");
@@ -192,7 +235,10 @@ async function deleteGroup() {
   // a shared/kiosk device — is otherwise enough to do both.
   if (
     !window.confirm(
-      `Delete "${name.value || group.name || "this zone"}"? Its speakers will be removed from the zone, and any offline speakers in it will be permanently forgotten.`
+      t(
+        'Delete "{p0}"? Its speakers will be removed from the zone, and any offline speakers in it will be permanently forgotten.',
+        { p0: name.value || group.name || t("this zone") },
+      ),
     )
   ) {
     return;
@@ -221,7 +267,7 @@ async function deleteGroup() {
 <template>
   <AppDialog
     :open="props.open"
-    title="Zone settings"
+    :title="t('Zone settings')"
     size="lg"
     @close="emit('close')"
   >
@@ -229,12 +275,12 @@ async function deleteGroup() {
       <div>
         <label
           class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
-          >Zone name</label
+          >{{ t("Zone name") }}</label
         >
         <input
           class="w-full px-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)] disabled:bg-[var(--surface-1)] disabled:text-[var(--text-tertiary)] disabled:opacity-50 disabled:cursor-not-allowed"
           v-model.trim="name"
-          placeholder="Custom zone name"
+          :placeholder="t('Custom zone name')"
           :disabled="!auth.permissions.canRenameGroups"
         />
       </div>
@@ -242,7 +288,7 @@ async function deleteGroup() {
       <div v-if="auth.permissions.canSelectStream">
         <label
           class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
-          >Source</label
+          >{{ t("Source") }}</label
         >
         <div class="relative">
           <select
@@ -274,12 +320,12 @@ async function deleteGroup() {
           class="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]"
         >
           <div class="flex flex-col">
-            <span class="font-medium text-[var(--text-primary)]"
-              >Per-Source Volume</span
-            >
-            <span class="text-xs text-[var(--text-tertiary)]"
-              >Remember volume settings for each source</span
-            >
+            <span class="font-medium text-[var(--text-primary)]">{{
+              t("Per-Source Volume")
+            }}</span>
+            <span class="text-xs text-[var(--text-tertiary)]">{{
+              t("Remember volume settings for each source")
+            }}</span>
           </div>
           <div class="relative inline-flex items-center">
             <input
@@ -287,9 +333,7 @@ async function deleteGroup() {
               v-model="perSourceVolumeEnabled"
               class="sr-only"
             />
-            <div
-              class="app-toggle"
-            ></div>
+            <div class="app-toggle"></div>
           </div>
         </div>
       </label>
@@ -299,7 +343,7 @@ async function deleteGroup() {
         <div>
           <label
             class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
-            >Volume Control Mode</label
+            >{{ t("Volume Control Mode") }}</label
           >
           <div class="relative">
             <select
@@ -307,10 +351,18 @@ async function deleteGroup() {
               class="w-full pl-4 pr-10 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)]"
             >
               <option value="global">
-                Global Default ({{ settings.globalVolumeControlMode }})
+                {{
+                  t("Global Default ({mode})", {
+                    mode: t(
+                      settings.globalVolumeControlMode === "linear"
+                        ? "Linear"
+                        : "Non-Linear",
+                    ),
+                  })
+                }}
               </option>
-              <option value="linear">Linear</option>
-              <option value="nonlinear">Non-Linear</option>
+              <option value="linear">{{ t("Linear") }}</option>
+              <option value="nonlinear">{{ t("Non-Linear") }}</option>
             </select>
             <span
               class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] pointer-events-none"
@@ -328,9 +380,9 @@ async function deleteGroup() {
           "
         >
           <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-medium text-[var(--text-secondary)]"
-              >Exponent (Curve)</label
-            >
+            <label class="text-sm font-medium text-[var(--text-secondary)]">{{
+              t("Exponent (Curve)")
+            }}</label>
             <span
               class="text-xs font-mono bg-[var(--surface-2)] px-2 py-0.5 rounded text-[var(--text-secondary)]"
             >
@@ -347,7 +399,7 @@ async function deleteGroup() {
             :style="{ '--p': rangePosition(sliderExponent, 1, 5) }"
           />
           <p class="mt-1 text-xs text-[var(--text-tertiary)]">
-            Higher values provide more precision at low volumes.
+            {{ t("Higher values provide more precision at low volumes.") }}
           </p>
         </div>
       </div>
@@ -356,7 +408,7 @@ async function deleteGroup() {
         <div class="flex items-center justify-between mb-4">
           <label
             class="block text-sm font-medium text-[var(--text-secondary)]"
-            >Speakers</label
+            >{{ t("Speakers") }}</label
           >
           <!-- Clean Offline Button (in header) -->
           <button
@@ -365,7 +417,11 @@ async function deleteGroup() {
             class="px-3 py-1.5 min-h-11 text-xs font-medium text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors flex items-center gap-1.5 border border-orange-200 dark:border-orange-800"
           >
             <span class="mdi mdi-trash-can-outline text-sm"></span>
-            Clean Offline ({{ getOfflineClientsInGroup().length }})
+            {{
+              t("Clean Offline ({count})", {
+                count: getOfflineClientsInGroup().length,
+              })
+            }}
           </button>
         </div>
 
@@ -373,15 +429,19 @@ async function deleteGroup() {
         <div
           class="flex items-center gap-3 px-3 pb-2 text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wide border-b border-[var(--border)]"
         >
-          <div class="flex-1 min-w-0">Speaker</div>
-          <div class="w-14 sm:w-24 shrink-0 text-center">In Zone</div>
+          <div class="flex-1 min-w-0">{{ t("Speaker") }}</div>
+          <div class="w-14 sm:w-24 shrink-0 text-center">
+            {{ t("In Zone") }}
+          </div>
           <div
             class="w-14 sm:w-24 shrink-0 text-center flex items-center justify-center gap-1"
           >
-            <Tooltip text="Link to zone volume control">
+            <Tooltip :text="t('Link to zone volume control')">
               <span class="inline-flex items-center gap-1 cursor-help">
-                Linked
-                <span class="hidden sm:inline mdi mdi-information-outline text-xs"></span>
+                {{ t("Linked") }}
+                <span
+                  class="hidden sm:inline mdi mdi-information-outline text-xs"
+                ></span>
               </span>
             </Tooltip>
           </div>
@@ -415,7 +475,7 @@ async function deleteGroup() {
                   v-if="!c.connected"
                   class="px-1.5 py-0.5 text-xs bg-[var(--surface-3)] text-[var(--text-secondary)] rounded flex-shrink-0"
                 >
-                  Offline
+                  {{ t("Offline") }}
                 </span>
               </div>
               <div class="text-xs text-[var(--text-tertiary)] truncate">
@@ -465,11 +525,14 @@ async function deleteGroup() {
         >
           <p class="text-xs text-blue-700 dark:text-blue-300">
             <span class="mdi mdi-information text-sm"></span>
-            {{ linkedClientIds.length }} speaker{{
-              linkedClientIds.length === 1 ? "" : "s"
+            {{
+              t(
+                linkedClientIds.length === 1
+                  ? "{count} linked speaker. Volumes adjust proportionally with zone volume."
+                  : "{count} linked speakers. Volumes adjust proportionally with zone volume.",
+                { count: linkedClientIds.length },
+              )
             }}
-            linked. Their volumes will adjust proportionally with the zone
-            volume control.
           </p>
         </div>
       </div>
@@ -482,20 +545,20 @@ async function deleteGroup() {
           @click="deleteGroup"
         >
           <span class="mdi mdi-delete" aria-hidden="true"></span>
-          Delete zone
+          {{ t("Delete zone") }}
         </button>
         <div class="flex gap-3">
           <button
             class="px-4 py-2 min-h-11 text-[var(--text-secondary)] font-medium hover:bg-[var(--surface-2)] rounded-lg transition-colors"
             @click="emit('close')"
           >
-            Cancel
+            {{ t("Cancel") }}
           </button>
           <button
             class="px-4 py-2 min-h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
             @click="apply"
           >
-            Save
+            {{ t("Save") }}
           </button>
         </div>
       </div>

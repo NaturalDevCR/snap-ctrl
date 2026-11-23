@@ -29,18 +29,25 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.png", "apple-touch-icon.png"],
       manifest: {
+        id: "./",
         name: "Snap Ctrl",
         short_name: "SnapCtrl",
         description:
           "Modern web interface for Snapcast multiroom audio control",
-        theme_color: "#0f172a",
+        theme_color: "#0b1322",
         // See vite.config.ts — the app defaults to dark mode, so a white
         // splash background would flash before the dark UI paints.
-        background_color: "#020617",
+        background_color: "#0b1322",
         display: "standalone",
         // See vite.config.ts — no orientation lock, so a tablet mounted
         // in landscape isn't forced into portrait once installed.
         icons: [
+          {
+            src: "pwa-maskable-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
+          },
           {
             src: "pwa-192x192.png",
             sizes: "192x192",

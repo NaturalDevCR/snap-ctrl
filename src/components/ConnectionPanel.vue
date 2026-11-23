@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from "@/i18n";
 import { ref, computed } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useSettingsStore } from "@/stores/settings";
@@ -37,8 +38,7 @@ function withDefaultPort(value: string): string {
 
 const hostInput = ref(snapcast.host);
 const haSnapcastInfo = (window as any).__HA_SNAPCAST_INFO__ as
-  | string
-  | undefined;
+  string | undefined;
 const connectHostError = ref("");
 
 function isLoopbackHost(value: string): boolean {
@@ -56,25 +56,33 @@ function isLoopbackHost(value: string): boolean {
 const isLoopbackTarget = computed(() => isLoopbackHost(snapcast.host));
 
 const connectionPanelTitle = computed(() => {
-  if (!snapcast.connectionError) return "Connect to Snapcast";
-  if (haSnapcastInfo) return "Check the Home Assistant proxy";
-  return "Tell SnapCtrl where your server is";
+  if (!snapcast.connectionError) return t("Connect to Snapcast");
+  if (haSnapcastInfo) return t("Check the Home Assistant proxy");
+  return t("Tell SnapCtrl where your server is");
 });
 
 const connectionPanelDescription = computed(() => {
   if (haSnapcastInfo) {
-    return "SnapCtrl is using the Home Assistant add-on proxy. If this fails, check the add-on configuration and Snapcast service.";
+    return t(
+      "SnapCtrl is using the Home Assistant add-on proxy. If this fails, check the add-on configuration and Snapcast service.",
+    );
   }
 
   if (snapcast.connectionError && isLoopbackTarget.value) {
-    return "We tried localhost first. If Snapcast runs on another device, enter that device's IP address or hostname below.";
+    return t(
+      "We tried localhost first. If Snapcast runs on another device, enter that device's IP address or hostname below.",
+    );
   }
 
   if (snapcast.connectionError) {
-    return "We could not reach the saved server address. Check the host, port, and network access, then try again.";
+    return t(
+      "We could not reach the saved server address. Check the host, port, and network access, then try again.",
+    );
   }
 
-  return "SnapCtrl will try the local server first. If Snapcast is on another device, use its LAN IP address or hostname.";
+  return t(
+    "SnapCtrl will try the local server first. If Snapcast is on another device, use its LAN IP address or hostname.",
+  );
 });
 
 const connectionFormTone = computed<"warning" | "error">(() => {
@@ -86,12 +94,19 @@ const connectionFormMessage = computed(() => {
   if (connectHostError.value) return connectHostError.value;
   if (!snapcast.connectionError) return "";
   if (haSnapcastInfo) {
-    return "The add-on proxy could not reach Snapcast. Confirm the add-on host and port settings.";
+    return t(
+      "The add-on proxy could not reach Snapcast. Confirm the add-on host and port settings.",
+    );
   }
   if (isLoopbackTarget.value) {
-    return "Snapcast did not answer on localhost:1780. Enter the IP or hostname of the machine running Snapcast.";
+    return t(
+      "Snapcast did not answer on localhost:1780. Enter the IP or hostname of the machine running Snapcast.",
+    );
   }
-  return `Snapcast did not answer on ${snapcast.host}. Try another address or confirm port 1780 is open.`;
+  return t(
+    "Snapcast did not answer on {p0}. Try another address or confirm port 1780 is open.",
+    { p0: snapcast.host },
+  );
 });
 
 const hostSuggestions = computed(() => {
@@ -150,10 +165,10 @@ function useHostSuggestion(host: string) {
           </div>
           <div>
             <p class="text-sm font-semibold text-blue-700 dark:text-blue-300">
-              Snapcast server
+              {{ t("Snapcast server") }}
             </p>
             <p class="text-sm text-[var(--text-tertiary)]">
-              Default target: localhost:1780
+              {{ t("Default target: localhost:1780") }}
             </p>
           </div>
         </div>
@@ -163,7 +178,9 @@ function useHostSuggestion(host: string) {
         >
           {{ connectionPanelTitle }}
         </h2>
-        <p class="mt-3 max-w-2xl text-base leading-7 text-[var(--text-secondary)]">
+        <p
+          class="mt-3 max-w-2xl text-base leading-7 text-[var(--text-secondary)]"
+        >
           {{ connectionPanelDescription }}
         </p>
       </div>
@@ -175,14 +192,15 @@ function useHostSuggestion(host: string) {
           class="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-blue-800 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200"
         >
           <div class="flex items-start gap-3">
-            <span
-              class="mdi mdi-information-outline shrink-0 text-xl"
-            ></span>
+            <span class="mdi mdi-information-outline shrink-0 text-xl"></span>
             <div>
-              <p class="text-sm font-semibold">Initial setup</p>
+              <p class="text-sm font-semibold">{{ t("Initial setup") }}</p>
               <p class="mt-1 text-sm leading-6">
-                Connect to your server to load zones, sources, and
-                speakers. You'll configure permissions after connecting.
+                {{
+                  t(
+                    "Connect to your server to load zones, sources, and speakers. You'll configure permissions after connecting.",
+                  )
+                }}
               </p>
             </div>
           </div>
@@ -217,19 +235,21 @@ function useHostSuggestion(host: string) {
             <label
               class="mb-2 block text-sm font-semibold text-[var(--text-primary)]"
             >
-              Home Assistant proxy
+              {{ t("Home Assistant proxy") }}
             </label>
             <div
               class="flex min-h-12 items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-secondary)]"
             >
-              <span class="mdi mdi-home-assistant text-lg text-blue-600 dark:text-blue-300"></span>
+              <span
+                class="mdi mdi-home-assistant text-lg text-blue-600 dark:text-blue-300"
+              ></span>
               <span>
                 Snapcast:
                 <span class="font-mono text-[var(--text-primary)]">
                   {{ haSnapcastInfo }}
                 </span>
                 <span class="ml-2 text-xs text-[var(--text-tertiary)]">
-                  via addon proxy
+                  {{ t("via addon proxy") }}
                 </span>
               </span>
             </div>
@@ -240,7 +260,7 @@ function useHostSuggestion(host: string) {
               for="snapcast-host"
               class="mb-2 block text-sm font-semibold text-[var(--text-primary)]"
             >
-              IP address or hostname
+              {{ t("IP address or hostname") }}
             </label>
             <div class="relative">
               <span
@@ -266,10 +286,9 @@ function useHostSuggestion(host: string) {
               id="snapcast-host-help"
               class="mt-2 text-sm leading-6 text-[var(--text-tertiary)]"
             >
-              Include the Snapcast JSON-RPC port. The default is
-              <span class="font-mono text-[var(--text-secondary)]">
-                1780
-              </span>.
+              {{ t("Include the Snapcast JSON-RPC port. The default is") }}
+              <span class="font-mono text-[var(--text-secondary)]"> 1780 </span
+              >.
             </p>
             <p
               v-if="connectHostError"
@@ -305,7 +324,7 @@ function useHostSuggestion(host: string) {
                 v-if="settings.recentHosts.includes(suggestion)"
                 type="button"
                 class="inline-flex min-w-[44px] items-center justify-center px-2 text-[var(--text-tertiary)] opacity-0 pointer-coarse:opacity-100 transition-opacity hover:text-red-600 group-hover:opacity-100 focus:opacity-100 dark:hover:text-red-400"
-                :aria-label="`Forget ${suggestion}`"
+                :aria-label="t(`Forget {p0}`, { p0: suggestion })"
                 @click="settings.removeRecentHost(suggestion)"
               >
                 <span class="mdi mdi-close text-sm"></span>
@@ -317,7 +336,7 @@ function useHostSuggestion(host: string) {
             type="submit"
             class="min-h-12 w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white shadow-sm shadow-blue-950/10 transition-all hover:bg-blue-700 active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-blue-500/25 dark:bg-blue-500 dark:hover:bg-blue-400"
           >
-            Connect to Snapcast
+            {{ t("Connect to Snapcast") }}
           </button>
         </form>
       </div>
@@ -327,7 +346,7 @@ function useHostSuggestion(host: string) {
       class="rounded-2xl border border-[var(--border)] bg-[var(--surface-0)] p-6"
     >
       <h3 class="text-base font-semibold text-[var(--text-primary)]">
-        Where is Snapcast running?
+        {{ t("Where is Snapcast running?") }}
       </h3>
       <div class="mt-5 space-y-4">
         <div class="flex gap-3">
@@ -337,10 +356,12 @@ function useHostSuggestion(host: string) {
             1
           </span>
           <p class="text-sm leading-6 text-[var(--text-secondary)]">
-            If this UI is installed on the same machine as Snapcast, keep
+            {{
+              t("If this UI is installed on the same machine as Snapcast, keep")
+            }}
             <span class="font-mono text-[var(--text-primary)]">
-              localhost:1780
-            </span>.
+              localhost:1780 </span
+            >.
           </p>
         </div>
         <div class="flex gap-3">
@@ -350,8 +371,11 @@ function useHostSuggestion(host: string) {
             2
           </span>
           <p class="text-sm leading-6 text-[var(--text-secondary)]">
-            If Snapcast is on another device, use that device's LAN IP or
-            hostname.
+            {{
+              t(
+                "If Snapcast is on another device, use that device's LAN IP or hostname.",
+              )
+            }}
           </p>
         </div>
         <div class="flex gap-3">
@@ -361,9 +385,9 @@ function useHostSuggestion(host: string) {
             3
           </span>
           <p class="text-sm leading-6 text-[var(--text-secondary)]">
-            Make sure port
+            {{ t("Make sure port") }}
             <span class="font-mono text-[var(--text-primary)]">1780</span>
-            is reachable from this browser.
+            {{ t("is reachable from this browser.") }}
           </p>
         </div>
       </div>

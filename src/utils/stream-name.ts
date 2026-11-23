@@ -2,10 +2,14 @@
  * Derive a human-friendly stream name from a Snapcast stream URI.
  * Handles both string URIs and parsed URI objects returned by Server.GetStatus.
  */
-export function getStreamName(stream: { uri?: unknown; id?: string } | null | undefined): string {
-  if (!stream) return "Unknown Source";
+import { t } from "@/i18n";
+
+export function getStreamName(
+  stream: { uri?: unknown; id?: string } | null | undefined,
+): string {
+  if (!stream) return t("Unknown Source");
   const uri = stream.uri;
-  if (!uri) return stream.id ?? "Unknown Source";
+  if (!uri) return stream.id ?? t("Unknown Source");
 
   if (typeof uri === "string") {
     const q = uri.split("?")[1] || "";
@@ -18,13 +22,13 @@ export function getStreamName(stream: { uri?: unknown; id?: string } | null | un
     const query = u.query;
     if (typeof query === "string") {
       const params = new URLSearchParams(query);
-      return params.get("name") || (u.path ?? stream.id ?? "Unknown Source");
+      return params.get("name") || (u.path ?? stream.id ?? t("Unknown Source"));
     }
     if (query && typeof query === "object") {
       const name = (query as { name?: string }).name;
-      return name || (u.path ?? stream.id ?? "Unknown Source");
+      return name || (u.path ?? stream.id ?? t("Unknown Source"));
     }
-    return u.path ?? stream.id ?? "Unknown Source";
+    return u.path ?? stream.id ?? t("Unknown Source");
   }
-  return stream.id ?? "Unknown Source";
+  return stream.id ?? t("Unknown Source");
 }

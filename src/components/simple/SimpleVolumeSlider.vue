@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from "@/i18n";
 import { computed } from "vue";
 import { sliderToVolume, volumeToSlider } from "@/utils/volume";
 
@@ -23,7 +24,7 @@ const props = withDefaults(
     disabled: false,
     size: "lg",
     accent: "var(--brand)",
-  }
+  },
 );
 
 const emit = defineEmits<{
@@ -31,10 +32,12 @@ const emit = defineEmits<{
   "update:volume": [value: number];
 }>();
 
-const sliderValue = computed(() => volumeToSlider(props.volume, props.exponent));
+const sliderValue = computed(() =>
+  volumeToSlider(props.volume, props.exponent),
+);
 
 const fillColor = computed(() =>
-  props.disabled || props.muted ? "var(--fill-neutral)" : props.accent
+  props.disabled || props.muted ? "var(--fill-neutral)" : props.accent,
 );
 
 const trackStyle = computed(() => ({
@@ -51,22 +54,28 @@ function nudge(direction: 1 | -1) {
   // Step in slider-space so each tap feels equal regardless of the curve.
   const next = Math.max(
     0,
-    Math.min(100, Math.round(sliderValue.value + direction * props.step))
+    Math.min(100, Math.round(sliderValue.value + direction * props.step)),
   );
   emit("update:volume", sliderToVolume(next, props.exponent));
 }
 </script>
 
 <template>
-  <div class="flex items-center gap-2 w-full" :class="{ 'opacity-60': disabled }">
+  <div
+    class="flex items-center gap-2 w-full"
+    :class="{ 'opacity-60': disabled }"
+  >
     <button
       type="button"
       class="w-11 h-11 shrink-0 flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:hover:bg-transparent disabled:hover:text-[var(--text-tertiary)]"
       :disabled="disabled || volume <= 0"
-      :aria-label="`Decrease ${label}`"
+      :aria-label="t(`Decrease {p0}`, { p0: label })"
       @click="nudge(-1)"
     >
-      <span class="mdi mdi-minus" :class="size === 'lg' ? 'text-xl' : 'text-lg'"></span>
+      <span
+        class="mdi mdi-minus"
+        :class="size === 'lg' ? 'text-xl' : 'text-lg'"
+      ></span>
     </button>
 
     <input
@@ -77,7 +86,7 @@ function nudge(direction: 1 | -1) {
       :value="sliderValue"
       :disabled="disabled"
       :aria-label="label"
-      :aria-valuetext="`${volume}%${muted ? ', muted' : ''}`"
+      :aria-valuetext="`${volume}%${muted ? t(', muted') : ''}`"
       class="simple-range h-11 w-full bg-transparent appearance-none flex-1 min-w-0 cursor-pointer touch-pan-y disabled:cursor-not-allowed"
       :class="{ 'simple-range--lg': size === 'lg' }"
       :style="trackStyle"
@@ -88,17 +97,22 @@ function nudge(direction: 1 | -1) {
       type="button"
       class="w-11 h-11 shrink-0 flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:hover:bg-transparent disabled:hover:text-[var(--text-tertiary)]"
       :disabled="disabled || volume >= 100"
-      :aria-label="`Increase ${label}`"
+      :aria-label="t(`Increase {p0}`, { p0: label })"
       @click="nudge(1)"
     >
-      <span class="mdi mdi-plus" :class="size === 'lg' ? 'text-xl' : 'text-lg'"></span>
+      <span
+        class="mdi mdi-plus"
+        :class="size === 'lg' ? 'text-xl' : 'text-lg'"
+      ></span>
     </button>
 
     <span
       class="shrink-0 text-right tabular-nums font-semibold"
       :class="[
         size === 'lg' ? 'w-12 text-lg' : 'w-10 text-sm',
-        muted ? 'text-[var(--text-tertiary)] line-through' : 'text-[var(--text-secondary)]',
+        muted
+          ? 'text-[var(--text-tertiary)] line-through'
+          : 'text-[var(--text-secondary)]',
       ]"
       aria-hidden="true"
     >
@@ -120,7 +134,11 @@ function nudge(direction: 1 | -1) {
 .simple-range::-webkit-slider-runnable-track {
   height: 0.5rem;
   border-radius: 9999px;
-  background: linear-gradient(to right, var(--fill) var(--stop), var(--track) var(--stop));
+  background: linear-gradient(
+    to right,
+    var(--fill) var(--stop),
+    var(--track) var(--stop)
+  );
 }
 .simple-range--lg::-webkit-slider-runnable-track {
   height: 0.75rem;
@@ -128,7 +146,11 @@ function nudge(direction: 1 | -1) {
 .simple-range::-moz-range-track {
   height: 0.5rem;
   border-radius: 9999px;
-  background: linear-gradient(to right, var(--fill) var(--stop), var(--track) var(--stop));
+  background: linear-gradient(
+    to right,
+    var(--fill) var(--stop),
+    var(--track) var(--stop)
+  );
 }
 .simple-range--lg::-moz-range-track {
   height: 0.75rem;

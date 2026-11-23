@@ -41,6 +41,44 @@ See [CHANGELOG.md](CHANGELOG.md) for the full version history, and
 [GitHub Releases](https://github.com/NaturalDevCR/snap-ctrl/releases) for
 per-release notes and downloadable builds.
 
+## Optional Studio interface
+
+Select **Studio** in the header, or open **Settings → Interface → Studio**.
+The original interface remains the default. Switch back with **Classic** in the
+Studio header, or **Settings → Interface → Classic**. The choice takes effect
+immediately and is remembered in this browser.
+
+Studio puts everything in one compact zone view, without a banner or separate
+source and speaker pages. Search by zone, source or speaker; filter playing or
+muted zones; and change the source, volume and mute state directly on each card.
+Studio has a Midnight blue dark theme and a matching cool blue light theme.
+The speaker button beside the source expands individual volumes, linking, details
+and settings. Cards stay compact on phones, with additional controls shown only
+when expanded.
+
+A zone with one speaker exposes that speaker's volume. Zones with linked speakers
+use the existing proportional master volume and control curve. Playback itself is
+still controlled in the source application.
+
+Zone creation, visibility and ordering, server information, speaker calibration,
+group membership, cleanup, per-source volume memory, application settings,
+passcodes and permissions remain available through the shared dialogs. Studio uses
+the same stores and WebSocket connection as the original interface. One browser
+player instance is shared by both interfaces: changing the interface or resizing
+the window preserves playback and does not delete its temporary speaker.
+
+Both interfaces ask for confirmation before muting a zone, an individual speaker,
+all visible zones or the browser player. Canceling leaves audio unchanged;
+unmuting does not require confirmation. The confirmations are styled app dialogs,
+with keyboard focus handling, Escape/backdrop cancellation and live translations.
+Changing a source also requires confirmation, including the browser player and
+changes saved from zone settings.
+
+Animations respect the operating system's reduced-motion preference. Studio uses
+local assets and system fonts, without requiring external font or image services.
+
+Development checks: `pnpm test`, `pnpm run build`, and `pnpm run build:ha`.
+
 ## Getting Started
 
 ### Prerequisites
@@ -147,3 +185,20 @@ This project was developed with the assistance of advanced AI coding agents (Gem
 ## License
 
 MIT
+
+## Language, palettes and app icon
+
+Choose **Settings → Language** to switch between **English** and **Español**.
+The two language buttons avoid native dropdown menus. Labels, dialogs,
+confirmations and accessibility text change immediately in both
+interfaces. Zone, source and speaker names stay as configured on the server.
+Language and palette choices are local to each browser.
+
+Studio includes four palettes in **Settings → Studio color palette**: Midnight
+(default), Ocean, Aurora and Ember. Each supports light and dark mode. Playing
+zones have a highlighted edge, tinted surface and animated equalizer; muted and
+unavailable zones have distinct icons and borders. Motion respects the system's
+reduced-motion setting.
+
+The new installed-app icon includes Apple, standard PWA and maskable Android
+exports. See [icon source and generation prompt](docs/branding/app-icon.md).

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from "@/i18n";
 import { computed, toRef } from "vue";
 import { useSettingsStore } from "@/stores/settings";
 import { useSnapcastStore } from "@/stores/snapcast";
@@ -46,13 +47,17 @@ function isHidden(groupId: string): boolean {
 </script>
 
 <template>
-  <AppDialog :open="props.open" title="Manage zones" @close="emit('close')">
+  <AppDialog
+    :open="props.open"
+    :title="t('Manage zones')"
+    @close="emit('close')"
+  >
     <div class="-m-2">
       <div
         v-if="snapcast.groups.length === 0"
         class="p-4 text-center text-[var(--text-tertiary)]"
       >
-        No zones available
+        {{ t("No zones available") }}
       </div>
       <div
         v-for="(group, index) in orderedZonesForFilter"
@@ -66,7 +71,10 @@ function isHidden(groupId: string): boolean {
         :class="{ 'opacity-50': draggedIndex === index }"
       >
         <div class="flex items-center gap-3 min-w-0">
-          <span class="mdi mdi-drag-vertical text-[var(--text-tertiary)] hidden sm:inline" aria-hidden="true"></span>
+          <span
+            class="mdi mdi-drag-vertical text-[var(--text-tertiary)] hidden sm:inline"
+            aria-hidden="true"
+          ></span>
           <!-- Native HTML5 drag-and-drop (the handlers on the row above)
                never fires on touch devices — there's no browser
                fallback — so these are the only way to reorder on a
@@ -78,7 +86,7 @@ function isHidden(groupId: string): boolean {
               type="button"
               class="w-11 h-11 flex items-center justify-center rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] disabled:opacity-25 disabled:pointer-events-none"
               :disabled="index === 0"
-              :aria-label="`Move ${getGroupName(group)} up`"
+              :aria-label="t(`Move {p0} up`, { p0: getGroupName(group) })"
               @click.stop="moveZoneUp(index)"
             >
               <span class="mdi mdi-chevron-up text-xl"></span>
@@ -87,7 +95,7 @@ function isHidden(groupId: string): boolean {
               type="button"
               class="w-11 h-11 flex items-center justify-center rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] disabled:opacity-25 disabled:pointer-events-none"
               :disabled="index === orderedZonesForFilter.length - 1"
-              :aria-label="`Move ${getGroupName(group)} down`"
+              :aria-label="t(`Move {p0} down`, { p0: getGroupName(group) })"
               @click.stop="moveZoneDown(index)"
             >
               <span class="mdi mdi-chevron-down text-xl"></span>
@@ -98,15 +106,20 @@ function isHidden(groupId: string): boolean {
           >
             {{ getGroupName(group).charAt(0).toUpperCase() }}
           </span>
-          <span class="min-w-0 font-medium text-[var(--text-primary)] truncate">{{
-            getGroupName(group)
-          }}</span>
+          <span
+            class="min-w-0 font-medium text-[var(--text-primary)] truncate"
+            >{{ getGroupName(group) }}</span
+          >
         </div>
         <button
           type="button"
           class="w-11 h-11 flex items-center justify-center shrink-0"
           :aria-pressed="!isHidden(group.id)"
-          :aria-label="isHidden(group.id) ? `Show ${getGroupName(group)}` : `Hide ${getGroupName(group)}`"
+          :aria-label="
+            isHidden(group.id)
+              ? t(`Show {p0}`, { p0: getGroupName(group) })
+              : t(`Hide {p0}`, { p0: getGroupName(group) })
+          "
           @click.stop="toggleVisibility(group.id)"
         >
           <span
@@ -132,7 +145,7 @@ function isHidden(groupId: string): boolean {
           @click="emit('close')"
           class="px-4 py-2 min-h-11 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
         >
-          Done
+          {{ t("Done") }}
         </button>
       </div>
     </template>

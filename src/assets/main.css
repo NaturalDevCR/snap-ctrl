@@ -270,3 +270,13 @@ input:focus-visible + .app-toggle {
     --gutter: 2rem;
   }
 }
+
+/* Direct language choices avoid native menus and keep both languages visible. */
+.app-language-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+.app-language-choice { display: flex; align-items: center; gap: .625rem; min-height: 56px; padding: .75rem; border: 1px solid var(--border); border-radius: 14px; background: var(--surface-2); color: var(--text-secondary); cursor: pointer; font-size: 13px; transition: border-color .2s, background-color .2s; }
+.app-language-choice--selected { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 10%, var(--surface-1)); color: var(--text-primary); }
+.app-language-choice:has(input:focus-visible) { outline: 2px solid var(--focus); outline-offset: 3px; }
+.app-language-code { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 7px; flex-shrink: 0; font-size: 10px; font-weight: 700; color: var(--text-tertiary); background: var(--surface-1); }
+.app-language-choice--selected .app-language-code { color: var(--brand); }
+.app-language-choice > .mdi { margin-left: auto; font-size: 17px; color: var(--text-tertiary); }.app-language-choice--selected > .mdi { color: var(--brand); }
+@media (max-width: 360px) { .app-language-code { display: none; } }

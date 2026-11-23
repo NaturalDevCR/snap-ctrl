@@ -1,10 +1,14 @@
+import { t } from "@/i18n";
 import { getStreamName } from "./stream-name";
 
 export interface GroupLike {
   id: string;
   name?: string | null;
   stream_id?: string;
-  clients?: Array<{ config?: { name?: string | null }; host?: { name?: string } }>;
+  clients?: Array<{
+    config?: { name?: string | null };
+    host?: { name?: string };
+  }>;
 }
 
 export interface StreamLike {
@@ -19,7 +23,7 @@ export interface StreamLike {
  */
 export function getGroupDisplayName(
   group: GroupLike,
-  streams: StreamLike[] = []
+  streams: StreamLike[] = [],
 ): string {
   if (group.name && group.name.trim().length > 0) return group.name;
 
@@ -31,9 +35,10 @@ export function getGroupDisplayName(
 
   if (group.clients && group.clients.length > 0) {
     const first = group.clients[0];
-    if (first?.config?.name) return `${first.config.name} Zone`;
-    return `${group.clients.length} Speakers`;
+    if (first?.config?.name)
+      return t("{name} Zone", { name: first.config.name });
+    return t("{count} Speakers", { count: group.clients.length });
   }
 
-  return `Zone ${group.id.substring(0, 8)}`;
+  return t("Zone {p0}", { p0: group.id.substring(0, 8) });
 }

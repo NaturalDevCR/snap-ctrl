@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from "@/i18n";
 import { ref, computed, watch, nextTick } from "vue";
 import { useEscapeToClose } from "@/composables/useEscapeToClose";
 import { useBodyScrollLock } from "@/composables/useBodyScrollLock";
@@ -70,26 +71,30 @@ watch(
         searchRef.value?.focus();
       } else {
         panelRef.value
-          ?.querySelector<HTMLButtonElement>('[aria-selected="true"], [role="option"]')
+          ?.querySelector<HTMLButtonElement>(
+            '[aria-selected="true"], [role="option"]',
+          )
           ?.focus();
       }
     } else {
       returnFocusTo?.focus?.();
       returnFocusTo = null;
     }
-  }
+  },
 );
 
 function onListKeydown(event: KeyboardEvent) {
   if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
   event.preventDefault();
   const options = Array.from(
-    panelRef.value?.querySelectorAll<HTMLButtonElement>('[role="option"]') ?? []
+    panelRef.value?.querySelectorAll<HTMLButtonElement>('[role="option"]') ??
+      [],
   );
   if (options.length === 0) return;
   const index = options.indexOf(document.activeElement as HTMLButtonElement);
   const dir = event.key === "ArrowDown" ? 1 : -1;
-  const next = index === -1 ? 0 : (index + dir + options.length) % options.length;
+  const next =
+    index === -1 ? 0 : (index + dir + options.length) % options.length;
   options[next]?.focus();
 }
 </script>
@@ -111,7 +116,7 @@ function onListKeydown(event: KeyboardEvent) {
           ref="panelRef"
           role="dialog"
           aria-modal="true"
-          :aria-label="`Choose a source for ${zoneName}`"
+          :aria-label="t(`Choose a source for {p0}`, { p0: zoneName })"
           tabindex="-1"
           class="sv-sheet-panel relative w-full sm:max-w-md max-h-[82dvh] sm:max-h-[75dvh] flex flex-col bg-[var(--surface-1)] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[var(--border)] overflow-hidden outline-none"
           @keydown="onListKeydown"
@@ -123,17 +128,21 @@ function onListKeydown(event: KeyboardEvent) {
 
           <div class="px-5 pt-4 sm:pt-5 pb-3 flex items-start gap-3">
             <div class="flex-1 min-w-0">
-              <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--text-tertiary)]">
-                Choose a source
+              <p
+                class="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--text-tertiary)]"
+              >
+                {{ t("Choose a source") }}
               </p>
-              <h3 class="mt-0.5 text-xl font-bold tracking-tight text-[var(--text-primary)] truncate">
+              <h3
+                class="mt-0.5 text-xl font-bold tracking-tight text-[var(--text-primary)] truncate"
+              >
                 {{ zoneName }}
               </h3>
             </div>
             <button
               type="button"
               class="w-11 h-11 -mr-2 flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-2)] transition-all active:scale-90"
-              aria-label="Close"
+              :aria-label="t('Close')"
               @click="close"
             >
               <span class="mdi mdi-close text-xl"></span>
@@ -142,7 +151,7 @@ function onListKeydown(event: KeyboardEvent) {
 
           <div v-if="showSearch" class="px-5 pb-3">
             <label class="relative block">
-              <span class="sr-only">Search sources</span>
+              <span class="sr-only">{{ t("Search sources") }}</span>
               <span
                 class="mdi mdi-magnify absolute left-3.5 top-1/2 -translate-y-1/2 text-lg text-[var(--text-tertiary)]"
                 aria-hidden="true"
@@ -151,7 +160,7 @@ function onListKeydown(event: KeyboardEvent) {
                 ref="searchRef"
                 v-model="query"
                 type="search"
-                placeholder="Search sources"
+                :placeholder="t('Search sources')"
                 class="w-full h-11 pl-10 pr-4 rounded-2xl bg-[var(--surface-2)] border border-transparent focus:border-blue-500 focus:bg-[var(--surface-1)] outline-none text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] transition-colors"
               />
             </label>
@@ -159,7 +168,7 @@ function onListKeydown(event: KeyboardEvent) {
 
           <div
             role="listbox"
-            :aria-label="`Sources for ${zoneName}`"
+            :aria-label="t(`Sources for {p0}`, { p0: zoneName })"
             class="flex-1 overflow-y-auto custom-scrollbar px-3"
             style="padding-bottom: calc(1rem + env(safe-area-inset-bottom))"
           >
@@ -190,19 +199,24 @@ function onListKeydown(event: KeyboardEvent) {
                 <span class="mdi text-xl" :class="source.icon"></span>
               </span>
               <span class="flex-1 min-w-0">
-                <span class="block truncate font-semibold text-[var(--text-primary)]">
+                <span
+                  class="block truncate font-semibold text-[var(--text-primary)]"
+                >
                   {{ source.name }}
                 </span>
-                <span class="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]">
+                <span
+                  class="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]"
+                >
                   <span
                     class="w-1.5 h-1.5 rounded-full"
                     :class="{
                       'bg-[var(--status-playing)]': source.state === 'playing',
                       'bg-[var(--status-idle)]': source.state === 'idle',
-                      'bg-[var(--status-attention)]': source.state === 'unavailable',
+                      'bg-[var(--status-attention)]':
+                        source.state === 'unavailable',
                     }"
                   ></span>
-                  {{ stateLabel[source.state] }}
+                  {{ t(stateLabel[source.state]) }}
                 </span>
               </span>
               <span
@@ -216,7 +230,7 @@ function onListKeydown(event: KeyboardEvent) {
               v-if="filtered.length === 0"
               class="py-10 text-center text-sm text-[var(--text-tertiary)]"
             >
-              No sources match “{{ query }}”
+              {{ t("No sources match “{query}”", { query }) }}
             </p>
           </div>
         </div>

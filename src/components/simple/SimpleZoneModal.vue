@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from "@/i18n";
 import { ref, watch, nextTick } from "vue";
 import { useZoneControls } from "@/composables/useZoneControls";
 import { useEscapeToClose } from "@/composables/useEscapeToClose";
@@ -44,7 +45,7 @@ watch(
       returnFocusTo?.focus?.();
       returnFocusTo = null;
     }
-  }
+  },
 );
 </script>
 
@@ -66,20 +67,29 @@ watch(
           ref="panelRef"
           role="dialog"
           aria-modal="true"
-          :aria-label="`${zone.zoneName.value}: volume and speakers`"
+          :aria-label="
+            t(`{p0}: volume and speakers`, { p0: zone.zoneName.value })
+          "
           tabindex="-1"
           class="sv-sheet-panel relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[85dvh] flex flex-col bg-[var(--surface-1)] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-[var(--border)] overflow-hidden outline-none"
-          :class="{ 'is-playing': zone.playState.value === 'playing' && !group.muted }"
+          :class="{
+            'is-playing': zone.playState.value === 'playing' && !group.muted,
+          }"
         >
           <div class="sv-glow" aria-hidden="true"></div>
 
           <!-- Grab handle (mobile affordance) -->
-          <div class="sm:hidden pt-2.5 flex justify-center relative" aria-hidden="true">
+          <div
+            class="sm:hidden pt-2.5 flex justify-center relative"
+            aria-hidden="true"
+          >
             <div class="w-10 h-1.5 rounded-full bg-[var(--handle)]"></div>
           </div>
 
           <!-- Header -->
-          <header class="relative px-5 pt-4 sm:pt-5 pb-4 flex items-start gap-3">
+          <header
+            class="relative px-5 pt-4 sm:pt-5 pb-4 flex items-start gap-3"
+          >
             <div
               class="sv-tile w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-white transition-all duration-500"
               :class="{ 'is-idle': zone.tileState.value === 'idle' }"
@@ -87,15 +97,26 @@ watch(
               aria-hidden="true"
             >
               <Transition name="sv-swap" mode="out-in">
-                <span v-if="zone.tileState.value === 'playing'" key="eq" class="sv-eq scale-90">
+                <span
+                  v-if="zone.tileState.value === 'playing'"
+                  key="eq"
+                  class="sv-eq scale-90"
+                >
                   <span></span><span></span><span></span><span></span>
                 </span>
-                <span v-else key="i" class="mdi text-2xl" :class="zone.currentSourceIcon.value"></span>
+                <span
+                  v-else
+                  key="i"
+                  class="mdi text-2xl"
+                  :class="zone.currentSourceIcon.value"
+                ></span>
               </Transition>
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 min-w-0">
-                <h3 class="text-xl font-bold tracking-tight text-[var(--text-primary)] truncate">
+                <h3
+                  class="text-xl font-bold tracking-tight text-[var(--text-primary)] truncate"
+                >
                   {{ zone.zoneName.value }}
                 </h3>
                 <Transition name="sv-pop">
@@ -103,15 +124,18 @@ watch(
                     v-if="group.muted"
                     class="shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400"
                   >
-                    Muted
+                    {{ t("Muted") }}
                   </span>
                 </Transition>
               </div>
               <p class="text-sm text-[var(--text-tertiary)]">
-                Volume &amp; speakers
+                {{ t("Volume & speakers") }}
               </p>
             </div>
-            <Tooltip v-if="zone.showGroupSettings.value" text="Zone settings">
+            <Tooltip
+              v-if="zone.showGroupSettings.value"
+              :text="t('Zone settings')"
+            >
               <button
                 type="button"
                 class="w-11 h-11 flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-2)] hover:rotate-90 active:scale-90 transition-all duration-300"
@@ -123,7 +147,7 @@ watch(
             <button
               type="button"
               class="w-11 h-11 -mr-2 flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-2)] active:scale-90 transition-all"
-              aria-label="Close"
+              :aria-label="t('Close')"
               @click="close"
             >
               <span class="mdi mdi-close text-xl"></span>
@@ -150,15 +174,25 @@ watch(
             >
               <div class="flex items-center gap-3">
                 <div class="flex-1 min-w-0">
-                  <h4 class="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--text-tertiary)]">
-                    Zone volume
+                  <h4
+                    class="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--text-tertiary)]"
+                  >
+                    {{ t("Zone volume") }}
                   </h4>
                   <p class="text-sm text-[var(--text-secondary)]">
                     <template v-if="zone.hasMasterVolume.value">
-                      Moves {{ zone.linkedClients.value.length }} linked
-                      speaker{{ zone.linkedClients.value.length === 1 ? "" : "s" }} together
+                      {{
+                        t(
+                          zone.linkedClients.value.length === 1
+                            ? "Moves {count} linked speaker together"
+                            : "Moves {count} linked speakers together",
+                          { count: zone.linkedClients.value.length },
+                        )
+                      }}
                     </template>
-                    <template v-else>Mute or unmute the whole zone</template>
+                    <template v-else>{{
+                      t("Mute or unmute the whole zone")
+                    }}</template>
                   </p>
                 </div>
                 <button
@@ -171,18 +205,24 @@ watch(
                   "
                   :disabled="!zone.canAdjustVolume.value"
                   :aria-pressed="group.muted"
-                  :aria-label="group.muted ? `Unmute ${zone.zoneName.value}` : `Mute ${zone.zoneName.value}`"
+                  :aria-label="
+                    group.muted
+                      ? t(`Unmute {p0}`, { p0: zone.zoneName.value })
+                      : t(`Mute {p0}`, { p0: zone.zoneName.value })
+                  "
                   @click="zone.toggleZoneMute"
                 >
                   <Transition name="sv-swap" mode="out-in">
                     <span
                       :key="group.muted ? 'off' : 'on'"
                       class="mdi text-lg"
-                      :class="group.muted ? 'mdi-volume-off' : 'mdi-volume-high'"
+                      :class="
+                        group.muted ? 'mdi-volume-off' : 'mdi-volume-high'
+                      "
                       aria-hidden="true"
                     ></span>
                   </Transition>
-                  {{ group.muted ? "Muted" : "Mute" }}
+                  {{ group.muted ? t("Muted") : t("Mute") }}
                 </button>
               </div>
 
@@ -190,7 +230,7 @@ watch(
                 v-if="zone.hasMasterVolume.value"
                 :volume="zone.masterVolume.value"
                 :muted="group.muted"
-                :label="`${zone.zoneName.value} volume`"
+                :label="t(`{p0} volume`, { p0: zone.zoneName.value })"
                 :exponent="zone.exponent.value"
                 :step="zone.volumeStep.value"
                 :disabled="!zone.canAdjustVolume.value"
@@ -202,11 +242,22 @@ watch(
                 v-else-if="zone.speakers.value.length > 0"
                 class="flex items-start gap-2 text-xs text-[var(--text-tertiary)] leading-relaxed"
               >
-                <span class="mdi mdi-link-variant text-base -mt-0.5 sv-accent-text" aria-hidden="true"></span>
+                <span
+                  class="mdi mdi-link-variant text-base -mt-0.5 sv-accent-text"
+                  aria-hidden="true"
+                ></span>
                 <span v-if="zone.canLinkClients.value">
-                  To control several speakers with one slider, tap their link button below.
+                  {{
+                    t(
+                      "To control several speakers with one slider, tap their link button below.",
+                    )
+                  }}
                 </span>
-                <span v-else>This zone has no linked speakers, so it has no zone volume.</span>
+                <span v-else>{{
+                  t(
+                    "This zone has no linked speakers, so it has no zone volume.",
+                  )
+                }}</span>
               </p>
 
               <p
@@ -214,15 +265,17 @@ watch(
                 class="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]"
               >
                 <span class="mdi mdi-lock-outline" aria-hidden="true"></span>
-                Volume changes are disabled on this device
+                {{ t("Volume changes are disabled on this device") }}
               </p>
             </section>
 
             <!-- Speakers -->
             <section class="sv-cascade" style="--i: 2">
               <div class="flex items-baseline justify-between mb-1 px-1">
-                <h4 class="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--text-tertiary)]">
-                  Speakers
+                <h4
+                  class="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--text-tertiary)]"
+                >
+                  {{ t("Speakers") }}
                 </h4>
                 <span class="text-xs text-[var(--text-tertiary)]">
                   {{ zone.speakers.value.length }}
@@ -248,7 +301,9 @@ watch(
                   <button
                     type="button"
                     class="group/info flex-1 min-w-0 flex items-center gap-2.5 -my-1 -ml-1 py-1 pl-1 pr-2 rounded-xl text-left hover:bg-[var(--surface-2)] transition-colors focus-visible:outline-2 focus-visible:outline-blue-500"
-                    :aria-label="`${zone.speakerName(client)}: speaker info`"
+                    :aria-label="
+                      t(`{p0}: speaker info`, { p0: zone.speakerName(client) })
+                    "
                     @click="emit('client-details', client)"
                   >
                     <span
@@ -263,12 +318,21 @@ watch(
                       {{ zone.speakerName(client).charAt(0) }}
                       <span
                         class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[var(--surface-1)]"
-                        :class="client.connected ? 'bg-[var(--status-playing)]' : 'bg-[var(--status-idle)]'"
+                        :class="
+                          client.connected
+                            ? 'bg-[var(--status-playing)]'
+                            : 'bg-[var(--status-idle)]'
+                        "
                       ></span>
                     </span>
-                    <span class="flex-1 min-w-0" :class="{ 'opacity-60': !client.connected }">
+                    <span
+                      class="flex-1 min-w-0"
+                      :class="{ 'opacity-60': !client.connected }"
+                    >
                       <span class="flex items-center gap-1 min-w-0">
-                        <span class="truncate text-sm font-semibold text-[var(--text-primary)]">
+                        <span
+                          class="truncate text-sm font-semibold text-[var(--text-primary)]"
+                        >
                           {{ zone.speakerName(client) }}
                         </span>
                         <span
@@ -276,9 +340,13 @@ watch(
                           aria-hidden="true"
                         ></span>
                       </span>
-                      <span class="block truncate text-xs text-[var(--text-tertiary)]">
-                        {{ client.connected ? "Online" : "Offline" }}
-                        <template v-if="zone.isLinked(client)"> · Linked</template>
+                      <span
+                        class="block truncate text-xs text-[var(--text-tertiary)]"
+                      >
+                        {{ client.connected ? t("Online") : t("Offline") }}
+                        <template v-if="zone.isLinked(client)">
+                          {{ t("· Linked") }}</template
+                        >
                       </span>
                     </span>
                   </button>
@@ -293,21 +361,34 @@ watch(
                         : 'bg-[var(--surface-1)] border-[var(--border)] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
                     "
                     :aria-pressed="zone.isLinked(client)"
-                    :aria-label="`Link ${zone.speakerName(client)} to zone volume`"
+                    :aria-label="
+                      t(`Link {p0} to zone volume`, {
+                        p0: zone.speakerName(client),
+                      })
+                    "
                     @click="zone.toggleLink(client)"
                   >
                     <Transition name="sv-swap" mode="out-in">
                       <span
                         :key="zone.isLinked(client) ? 'on' : 'off'"
                         class="mdi"
-                        :class="zone.isLinked(client) ? 'mdi-link-variant' : 'mdi-link-variant-off'"
+                        :class="
+                          zone.isLinked(client)
+                            ? 'mdi-link-variant'
+                            : 'mdi-link-variant-off'
+                        "
                         aria-hidden="true"
                       ></span>
                     </Transition>
-                    <span class="max-[420px]:hidden">{{ zone.isLinked(client) ? "Linked" : "Link" }}</span>
+                    <span class="max-[420px]:hidden">{{
+                      zone.isLinked(client) ? t("Linked") : t("Link")
+                    }}</span>
                   </button>
 
-                  <Tooltip v-if="zone.showClientSettings.value" text="Speaker settings">
+                  <Tooltip
+                    v-if="zone.showClientSettings.value"
+                    :text="t('Speaker settings')"
+                  >
                     <button
                       type="button"
                       class="shrink-0 w-11 h-11 flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-2)] transition-all active:scale-90"
@@ -329,14 +410,18 @@ watch(
                     :aria-pressed="client.config.volume.muted"
                     :aria-label="
                       client.config.volume.muted
-                        ? `Unmute ${zone.speakerName(client)}`
-                        : `Mute ${zone.speakerName(client)}`
+                        ? t(`Unmute {p0}`, { p0: zone.speakerName(client) })
+                        : t(`Mute {p0}`, { p0: zone.speakerName(client) })
                     "
                     @click="zone.toggleSpeakerMute(client)"
                   >
                     <span
                       class="mdi text-lg"
-                      :class="client.config.volume.muted ? 'mdi-volume-off' : 'mdi-volume-high'"
+                      :class="
+                        client.config.volume.muted
+                          ? 'mdi-volume-off'
+                          : 'mdi-volume-high'
+                      "
                     ></span>
                   </button>
                 </div>
@@ -346,7 +431,7 @@ watch(
                     size="md"
                     :volume="client.config.volume.percent"
                     :muted="client.config.volume.muted || group.muted"
-                    :label="`${zone.speakerName(client)} volume`"
+                    :label="t(`{p0} volume`, { p0: zone.speakerName(client) })"
                     :exponent="zone.exponent.value"
                     :step="zone.volumeStep.value"
                     :disabled="!zone.canAdjustVolume.value"

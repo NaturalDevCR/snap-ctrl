@@ -1,39 +1,29 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { t } from "@/i18n";
+import { ref, computed, nextTick } from "vue";
 import { useZoneControls } from "@/composables/useZoneControls";
 import SimpleSourcePicker from "@/components/simple/SimpleSourcePicker.vue";
-import AppDialog from "@/components/AppDialog.vue";
 import type { Group } from "@/stores/snapcast";
 
 const props = defineProps<{ group: Group }>();
 
 const zone = useZoneControls(() => props.group);
 const showPicker = ref(false);
-const pendingSourceId = ref<string | null>(null);
 
 const subtitle = computed(() => {
-  if (!zone.canSelectStream.value) return "Changing the source is disabled";
+  if (!zone.canSelectStream.value) return t("Changing the source is disabled");
   const n = zone.sources.value.length;
-  if (n === 0) return "No sources available";
-  if (!zone.canChangeSource.value) return "Only source available";
-  return `${n} source${n === 1 ? "" : "s"} available`;
+  if (n === 0) return t("No sources available");
+  if (!zone.canChangeSource.value) return t("Only source available");
+  return t(n === 1 ? "{count} source available" : "{count} sources available", {
+    count: n,
+  });
 });
 
-const pendingSourceName = computed(
-  () => zone.sources.value.find((s) => s.id === pendingSourceId.value)?.name ?? ""
-);
-
-function requestSourceChange(id: string) {
-  pendingSourceId.value = id;
-}
-
-function confirmSourceChange() {
-  if (pendingSourceId.value) zone.selectSource(pendingSourceId.value);
-  pendingSourceId.value = null;
-}
-
-function cancelSourceChange() {
-  pendingSourceId.value = null;
+async function requestSourceChange(id: string) {
+  showPicker.value = false;
+  await nextTick();
+  zone.selectSource(id);
 }
 </script>
 
@@ -50,7 +40,7 @@ function cancelSourceChange() {
     :aria-haspopup="zone.canChangeSource.value ? 'dialog' : undefined"
     :aria-label="
       zone.canChangeSource.value
-        ? `Source: ${zone.currentSourceName.value}. Change source`
+        ? t(`Source: {p0}. Change source`, { p0: zone.currentSourceName.value })
         : undefined
     "
     @click="zone.canChangeSource.value && (showPicker = true)"
@@ -62,7 +52,11 @@ function cancelSourceChange() {
           ? 'border-transparent text-white shadow-md'
           : 'border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-secondary)]'
       "
-      :style="zone.playState.value === 'playing' ? { background: zone.playAccent.value.main } : undefined"
+      :style="
+        zone.playState.value === 'playing'
+          ? { background: zone.playAccent.value.main }
+          : undefined
+      "
       aria-hidden="true"
     >
       <Transition name="sv-swap" mode="out-in">
@@ -74,6 +68,10 @@ function cancelSourceChange() {
       </Transition>
     </span>
     <span class="flex-1 min-w-0">
+      <span
+        class="block text-[10px] font-semibold uppercase tracking-wide text-[var(--text-tertiary)]"
+        >{{ t("Source") }}</span
+      >
       <Transition name="sv-slide" mode="out-in">
         <span
           :key="group.stream_id"
@@ -90,7 +88,7 @@ function cancelSourceChange() {
       v-if="zone.canChangeSource.value"
       class="shrink-0 inline-flex items-center gap-0.5 text-sm font-semibold text-blue-600 dark:text-blue-400"
     >
-      Change
+      {{ t("Change") }}
       <span class="mdi mdi-chevron-right text-lg" aria-hidden="true"></span>
     </span>
     <span
@@ -109,36 +107,4 @@ function cancelSourceChange() {
     @select="requestSourceChange"
     @close="showPicker = false"
   />
-
-  <AppDialog
-    :open="pendingSourceId !== null"
-    title="Change source?"
-    title-icon="mdi-swap-horizontal"
-    size="sm"
-    @close="cancelSourceChange"
-  >
-    <p class="text-sm text-[var(--text-secondary)]">
-      Change <strong>{{ zone.zoneName.value }}</strong>'s source to
-      <strong>{{ pendingSourceName }}</strong>? This replaces what's currently
-      playing in this zone.
-    </p>
-    <template #footer>
-      <div class="flex gap-2 w-full justify-end">
-        <button
-          type="button"
-          class="h-11 px-4 rounded-full border border-[var(--border)] text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-2)] transition-colors"
-          @click="cancelSourceChange"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          class="h-11 px-4 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors"
-          @click="confirmSourceChange"
-        >
-          Change source
-        </button>
-      </div>
-    </template>
-  </AppDialog>
 </template>

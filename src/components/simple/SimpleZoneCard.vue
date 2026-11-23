@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from "@/i18n";
 import { ref } from "vue";
 import { useZoneControls } from "@/composables/useZoneControls";
 import SimpleSourceButton from "@/components/simple/SimpleSourceButton.vue";
@@ -22,7 +23,9 @@ const showVolume = ref(false);
   <article
     class="relative flex flex-col rounded-3xl border bg-[var(--surface-1)] shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
     :class="[
-      group.muted ? 'border-red-200 dark:border-red-900/50' : 'border-[var(--border)]',
+      group.muted
+        ? 'border-red-200 dark:border-red-900/50'
+        : 'border-[var(--border)]',
       { 'is-playing': zone.playState.value === 'playing' && !group.muted },
     ]"
     :style="zone.accentStyle.value"
@@ -41,7 +44,11 @@ const showVolume = ref(false);
           aria-hidden="true"
         >
           <Transition name="sv-swap" mode="out-in">
-            <span v-if="zone.tileState.value === 'playing'" key="eq" class="sv-eq">
+            <span
+              v-if="zone.tileState.value === 'playing'"
+              key="eq"
+              class="sv-eq"
+            >
               <span></span><span></span><span></span><span></span>
             </span>
             <span
@@ -55,7 +62,10 @@ const showVolume = ref(false);
             v-if="zone.tileState.value === 'playing'"
             class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[var(--surface-1)] flex items-center justify-center shadow"
           >
-            <span class="mdi text-sm sv-accent-text" :class="zone.currentSourceIcon.value"></span>
+            <span
+              class="mdi text-sm sv-accent-text"
+              :class="zone.currentSourceIcon.value"
+            ></span>
           </span>
         </div>
 
@@ -72,11 +82,13 @@ const showVolume = ref(false);
                 v-if="group.muted"
                 class="shrink-0 px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400"
               >
-                Muted
+                {{ t("Muted") }}
               </span>
             </Transition>
           </div>
-          <p class="mt-1 flex items-center gap-1.5 text-sm text-[var(--text-tertiary)] min-w-0">
+          <p
+            class="mt-1 flex items-center gap-1.5 text-sm text-[var(--text-tertiary)] min-w-0"
+          >
             <span class="relative flex w-2 h-2 shrink-0" aria-hidden="true">
               <span
                 v-if="zone.tileState.value === 'playing'"
@@ -85,9 +97,11 @@ const showVolume = ref(false);
               <span
                 class="relative inline-flex w-2 h-2 rounded-full"
                 :class="{
-                  'bg-[var(--status-playing)]': zone.playState.value === 'playing',
+                  'bg-[var(--status-playing)]':
+                    zone.playState.value === 'playing',
                   'bg-[var(--status-idle)]': zone.playState.value === 'idle',
-                  'bg-[var(--status-attention)]': zone.playState.value === 'unavailable',
+                  'bg-[var(--status-attention)]':
+                    zone.playState.value === 'unavailable',
                 }"
               ></span>
             </span>
@@ -95,13 +109,20 @@ const showVolume = ref(false);
             <template v-if="zone.speakers.value.length > 0">
               <span aria-hidden="true">·</span>
               <span class="truncate">
-                {{ zone.speakers.value.length }} speaker{{ zone.speakers.value.length === 1 ? "" : "s" }}
+                {{
+                  t(
+                    zone.speakers.value.length === 1
+                      ? "{count} speaker"
+                      : "{count} speakers",
+                    { count: zone.speakers.value.length },
+                  )
+                }}
               </span>
             </template>
           </p>
         </div>
 
-        <Tooltip v-if="zone.showGroupSettings.value" text="Zone settings">
+        <Tooltip v-if="zone.showGroupSettings.value" :text="t('Zone settings')">
           <button
             type="button"
             class="w-11 h-11 -mr-2 -mt-1 flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] hover:rotate-90 active:scale-90 transition-all duration-300"
@@ -129,7 +150,11 @@ const showVolume = ref(false);
           "
           :disabled="!zone.canAdjustVolume.value"
           :aria-pressed="group.muted"
-          :aria-label="group.muted ? `Unmute ${zone.zoneName.value}` : `Mute ${zone.zoneName.value}`"
+          :aria-label="
+            group.muted
+              ? t(`Unmute {p0}`, { p0: zone.zoneName.value })
+              : t(`Mute {p0}`, { p0: zone.zoneName.value })
+          "
           @click="zone.toggleZoneMute"
         >
           <Transition name="sv-swap" mode="out-in">
@@ -148,17 +173,31 @@ const showVolume = ref(false);
           aria-haspopup="dialog"
           @click="showVolume = true"
         >
-          <span class="mdi mdi-tune-vertical-variant text-xl sv-accent-text shrink-0" aria-hidden="true"></span>
+          <span
+            class="mdi mdi-tune-vertical-variant text-xl sv-accent-text shrink-0"
+            aria-hidden="true"
+          ></span>
 
           <span class="flex-1 min-w-0 flex flex-col gap-1.5">
             <span class="flex items-center justify-between gap-2">
-              <span class="truncate text-sm font-semibold text-[var(--text-primary)]">Volume</span>
+              <span
+                class="truncate text-sm font-semibold text-[var(--text-primary)]"
+                >{{ t("Volume") }}</span
+              >
               <span
                 class="tabular-nums text-sm font-bold shrink-0"
-                :class="group.muted ? 'text-[var(--text-tertiary)] line-through' : 'text-[var(--text-secondary)]'"
-              >{{ zone.zoneVolume.value }}%</span>
+                :class="
+                  group.muted
+                    ? 'text-[var(--text-tertiary)] line-through'
+                    : 'text-[var(--text-secondary)]'
+                "
+                >{{ zone.zoneVolume.value }}%</span
+              >
             </span>
-            <span class="w-full h-1.5 rounded-full bg-[color-mix(in_srgb,var(--text-tertiary)_35%,transparent)] overflow-hidden" aria-hidden="true">
+            <span
+              class="w-full h-1.5 rounded-full bg-[color-mix(in_srgb,var(--text-tertiary)_35%,transparent)] overflow-hidden"
+              aria-hidden="true"
+            >
               <span
                 class="block h-full rounded-full transition-all duration-300"
                 :style="{
@@ -169,11 +208,20 @@ const showVolume = ref(false);
             </span>
           </span>
 
-          <span class="mdi mdi-chevron-right text-lg text-[var(--text-tertiary)] group-hover/vol:translate-x-0.5 transition-transform" aria-hidden="true"></span>
-          <span class="sr-only">Open volume and speakers for {{ zone.zoneName.value }}</span>
+          <span
+            class="mdi mdi-chevron-right text-lg text-[var(--text-tertiary)] group-hover/vol:translate-x-0.5 transition-transform"
+            aria-hidden="true"
+          ></span>
+          <span class="sr-only"
+            >{{ t("Open volume and speakers for") }}
+            {{ zone.zoneName.value }}</span
+          >
         </button>
 
-        <p v-else class="flex-1 min-w-0 flex items-center gap-2 text-sm text-[var(--text-tertiary)]">
+        <p
+          v-else
+          class="flex-1 min-w-0 flex items-center gap-2 text-sm text-[var(--text-tertiary)]"
+        >
           <span class="mdi mdi-speaker-off text-lg" aria-hidden="true"></span>
           {{ zone.noSpeakersMessage.value }}
         </p>
