@@ -15,10 +15,10 @@
           <span class="mdi mdi-lock-outline text-4xl"></span>
         </div>
         <h1 class="text-2xl font-bold text-[var(--text-primary)] mb-2">
-          {{ title }}
+          {{ t(title) }}
         </h1>
         <p class="text-[var(--text-tertiary)]">
-          {{ description }}
+          {{ t(description) }}
         </p>
       </div>
 
@@ -27,7 +27,7 @@
           <label
             class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
           >
-            Passcode
+            {{ t("Passcode") }}
           </label>
           <input
             v-model="passcode"
@@ -38,7 +38,7 @@
                 ? 'border-red-500 focus:ring-2 focus:ring-red-500'
                 : 'border-[var(--border)] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400',
             ]"
-            placeholder="Enter passcode"
+            :placeholder="t('Enter passcode')"
             required
             minlength="4"
           />
@@ -48,7 +48,7 @@
           <label
             class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
           >
-            Confirm Passcode
+            {{ t("Confirm Passcode") }}
           </label>
           <input
             v-model="confirmPasscode"
@@ -59,7 +59,7 @@
                 ? 'border-red-500 focus:ring-2 focus:ring-red-500'
                 : 'border-[var(--border)] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400',
             ]"
-            placeholder="Confirm passcode"
+            :placeholder="t('Confirm passcode')"
             required
             minlength="4"
           />
@@ -77,17 +77,18 @@
           class="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/30 text-blue-700 dark:text-blue-400 text-sm flex items-start gap-2"
         >
           <span class="mdi mdi-information-outline shrink-0"></span>
-          <span
-            >Minimum 4 characters. This passcode will be required to access
-            settings and change permissions.</span
-          >
+          <span>{{
+            t(
+              "Minimum 4 characters. This passcode will be required to access settings and change permissions.",
+            )
+          }}</span>
         </div>
 
         <button
           type="submit"
           class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-[var(--surface-1)]"
         >
-          {{ submitLabel }}
+          {{ t(submitLabel) }}
         </button>
 
         <button
@@ -96,7 +97,7 @@
           class="w-full py-3 px-4 text-[var(--text-secondary)] font-semibold rounded-lg hover:bg-[var(--surface-2)] transition-colors"
           @click="handleCancel"
         >
-          Cancel
+          {{ t("Cancel") }}
         </button>
       </form>
     </div>
@@ -104,6 +105,7 @@
 </template>
 
 <script setup lang="ts">
+import { t } from "@/i18n";
 import { ref } from "vue";
 import { useEscapeToClose } from "@/composables/useEscapeToClose";
 import { useFocusTrap } from "@/composables/useFocusTrap";
@@ -120,7 +122,7 @@ const props = withDefaults(
     description: "Create a passcode to secure your Snapcast control",
     submitLabel: "Continue to Permissions",
     canCancel: false,
-  }
+  },
 );
 
 const emit = defineEmits<{
@@ -139,12 +141,12 @@ function handleSubmit() {
   error.value = "";
 
   if (passcode.value.length < 4) {
-    error.value = "Passcode must be at least 4 characters";
+    error.value = t("Passcode must be at least 4 characters");
     return;
   }
 
   if (passcode.value !== confirmPasscode.value) {
-    error.value = "Passcodes do not match";
+    error.value = t("Passcodes do not match");
     return;
   }
 

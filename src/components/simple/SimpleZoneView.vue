@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { countLabel, t } from "@/i18n";
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useSettingsStore } from "@/stores/settings";
@@ -6,6 +7,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useZoneOrder } from "@/composables/useZoneOrder";
 import { useEscapeToClose } from "@/composables/useEscapeToClose";
 import { getStreamStatus, parsePlayState } from "@/utils/stream-status";
+import { confirmMute } from "@/utils/confirm-mute";
 import SimpleZoneCard from "@/components/simple/SimpleZoneCard.vue";
 import GroupFilterModal from "@/components/GroupFilterModal.vue";
 import Tooltip from "@/components/Tooltip.vue";
@@ -44,7 +46,8 @@ function closeOverflowMenu() {
 }
 
 function onDocumentPointerDown(event: PointerEvent) {
-  if (!overflowMenuRef.value?.contains(event.target as Node)) closeOverflowMenu();
+  if (!overflowMenuRef.value?.contains(event.target as Node))
+    closeOverflowMenu();
 }
 
 onMounted(() => {
@@ -65,35 +68,53 @@ const { sortedZones } = useZoneOrder(
     hiddenZoneIds: computed(() => settings.hiddenGroups),
     showEmptyZones: computed(() => settings.showEmptyGroups),
     browserPlayerId: computed(() => snapcast.browserPlayerId),
-  }
+  },
 );
 
-const canAdjustVolume = computed(() => auth.hasFeaturePermission("canAdjustVolumes"));
+const canAdjustVolume = computed(() =>
+  auth.hasFeaturePermission("canAdjustVolumes"),
+);
 
 function isPlaying(group: Group) {
-  return parsePlayState(getStreamStatus(snapcast.streams, group.stream_id)) === "playing";
+  return (
+    parsePlayState(getStreamStatus(snapcast.streams, group.stream_id)) ===
+    "playing"
+  );
 }
 
 const playingCount = computed(
-  () => sortedZones.value.filter((g) => isPlaying(g) && !g.muted).length
+  () => sortedZones.value.filter((g) => isPlaying(g) && !g.muted).length,
 );
 
 const allMuted = computed(
-  () => sortedZones.value.length > 0 && sortedZones.value.every((g) => g.muted)
+  () => sortedZones.value.length > 0 && sortedZones.value.every((g) => g.muted),
 );
 
 const summary = computed(() => {
   const total = sortedZones.value.length;
-  const zones = `${total} zone${total === 1 ? "" : "s"}`;
-  if (playingCount.value === 0) return `Nothing playing · ${zones}`;
-  return `${playingCount.value} playing now · ${zones}`;
+  const zones = countLabel(total, "zone", "zones");
+  if (playingCount.value === 0)
+    return t("Nothing playing · {p0}", { p0: zones });
+  return t("{p0} playing now · {p1}", { p0: playingCount.value, p1: zones });
 });
 
-function toggleMuteAll() {
+async function toggleMuteAll() {
   if (!canAdjustVolume.value) return;
   const mute = !allMuted.value;
-  for (const g of sortedZones.value) {
-    if (g.muted !== mute) snapcast.setGroupMute(g.id, mute);
+  const targetHost = snapcast.host;
+  const targetIds = new Set(sortedZones.value.map((g) => g.id));
+  if (
+    mute &&
+    !(await confirmMute("Mute all {count} visible zones?", {
+      count: targetIds.size,
+    }))
+  )
+    return;
+  if (!canAdjustVolume.value || snapcast.host !== targetHost) return;
+  // New or newly visible zones were not part of the confirmed action.
+  for (const group of sortedZones.value) {
+    if (targetIds.has(group.id) && group.muted !== mute)
+      snapcast.setGroupMute(group.id, mute);
   }
 }
 
@@ -125,10 +146,14 @@ function openManageZonesFromMenu() {
 <template>
   <div class="space-y-8">
     <!-- Hero header -->
-    <div class="relative z-30 flex flex-col sm:flex-row sm:items-end justify-between gap-4 hero-in">
+    <div
+      class="relative z-30 flex flex-col sm:flex-row sm:items-end justify-between gap-4 hero-in"
+    >
       <div>
-        <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-[var(--text-primary)]">
-          Your zones
+        <h2
+          class="text-3xl sm:text-4xl font-extrabold tracking-tight text-[var(--text-primary)]"
+        >
+          {{ t("Your zones") }}
         </h2>
         <p class="mt-1 flex items-center gap-2 text-[var(--text-tertiary)]">
           <span class="relative flex w-2.5 h-2.5" aria-hidden="true">
@@ -138,7 +163,11 @@ function openManageZonesFromMenu() {
             ></span>
             <span
               class="relative inline-flex w-2.5 h-2.5 rounded-full"
-              :class="playingCount > 0 ? 'bg-[var(--status-playing)]' : 'bg-[var(--status-idle)]'"
+              :class="
+                playingCount > 0
+                  ? 'bg-[var(--status-playing)]'
+                  : 'bg-[var(--status-idle)]'
+              "
             ></span>
           </span>
           <span aria-live="polite">{{ summary }}</span>
@@ -158,8 +187,12 @@ function openManageZonesFromMenu() {
           :aria-pressed="allMuted"
           @click="toggleMuteAll"
         >
-          <span class="mdi text-lg" :class="allMuted ? 'mdi-volume-high' : 'mdi-volume-off'" aria-hidden="true"></span>
-          {{ allMuted ? "Unmute all" : "Mute all" }}
+          <span
+            class="mdi text-lg"
+            :class="allMuted ? 'mdi-volume-high' : 'mdi-volume-off'"
+            aria-hidden="true"
+          ></span>
+          {{ allMuted ? t("Unmute all") : t("Mute all") }}
         </button>
 
         <button
@@ -169,12 +202,18 @@ function openManageZonesFromMenu() {
           @click="emit('create-group')"
         >
           <span class="mdi mdi-plus text-lg" aria-hidden="true"></span>
-          Add zone
+          {{ t("Add zone") }}
         </button>
 
         <!-- Desktop: inline. Mobile: collapsed into the overflow menu below. -->
         <div class="hidden sm:flex items-center gap-2">
-          <Tooltip :text="settings.showEmptyGroups ? 'Hide empty zones' : 'Show empty zones'">
+          <Tooltip
+            :text="
+              settings.showEmptyGroups
+                ? t(`Hide empty zones`)
+                : t(`Show empty zones`)
+            "
+          >
             <button
               type="button"
               class="w-11 h-11 flex items-center justify-center rounded-full border shadow-sm transition-all active:scale-90"
@@ -186,11 +225,17 @@ function openManageZonesFromMenu() {
               :aria-pressed="settings.showEmptyGroups"
               @click="settings.setShowEmptyGroups(!settings.showEmptyGroups)"
             >
-              <span class="mdi text-xl" :class="settings.showEmptyGroups ? 'mdi-eye' : 'mdi-eye-off'"></span>
+              <span
+                class="mdi text-xl"
+                :class="settings.showEmptyGroups ? 'mdi-eye' : 'mdi-eye-off'"
+              ></span>
             </button>
           </Tooltip>
 
-          <Tooltip v-if="auth.permissions.showGroupFilter" text="Manage zones">
+          <Tooltip
+            v-if="auth.permissions.showGroupFilter"
+            :text="t('Manage zones')"
+          >
             <button
               type="button"
               class="w-11 h-11 flex items-center justify-center rounded-full border shadow-sm transition-all active:scale-90"
@@ -205,14 +250,17 @@ function openManageZonesFromMenu() {
             </button>
           </Tooltip>
 
-          <Tooltip text="Refresh Status">
+          <Tooltip :text="t('Refresh Status')">
             <button
               type="button"
               class="w-11 h-11 flex items-center justify-center rounded-full bg-[var(--surface-1)] border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--surface-2)] shadow-sm transition-all active:scale-90"
               :disabled="refreshing"
               @click="refreshStatus"
             >
-              <span class="mdi mdi-refresh text-xl block" :class="{ 'animate-spin': refreshing }"></span>
+              <span
+                class="mdi mdi-refresh text-xl block"
+                :class="{ 'animate-spin': refreshing }"
+              ></span>
             </button>
           </Tooltip>
         </div>
@@ -224,7 +272,7 @@ function openManageZonesFromMenu() {
             type="button"
             class="w-11 h-11 flex items-center justify-center rounded-full bg-[var(--surface-1)] border border-[var(--border)] text-[var(--text-secondary)] shadow-sm transition-all active:scale-90"
             :aria-expanded="showOverflowMenu"
-            aria-label="More zone actions"
+            :aria-label="t('More zone actions')"
             @click="showOverflowMenu = !showOverflowMenu"
           >
             <span class="mdi mdi-dots-horizontal text-xl"></span>
@@ -237,10 +285,21 @@ function openManageZonesFromMenu() {
               <button
                 type="button"
                 class="w-full min-h-11 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
-                @click="settings.setShowEmptyGroups(!settings.showEmptyGroups); showOverflowMenu = false"
+                @click="
+                  settings.setShowEmptyGroups(!settings.showEmptyGroups);
+                  showOverflowMenu = false;
+                "
               >
-                <span class="mdi text-lg" :class="settings.showEmptyGroups ? 'mdi-eye' : 'mdi-eye-off'" aria-hidden="true"></span>
-                {{ settings.showEmptyGroups ? "Hide empty zones" : "Show empty zones" }}
+                <span
+                  class="mdi text-lg"
+                  :class="settings.showEmptyGroups ? 'mdi-eye' : 'mdi-eye-off'"
+                  aria-hidden="true"
+                ></span>
+                {{
+                  settings.showEmptyGroups
+                    ? t("Hide empty zones")
+                    : t("Show empty zones")
+                }}
               </button>
               <button
                 v-if="auth.permissions.showGroupFilter"
@@ -248,8 +307,11 @@ function openManageZonesFromMenu() {
                 class="w-full min-h-11 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
                 @click="openManageZonesFromMenu"
               >
-                <span class="mdi mdi-filter-variant text-lg" aria-hidden="true"></span>
-                Manage zones
+                <span
+                  class="mdi mdi-filter-variant text-lg"
+                  aria-hidden="true"
+                ></span>
+                {{ t("Manage zones") }}
               </button>
               <button
                 type="button"
@@ -257,8 +319,12 @@ function openManageZonesFromMenu() {
                 class="w-full min-h-11 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
                 @click="refreshFromOverflowMenu"
               >
-                <span class="mdi mdi-refresh text-lg" :class="{ 'animate-spin': refreshing }" aria-hidden="true"></span>
-                Refresh status
+                <span
+                  class="mdi mdi-refresh text-lg"
+                  :class="{ 'animate-spin': refreshing }"
+                  aria-hidden="true"
+                ></span>
+                {{ t("Refresh status") }}
               </button>
             </div>
           </Transition>
@@ -293,20 +359,30 @@ function openManageZonesFromMenu() {
         <span class="mdi mdi-speaker-off text-4xl"></span>
       </div>
       <h3 class="text-xl font-bold text-[var(--text-primary)] mb-2">
-        No zones to show
+        {{ t("No zones to show") }}
       </h3>
       <p class="text-[var(--text-tertiary)] max-w-sm">
         <template v-if="snapcast.groups.length === 0">
-          Make sure your Snapcast server is running and has speakers connected.
+          {{
+            t(
+              "Make sure your Snapcast server is running and has speakers connected.",
+            )
+          }}
         </template>
         <template v-else>
-          Every zone is hidden by your current filters. Turn on "Show Empty
-          Zones" in Settings or check Manage zones.
+          {{
+            t(
+              'Every zone is hidden by your current filters. Turn on "Show Empty Zones" in Settings or check Manage zones.',
+            )
+          }}
         </template>
       </p>
     </div>
 
-    <GroupFilterModal :open="showGroupFilter" @close="showGroupFilter = false" />
+    <GroupFilterModal
+      :open="showGroupFilter"
+      @close="showGroupFilter = false"
+    />
   </div>
 </template>
 

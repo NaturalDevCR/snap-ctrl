@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from "@/i18n";
 import { ref, computed, watch } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { getStreamName } from "@/utils/stream-name";
@@ -49,10 +50,10 @@ watch(
       clientIds.value = [];
       streamId.value =
         snapcast.filteredStreams.length > 0
-          ? snapcast.filteredStreams[0]?.id ?? null
+          ? (snapcast.filteredStreams[0]?.id ?? null)
           : null;
     }
-  }
+  },
 );
 
 async function createGroup() {
@@ -64,7 +65,7 @@ async function createGroup() {
     await snapcast.getServerStatus();
 
     const newGroup = snapcast.groups.find((g) =>
-      g.clients.some((c) => clientIds.value.includes(c.id))
+      g.clients.some((c) => clientIds.value.includes(c.id)),
     );
 
     if (newGroup && streamId.value) {
@@ -80,12 +81,17 @@ async function createGroup() {
 </script>
 
 <template>
-  <AppDialog :open="props.open" title="Add zone" size="lg" @close="emit('close')">
+  <AppDialog
+    :open="props.open"
+    :title="t('Add zone')"
+    size="lg"
+    @close="emit('close')"
+  >
     <div class="space-y-6">
       <div>
         <label
           class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
-          >Source</label
+          >{{ t("Source") }}</label
         >
         <div class="relative">
           <select
@@ -111,7 +117,7 @@ async function createGroup() {
       <div>
         <label
           class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
-          >Choose speakers</label
+          >{{ t("Choose speakers") }}</label
         >
         <div class="space-y-2">
           <label
@@ -119,7 +125,9 @@ async function createGroup() {
             :key="c.id"
             class="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-2)] cursor-pointer transition-colors"
           >
-            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 flex-1 min-w-0 pr-3">
+            <div
+              class="flex flex-wrap items-center gap-x-2 gap-y-1 flex-1 min-w-0 pr-3"
+            >
               <span
                 class="w-2 h-2 rounded-full flex-shrink-0"
                 :class="
@@ -136,14 +144,19 @@ async function createGroup() {
                 v-if="!c.connected"
                 class="px-1.5 py-0.5 text-xs bg-[var(--surface-3)] text-[var(--text-secondary)] rounded flex-shrink-0"
               >
-                Offline
+                {{ t("Offline") }}
               </span>
               <span
                 v-if="clientCurrentGroup.has(c.id)"
                 class="px-1.5 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded max-w-full truncate"
-                :title="`Currently in ${clientCurrentGroup.get(c.id)} — adding it here moves it out of that zone`"
+                :title="
+                  t(
+                    `Currently in {p0} — adding it here moves it out of that zone`,
+                    { p0: clientCurrentGroup.get(c.id) },
+                  )
+                "
               >
-                From: {{ clientCurrentGroup.get(c.id) }}
+                {{ t("From:") }} {{ clientCurrentGroup.get(c.id) }}
               </span>
             </div>
             <div
@@ -155,9 +168,7 @@ async function createGroup() {
                 v-model="clientIds"
                 class="sr-only"
               />
-              <div
-                class="app-toggle"
-              ></div>
+              <div class="app-toggle"></div>
             </div>
           </label>
         </div>
@@ -170,8 +181,11 @@ async function createGroup() {
           v-if="availableClients.length === 0"
           class="mt-3 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-900/30"
         >
-          No speakers connected yet. Start a Snapcast client and it will
-          appear here.
+          {{
+            t(
+              "No speakers connected yet. Start a Snapcast client and it will appear here.",
+            )
+          }}
         </p>
       </div>
     </div>
@@ -182,14 +196,14 @@ async function createGroup() {
           class="px-4 py-2 min-h-11 text-[var(--text-secondary)] font-medium hover:bg-[var(--surface-2)] rounded-lg transition-colors"
           @click="emit('close')"
         >
-          Cancel
+          {{ t("Cancel") }}
         </button>
         <button
           class="px-4 py-2 min-h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           @click="createGroup"
           :disabled="clientIds.length === 0"
         >
-          Add zone
+          {{ t("Add zone") }}
         </button>
       </div>
     </template>

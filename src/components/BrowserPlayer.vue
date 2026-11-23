@@ -34,21 +34,23 @@
           <h3
             class="m-0 text-xs font-bold text-[var(--text-primary)] truncate leading-tight"
           >
-            Browser Player
+            {{ t("Browser Player") }}
           </h3>
           <div class="text-[10px] font-medium truncate leading-tight">
             <span
               v-if="connected"
               class="text-green-600 dark:text-green-400 flex items-center gap-1"
             >
-              <span class="mdi mdi-circle-small text-sm"></span> Live
+              <span class="mdi mdi-circle-small text-sm"></span> {{ t("Live") }}
             </span>
             <span
               v-else-if="connecting"
               class="text-yellow-600 dark:text-yellow-400"
-              >Connecting...</span
+              >{{ t("Connecting...") }}</span
             >
-            <span v-else class="text-[var(--text-tertiary)]">Ready</span>
+            <span v-else class="text-[var(--text-tertiary)]">{{
+              t("Ready")
+            }}</span>
           </div>
         </div>
 
@@ -56,8 +58,10 @@
           <!-- Stream Selector -->
           <select
             v-if="availableStreams.length > 0"
-            v-model="currentStreamId"
-            aria-label="Source"
+            :value="currentStreamId"
+            :disabled="!auth.hasFeaturePermission('canSelectStream')"
+            @change="requestBrowserSource"
+            :aria-label="t('Source')"
             class="h-11 text-xs bg-[var(--surface-2)] border-none rounded-lg px-2 text-[var(--text-secondary)] focus:ring-1 focus:ring-blue-500 outline-none cursor-pointer max-w-[120px] truncate"
             @click.stop
           >
@@ -74,25 +78,25 @@
             v-if="connected"
             v-model="bufferSetting"
             class="h-11 text-xs bg-[var(--surface-2)] border-none rounded-lg px-2 text-[var(--text-secondary)] focus:ring-1 focus:ring-blue-500 outline-none cursor-pointer max-w-[104px] truncate"
-            aria-label="Jitter buffer (safety margin)"
-            title="Jitter Buffer (Safety Margin)"
+            :aria-label="t('Jitter buffer (safety margin)')"
+            :title="t('Jitter Buffer (Safety Margin)')"
             @click.stop
           >
-            <option :value="0">Buffer: 0ms</option>
-            <option :value="500">Buffer: 0.5s</option>
-            <option :value="1000">Buffer: 1s</option>
-            <option :value="2000">Buffer: 2s</option>
+            <option :value="0">{{ t("Buffer: 0ms") }}</option>
+            <option :value="500">{{ t("Buffer: 0.5s") }}</option>
+            <option :value="1000">{{ t("Buffer: 1s") }}</option>
+            <option :value="2000">{{ t("Buffer: 2s") }}</option>
           </select>
 
           <div v-if="connected" class="flex gap-1 items-center">
             <span
               class="text-[9px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded font-mono uppercase font-bold tracking-wider"
-              title="Current Decoder"
+              :title="t('Current Decoder')"
               >{{ codec || "PCM" }}</span
             >
             <span
               class="hidden md:inline-block text-[9px] px-1 py-0.5 bg-[var(--surface-2)] rounded text-[var(--text-secondary)] font-mono"
-              title="Latency"
+              :title="t('Latency')"
               >{{ latency }}ms</span
             >
           </div>
@@ -108,9 +112,9 @@
         >
           <button
             class="w-11 h-11 flex items-center justify-center bg-transparent border-none text-lg rounded-full transition-colors hover:bg-[var(--surface-2)] text-[var(--text-tertiary)]"
-            @click="toggleMute"
+            @click="handleMute"
             :disabled="!connected"
-            :aria-label="isMuted ? 'Unmute' : 'Mute'"
+            :aria-label="isMuted ? t(`Unmute`) : t(`Mute`)"
             :aria-pressed="isMuted"
           >
             <span
@@ -125,7 +129,7 @@
               v-model.number="sliderValue"
               min="0"
               max="100"
-              aria-label="Browser player volume"
+              :aria-label="t('Browser player volume')"
               class="app-range"
               :style="{ '--p': sliderValue / 100 }"
               :disabled="!connected || isMuted"
@@ -139,7 +143,13 @@
           :class="{ '!bg-blue-600 dark:!bg-blue-500 !text-white': connected }"
           @click="handleConnect"
           :disabled="connecting"
-          :aria-label="connecting ? 'Connecting…' : connected ? 'Stop playback' : 'Play in browser'"
+          :aria-label="
+            connecting
+              ? t(`Connecting…`)
+              : connected
+                ? t(`Stop playback`)
+                : t(`Play in browser`)
+          "
         >
           <span v-if="connecting" class="mdi mdi-loading mdi-spin"></span>
           <span v-else-if="connected" class="mdi mdi-stop"></span>
@@ -180,24 +190,26 @@
             {{ currentGroup.name }}
           </p>
           <p class="text-[10px] text-[var(--text-tertiary)] truncate">
-            {{ connected ? "Temporary Audio Zone" : "Stale Browser Player" }}
+            {{
+              connected ? t("Temporary Audio Zone") : t("Stale Browser Player")
+            }}
           </p>
         </div>
       </div>
       <button
         @click="cleanTemporaryGroup"
         class="shrink-0 min-h-11 min-w-11 inline-flex items-center justify-center gap-1 px-3 text-xs font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-        title="Remove this temporary zone"
+        :title="t('Remove this temporary zone')"
       >
         <span class="mdi mdi-delete-outline"></span>
-        Cleanup
+        {{ t("Cleanup") }}
       </button>
     </div>
   </Transition>
 </template>
 
-
 <script setup lang="ts">
+import { t } from "@/i18n";
 import { logger } from "@/utils/logger";
 import { watch, computed, ref } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
@@ -207,8 +219,12 @@ import { useSnapStream } from "@/composables/useSnapStream";
 import { useSettingsStore } from "@/stores/settings";
 import { sliderToVolume, volumeToSlider } from "@/utils/volume";
 import { getStreamName } from "@/utils/stream-name";
+import { confirmSourceChange } from "@/utils/confirm-source";
+import { useAuthStore } from "@/stores/auth";
+import { confirmMute } from "@/utils/confirm-mute";
 
 const snapcast = useSnapcastStore();
+const auth = useAuthStore();
 const settings = useSettingsStore();
 const notifications = useNotificationStore();
 
@@ -236,7 +252,9 @@ const {
 } = useSnapStream();
 
 // Buffer Settings
-const bufferSetting = ref(parseInt(localStorage.getItem("snapcast-buffer") || "0"));
+const bufferSetting = ref(
+  parseInt(localStorage.getItem("snapcast-buffer") || "0"),
+);
 
 watch(bufferSetting, (val) => {
   localStorage.setItem("snapcast-buffer", val.toString());
@@ -251,14 +269,14 @@ const currentGroup = computed(() => {
   if (!clientId.value) return null;
   // Find the group that contains this client
   return snapcast.groups.find((g) =>
-    g.clients.some((c) => c.id === clientId.value)
+    g.clients.some((c) => c.id === clientId.value),
   );
 });
 
 // Local stream selection preference (No persistence)
 const selectedStreamId = ref("");
 
-const availableStreams = computed(() => snapcast.streams);
+const availableStreams = computed(() => snapcast.filteredStreams);
 
 // Auto-select first stream if none selected
 watch(
@@ -268,7 +286,7 @@ watch(
       selectedStreamId.value = streams[0].id;
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // Watch for stream mismatch to mute playback until synced
@@ -284,7 +302,9 @@ watch(
     if (selected) {
       // If group info is missing OR stream doesn't match -> MUTE
       if (!groupStreamId || groupStreamId !== selected) {
-        logger.debug(`Muting browser player: stream sync pending (${groupStreamId} -> ${selected})`);
+        logger.debug(
+          `Muting browser player: stream sync pending (${groupStreamId} -> ${selected})`,
+        );
         setInternalMute(true);
         return;
       }
@@ -293,7 +313,7 @@ watch(
     // Unmute when matched or no valid selection
     setInternalMute(false);
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // Volume Exponent
@@ -306,7 +326,7 @@ const sliderValue = computed({
   get: () => volumeToSlider(volume.value, volumeExponent.value),
   set: (val: number) => {
     volume.value = sliderToVolume(val, volumeExponent.value);
-  }
+  },
 });
 
 const currentStreamId = computed({
@@ -315,23 +335,45 @@ const currentStreamId = computed({
     if (selectedStreamId.value) return selectedStreamId.value;
     return currentGroup.value?.stream_id || "";
   },
-  set: (newStreamId: string) => {
+  set: async (newStreamId: string) => {
+    const source = availableStreams.value.find((s) => s.id === newStreamId);
+    if (
+      !source ||
+      newStreamId === currentStreamId.value ||
+      !auth.hasFeaturePermission("canSelectStream")
+    )
+      return;
+    const hostAtStart = snapcast.host;
+    if (
+      !(await confirmSourceChange(t("Browser Player"), getStreamName(source)))
+    )
+      return;
+    if (
+      hostAtStart !== snapcast.host ||
+      !auth.hasFeaturePermission("canSelectStream") ||
+      !auth.isEntityAllowed("source", newStreamId)
+    )
+      return;
     selectedStreamId.value = newStreamId;
-    
-    // If connected and we have a group, apply it immediately
-    if (currentGroup.value && newStreamId) {
+    if (currentGroup.value && newStreamId)
       snapcast.setGroupStream(currentGroup.value.id, newStreamId);
-    }
   },
 });
 
-
+function requestBrowserSource(event: Event) {
+  const select = event.target as HTMLSelectElement;
+  const next = select.value;
+  select.value = currentStreamId.value;
+  currentStreamId.value = next;
+}
 
 // Sync stream when connecting or when group becomes available
 watch([connected, currentGroup], ([isConnected, group]) => {
   if (isConnected && group && selectedStreamId.value) {
     if (group.stream_id !== selectedStreamId.value) {
-      logger.debug(`Syncing browser player stream to preferred: ${selectedStreamId.value}`);
+      logger.debug(
+        `Syncing browser player stream to preferred: ${selectedStreamId.value}`,
+      );
       snapcast.setGroupStream(group.id, selectedStreamId.value);
     }
   }
@@ -345,7 +387,7 @@ watch(volume, (newVolume) => {
 // Watch connected state for notifications
 watch(connected, (isConnected) => {
   if (isConnected) {
-    notifications.success("Browser player connected");
+    notifications.success(t("Browser player connected"));
   }
 });
 
@@ -356,7 +398,7 @@ watch(
       retryPendingClientCleanups();
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 async function handleConnect() {
@@ -367,13 +409,21 @@ async function handleConnect() {
   }
 }
 
+async function handleMute() {
+  if (!connected.value) return;
+  const mute = !isMuted.value;
+  if (mute && !(await confirmMute("Mute browser playback on this device?")))
+    return;
+  if (connected.value && isMuted.value !== mute) toggleMute();
+}
+
 async function cleanTemporaryGroup() {
   const idToDelete = clientId.value;
   const groupToClean = currentGroup.value;
   if (idToDelete) {
     try {
       const clientExistsOnServer = snapcast.clients.some(
-        (c) => c.id === idToDelete
+        (c) => c.id === idToDelete,
       );
 
       let cleaned = false;
@@ -397,13 +447,15 @@ async function cleanTemporaryGroup() {
       }
 
       if (cleaned) {
-        notifications.success("Temporary zone cleaned up");
+        notifications.success(t("Temporary zone cleaned up"));
       } else {
-        notifications.error("Cleanup failed. The speaker may already be gone.");
+        notifications.error(
+          t("Cleanup failed. The speaker may already be gone."),
+        );
       }
     } catch (e) {
       console.error("Failed to clean up group:", e);
-      notifications.error("Failed to clean up zone");
+      notifications.error(t("Failed to clean up zone"));
     }
   }
 }

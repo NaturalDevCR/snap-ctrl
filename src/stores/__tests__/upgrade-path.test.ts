@@ -22,6 +22,37 @@ beforeEach(() => {
 });
 
 describe("upgrading from a release with the Classic layout", () => {
+  it("keeps the existing interface by default and persists the optional Studio choice", async () => {
+    localStorage.setItem(
+      "snapcast-settings",
+      JSON.stringify({ theme: "light", viewMode: "simple" }),
+    );
+    installPinia();
+    const settings = useSettingsStore();
+    expect(settings.interfaceMode).toBe("classic");
+    settings.setInterfaceMode("studio");
+    await nextTick();
+    expect(stored("snapcast-settings").interfaceMode).toBe("studio");
+    installPinia();
+    expect(useSettingsStore().interfaceMode).toBe("studio");
+    expect(useSettingsStore().theme).toBe("light");
+    useSettingsStore().setInterfaceMode("classic");
+    await nextTick();
+    expect(stored("snapcast-settings").interfaceMode).toBe("classic");
+  });
+
+  it("persists language and Studio palette independently of interface mode", async () => {
+    installPinia();
+    const settings = useSettingsStore();
+    settings.locale = "es";
+    settings.studioPalette = "aurora";
+    settings.setInterfaceMode("classic");
+    await nextTick();
+    installPinia();
+    expect(useSettingsStore().locale).toBe("es");
+    expect(useSettingsStore().studioPalette).toBe("aurora");
+    expect(useSettingsStore().interfaceMode).toBe("classic");
+  });
   it("loads settings saved with a stale viewMode", async () => {
     localStorage.setItem(
       "snapcast-settings",

@@ -1,12 +1,19 @@
+import { t } from "@/i18n";
 import { computed } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useSettingsStore } from "@/stores/settings";
 import { useAuthStore } from "@/stores/auth";
 import { getGroupDisplayName } from "@/utils/group-name";
 import { getStreamName } from "@/utils/stream-name";
-import { getStreamStatus, parsePlayState, type PlayState } from "@/utils/stream-status";
+import {
+  getStreamStatus,
+  parsePlayState,
+  type PlayState,
+} from "@/utils/stream-status";
 import { getSourceIcon } from "@/utils/source-style";
 import { averageClientVolume, linkedZoneClients } from "@/utils/zone-volume";
+import { confirmSourceChange } from "@/utils/confirm-source";
+import { confirmMute } from "@/utils/confirm-mute";
 import type { Client, Group } from "@/stores/snapcast";
 
 // A zone's accent reflects its own state, not its source's identity: red
@@ -40,14 +47,24 @@ export function useZoneControls(group: () => Group) {
   const auth = useAuthStore();
 
   // ---- Permissions ---------------------------------------------------------
-  const canAdjustVolume = computed(() => auth.hasFeaturePermission("canAdjustVolumes"));
-  const canSelectStream = computed(() => auth.hasFeaturePermission("canSelectStream"));
-  const canLinkClients = computed(() => auth.hasFeaturePermission("canLinkClients"));
+  const canAdjustVolume = computed(() =>
+    auth.hasFeaturePermission("canAdjustVolumes"),
+  );
+  const canSelectStream = computed(() =>
+    auth.hasFeaturePermission("canSelectStream"),
+  );
+  const canLinkClients = computed(() =>
+    auth.hasFeaturePermission("canLinkClients"),
+  );
   const showGroupSettings = computed(() => auth.permissions.showGroupSettings);
-  const showClientSettings = computed(() => auth.permissions.showClientSettings);
+  const showClientSettings = computed(
+    () => auth.permissions.showClientSettings,
+  );
 
   // ---- Zone / source -------------------------------------------------------
-  const zoneName = computed(() => getGroupDisplayName(group(), snapcast.streams));
+  const zoneName = computed(() =>
+    getGroupDisplayName(group(), snapcast.streams),
+  );
 
   function playStateOf(streamId: string): PlayState {
     return parsePlayState(getStreamStatus(snapcast.streams, streamId));
@@ -55,13 +72,13 @@ export function useZoneControls(group: () => Group) {
 
   const playState = computed(() => playStateOf(group().stream_id));
   const statusLabel = computed(() => {
-    if (playState.value === "playing") return "Playing";
-    if (playState.value === "idle") return "Idle";
-    return "Unavailable";
+    if (playState.value === "playing") return t("Playing");
+    if (playState.value === "idle") return t("Idle");
+    return t("Unavailable");
   });
 
   const currentStream = computed(() =>
-    snapcast.streams.find((s) => s.id === group().stream_id)
+    snapcast.streams.find((s) => s.id === group().stream_id),
   );
   const currentSourceName = computed(() => getStreamName(currentStream.value));
   const currentSourceIcon = computed(() => getSourceIcon(currentStream.value));
@@ -72,11 +89,13 @@ export function useZoneControls(group: () => Group) {
     return STATUS_ACCENT.attention; // unavailable
   });
   const statusAccent = computed(() =>
-    group().muted ? STATUS_ACCENT.attention : playAccent.value
+    group().muted ? STATUS_ACCENT.attention : playAccent.value,
   );
   // Idle and muted fills stay neutral: --status-idle fades into the track.
   const volumeFill = computed(() =>
-    group().muted || playState.value === "idle" ? "var(--fill-neutral)" : statusAccent.value.main
+    group().muted || playState.value === "idle"
+      ? "var(--fill-neutral)"
+      : statusAccent.value.main,
   );
   const accentStyle = computed(() => ({
     "--accent": statusAccent.value.main,
@@ -86,7 +105,7 @@ export function useZoneControls(group: () => Group) {
   // The tile shows no mute state: that lives on the label and mute button.
   // A muted zone just rests, so nothing animates next to the MUTED label.
   const tileState = computed<PlayState>(() =>
-    group().muted && playState.value === "playing" ? "idle" : playState.value
+    group().muted && playState.value === "playing" ? "idle" : playState.value,
   );
   const tileStyle = computed(() => ({ "--accent": playAccent.value.main }));
 
@@ -96,44 +115,74 @@ export function useZoneControls(group: () => Group) {
       name: getStreamName(s),
       icon: getSourceIcon(s),
       state: playStateOf(s.id),
-    }))
+    })),
   );
 
   // A zone can sit on a source this device may not pick, so one allowed
   // source can still be a real choice. Count what it could switch to.
   const canChangeSource = computed(
-    () => canSelectStream.value && sources.value.some((s) => s.id !== group().stream_id)
+    () =>
+      canSelectStream.value &&
+      sources.value.some((s) => s.id !== group().stream_id),
   );
 
-  function selectSource(streamId: string) {
-    if (!canSelectStream.value || streamId === group().stream_id) return;
-    snapcast.setGroupStream(group().id, streamId);
+  async function selectSource(streamId: string) {
+    const id = group().id;
+    const targetHost = snapcast.host;
+    if (
+      !canSelectStream.value ||
+      streamId === group().stream_id ||
+      !auth.isEntityAllowed("source", streamId)
+    )
+      return;
+    const source = snapcast.streams.find((s) => s.id === streamId);
+    if (
+      !source ||
+      !(await confirmSourceChange(zoneName.value, getStreamName(source)))
+    )
+      return;
+    const current = snapcast.groups.find((g) => g.id === id);
+    if (
+      !current ||
+      snapcast.host !== targetHost ||
+      !snapcast.streams.some((s) => s.id === streamId) ||
+      current.stream_id === streamId ||
+      !canSelectStream.value ||
+      !auth.isEntityAllowed("group", id) ||
+      !auth.isEntityAllowed("source", streamId)
+    )
+      return;
+    snapcast.setGroupStream(id, streamId);
   }
 
   // ---- Speakers & volume ---------------------------------------------------
   const speakers = computed<Client[]>(() =>
-    auth.filterAllowedEntities("client", group().clients)
+    auth.filterAllowedEntities("client", group().clients),
   );
 
   const noSpeakersMessage = computed(() =>
     group().clients.length > 0
-      ? "This zone's speakers aren't available on this device."
-      : "No speakers in this zone yet."
+      ? t("This zone's speakers aren't available on this device.")
+      : t("No speakers in this zone yet."),
   );
 
   const linkedIds = computed(
-    () => settings.groupVolumeLinks[group().id]?.linkedClientIds ?? []
+    () => settings.groupVolumeLinks[group().id]?.linkedClientIds ?? [],
   );
 
   const linkedClients = computed(() =>
-    linkedZoneClients(group(), linkedIds.value, (id) => auth.isEntityAllowed("client", id))
+    linkedZoneClients(group(), linkedIds.value, (id) =>
+      auth.isEntityAllowed("client", id),
+    ),
   );
 
   /** A zone has a master volume only while it has linked speakers. */
   const hasMasterVolume = computed(() => linkedClients.value.length > 0);
   const masterVolume = computed(() => averageClientVolume(linkedClients.value));
   const zoneVolume = computed(() =>
-    averageClientVolume(hasMasterVolume.value ? linkedClients.value : speakers.value)
+    averageClientVolume(
+      hasMasterVolume.value ? linkedClients.value : speakers.value,
+    ),
   );
   const exponent = computed(() => settings.getVolumeExponent(group().id));
 
@@ -144,25 +193,61 @@ export function useZoneControls(group: () => Group) {
       group().id,
       value,
       linkedClients.value.map((c) => c.id),
-      settings.groupVolumeLinks[group().id]?.referenceVolumes ?? {}
+      settings.groupVolumeLinks[group().id]?.referenceVolumes ?? {},
     );
   }
 
-  function toggleZoneMute() {
+  async function toggleZoneMute() {
     if (!canAdjustVolume.value) return;
-    snapcast.setGroupMute(group().id, !group().muted);
+    const target = group();
+    const targetHost = snapcast.host;
+    const mute = !target.muted;
+    if (
+      mute &&
+      !(await confirmMute('Mute zone "{name}"?', { name: zoneName.value }))
+    )
+      return;
+    const current = snapcast.groups.find((g) => g.id === target.id);
+    if (
+      !current ||
+      snapcast.host !== targetHost ||
+      !canAdjustVolume.value ||
+      !auth.isEntityAllowed("group", target.id) ||
+      current.muted === mute
+    )
+      return;
+    snapcast.setGroupMute(target.id, mute);
   }
 
   function setSpeakerVolume(client: Client, value: number) {
     snapcast.setClientVolume(client.id, value, client.config.volume.muted);
   }
 
-  function toggleSpeakerMute(client: Client) {
-    snapcast.setClientVolume(
-      client.id,
-      client.config.volume.percent,
-      !client.config.volume.muted
-    );
+  async function toggleSpeakerMute(client: Client) {
+    if (!canAdjustVolume.value) return;
+    const targetGroupId = group().id;
+    const targetHost = snapcast.host;
+    const mute = !client.config.volume.muted;
+    if (
+      mute &&
+      !(await confirmMute('Mute speaker "{name}"?', {
+        name: speakerName(client),
+      }))
+    )
+      return;
+    const current = snapcast.groups
+      .find((g) => g.id === targetGroupId)
+      ?.clients.find((c) => c.id === client.id);
+    if (
+      !canAdjustVolume.value ||
+      snapcast.host !== targetHost ||
+      !auth.isEntityAllowed("group", targetGroupId) ||
+      !current ||
+      !auth.isEntityAllowed("client", client.id) ||
+      current.config.volume.muted === mute
+    )
+      return;
+    snapcast.setClientVolume(current.id, current.config.volume.percent, mute);
   }
 
   function isLinked(client: Client) {

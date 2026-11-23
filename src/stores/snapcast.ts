@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { useAuthStore } from "./auth";
@@ -50,7 +51,7 @@ export const useSnapcastStore = defineStore(
 
     function notifyError(action: string, error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
-      notify.error(`${action}: ${message}`);
+      notify.error(t("{action}: {message}", {action: t(action), message: t(message)}));
     }
 
     // Filtered entities based on permissions

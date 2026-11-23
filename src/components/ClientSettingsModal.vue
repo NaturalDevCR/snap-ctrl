@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from "@/i18n";
 import { ref, watch } from "vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import { useAuthStore } from "@/stores/auth";
@@ -31,7 +32,7 @@ watch(
       latency.value = props.client.config.latency;
       clientId.value = props.client.id;
     }
-  }
+  },
 );
 
 function isClientConnected(id: string | null): boolean {
@@ -46,7 +47,10 @@ async function deleteClient() {
   const displayName = name.value || id;
   if (
     !window.confirm(
-      `Permanently forget "${displayName}"? This deletes its saved name, volume, and latency — it'll show up as a brand-new speaker if it reconnects. This cannot be undone.`
+      t(
+        'Permanently forget "{p0}"? This deletes its saved name, volume, and latency — it\'ll show up as a brand-new speaker if it reconnects. This cannot be undone.',
+        { p0: displayName },
+      ),
     )
   ) {
     return;
@@ -82,14 +86,14 @@ async function save() {
 <template>
   <AppDialog
     :open="props.open"
-    title="Speaker settings"
+    :title="t('Speaker settings')"
     @close="emit('close')"
   >
     <div class="space-y-6">
       <div>
         <label
           class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
-          >Name</label
+          >{{ t("Name") }}</label
         >
         <input
           class="w-full px-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 outline-none transition-colors text-[var(--text-primary)] disabled:bg-[var(--surface-1)] disabled:text-[var(--text-tertiary)] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -100,7 +104,7 @@ async function save() {
       <div>
         <label
           class="block text-sm font-medium text-[var(--text-secondary)] mb-2"
-          >Latency (ms)</label
+          >{{ t("Latency (ms)") }}</label
         >
         <input
           type="number"
@@ -119,10 +123,10 @@ async function save() {
             class="w-full px-4 py-2 min-h-11 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <span class="mdi mdi-delete"></span>
-            Delete Offline Speaker
+            {{ t("Delete Offline Speaker") }}
           </button>
           <p class="mt-2 text-xs text-red-600 dark:text-red-400 text-center">
-            This action cannot be undone
+            {{ t("This action cannot be undone") }}
           </p>
         </div>
         <div class="flex justify-end gap-3">
@@ -130,13 +134,13 @@ async function save() {
             class="px-4 py-2 min-h-11 text-[var(--text-secondary)] font-medium hover:bg-[var(--surface-2)] rounded-lg transition-colors"
             @click="emit('close')"
           >
-            Cancel
+            {{ t("Cancel") }}
           </button>
           <button
             class="px-4 py-2 min-h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
             @click="save"
           >
-            Save
+            {{ t("Save") }}
           </button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import "./polyfills";
+import { t } from "./i18n";
 import "./assets/main.css";
 import "@mdi/font/css/materialdesignicons.css";
 import "./assets/mdi-custom.css";
@@ -24,11 +25,11 @@ import { registerSW } from "virtual:pwa-register";
 const updateSW = registerSW({
   onNeedRefresh() {
     const notify = useNotificationStore();
-    notify.info("New content available. Reloading in 5s…", 5000);
+    notify.info(t("New content available. Reloading in 5s…"), 5000);
     window.setTimeout(() => updateSW(true), 5000);
   },
   onOfflineReady() {
     const notify = useNotificationStore();
-    notify.success("App ready to work offline");
+    notify.success(t("App ready to work offline"));
   },
 });

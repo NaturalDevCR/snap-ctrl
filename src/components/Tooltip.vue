@@ -16,7 +16,7 @@
       class="fixed z-[99999] px-2 py-1 text-xs font-medium text-white bg-gray-900 dark:bg-gray-700 rounded shadow-lg pointer-events-none whitespace-nowrap"
       :style="tooltipStyle"
     >
-      {{ text }}
+      {{ t(text) }}
       <div
         class="absolute w-2 h-2 bg-gray-900 dark:bg-gray-700 transform rotate-45"
         :class="arrowClasses"
@@ -26,6 +26,7 @@
 </template>
 
 <script setup lang="ts">
+import { t } from "@/i18n";
 import { ref, computed, nextTick, watchEffect } from "vue";
 
 const props = defineProps({
@@ -64,11 +65,12 @@ const tooltipStyle = ref<Record<string, string>>({});
 // attribute writes side-step that entirely.
 const autoLabelMarker = "data-tooltip-auto-label";
 watchEffect(() => {
-  const el = triggerRef.value?.firstElementChild as HTMLElement | null | undefined;
+  const el = triggerRef.value?.firstElementChild as
+    HTMLElement | null | undefined;
   if (!el) return;
   const weOwnIt = el.hasAttribute(autoLabelMarker);
   if (el.hasAttribute("aria-label") && !weOwnIt) return; // explicit label on the child — don't override it
-  el.setAttribute("aria-label", props.text);
+  el.setAttribute("aria-label", t(props.text));
   el.setAttribute(autoLabelMarker, "");
 });
 

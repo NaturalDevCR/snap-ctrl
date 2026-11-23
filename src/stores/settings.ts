@@ -15,6 +15,16 @@ export const useSettingsStore = defineStore(
   "settings",
   () => {
     const theme = ref<"light" | "dark">("dark");
+    // Independent of the retired viewMode preference used by older releases.
+    const interfaceMode = ref<"classic" | "studio">("classic");
+    const locale = ref<"en" | "es">("en");
+    const studioPalette = ref<"midnight" | "ocean" | "aurora" | "ember">(
+      "midnight",
+    );
+
+    function setInterfaceMode(mode: "classic" | "studio") {
+      interfaceMode.value = mode;
+    }
     const autoConnect = ref(true);
     const showDisconnectedClients = ref(false);
     const showEmptyGroups = ref(true);
@@ -39,9 +49,8 @@ export const useSettingsStore = defineStore(
           enabledPerSourceVolumeGroups.value.push(groupId);
         }
       } else {
-        enabledPerSourceVolumeGroups.value = enabledPerSourceVolumeGroups.value.filter(
-          (id) => id !== groupId
-        );
+        enabledPerSourceVolumeGroups.value =
+          enabledPerSourceVolumeGroups.value.filter((id) => id !== groupId);
       }
     }
 
@@ -50,7 +59,10 @@ export const useSettingsStore = defineStore(
     const globalVolumeExponent = ref(2.0);
     // Group-specific overrides: undefined/null means use global setting
     const groupVolumeControlConfig = ref<
-      Record<string, { mode: "global" | "linear" | "nonlinear"; exponent?: number }>
+      Record<
+        string,
+        { mode: "global" | "linear" | "nonlinear"; exponent?: number }
+      >
     >({});
 
     /**
@@ -90,7 +102,7 @@ export const useSettingsStore = defineStore(
     function setGroupVolumeControlConfig(
       groupId: string,
       mode: "global" | "linear" | "nonlinear",
-      exponent?: number
+      exponent?: number,
     ) {
       if (!groupVolumeControlConfig.value[groupId]) {
         groupVolumeControlConfig.value[groupId] = { mode: "global" };
@@ -104,9 +116,11 @@ export const useSettingsStore = defineStore(
     function saveClientVolume(
       clientId: string,
       streamId: string,
-      volume: number
+      volume: number,
     ) {
-      logger.debug(`[Settings] saveClientVolume: Client=${clientId}, Stream=${streamId}, Vol=${volume}`);
+      logger.debug(
+        `[Settings] saveClientVolume: Client=${clientId}, Stream=${streamId}, Vol=${volume}`,
+      );
       if (!clientSourceVolumes.value[clientId]) {
         clientSourceVolumes.value[clientId] = {};
       }
@@ -115,7 +129,7 @@ export const useSettingsStore = defineStore(
 
     function getClientVolume(
       clientId: string,
-      streamId: string
+      streamId: string,
     ): number | undefined {
       return clientSourceVolumes.value[clientId]?.[streamId];
     }
@@ -127,7 +141,7 @@ export const useSettingsStore = defineStore(
     function setGroupVolumeLinks(
       groupId: string,
       linkedClientIds: string[],
-      referenceVolumes: Record<string, number>
+      referenceVolumes: Record<string, number>,
     ) {
       groupVolumeLinks.value[groupId] = { linkedClientIds, referenceVolumes };
     }
@@ -213,6 +227,10 @@ export const useSettingsStore = defineStore(
 
     return {
       theme,
+      interfaceMode,
+      locale,
+      studioPalette,
+      setInterfaceMode,
       autoConnect,
       showDisconnectedClients,
       showEmptyGroups,
@@ -251,6 +269,9 @@ export const useSettingsStore = defineStore(
       key: "snapcast-settings",
       pick: [
         "theme",
+        "interfaceMode",
+        "locale",
+        "studioPalette",
         "autoConnect",
         "showDisconnectedClients",
         "showEmptyGroups",
@@ -274,5 +295,5 @@ export const useSettingsStore = defineStore(
         }
       },
     },
-  }
+  },
 );

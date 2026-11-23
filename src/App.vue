@@ -4,13 +4,16 @@
     class="min-h-screen bg-[var(--surface-0)] text-[var(--text-primary)] font-sans transition-colors duration-300"
   >
     <Toast />
+    <ActionConfirmation />
 
     <!-- Setup Passcode Flow -->
     <SetupPasscode
-      v-if="showingPasscodeSetup || (auth.requiresSetup && !showingPermissionsSetup)"
-      title="Enable Authentication"
-      description="Create a passcode to protect settings and permissions."
-      submit-label="Enable Authentication"
+      v-if="
+        showingPasscodeSetup || (auth.requiresSetup && !showingPermissionsSetup)
+      "
+      :title="t('Enable Authentication')"
+      :description="t('Create a passcode to protect settings and permissions.')"
+      :submit-label="t('Enable Authentication')"
       :can-cancel="!auth.requiresSetup"
       @complete="handlePasscodeSetup"
       @cancel="handlePasscodeSetupCancel"
@@ -50,150 +53,200 @@
         @cancel="showingUnlockForPermissions = false"
       />
 
-      <header
-        style="padding-top: env(safe-area-inset-top)"
-        class="sticky [@media(max-height:500px)]:static top-0 z-50 w-full backdrop-blur-xl bg-[var(--surface-1)]/80 border-b border-[var(--border)] transition-all duration-300 shadow-sm"
-      >
-        <div class="max-w-7xl mx-auto page-gutter">
-          <div class="flex items-center justify-between h-16 gap-4">
-            <div class="flex items-center gap-2 sm:gap-4 min-w-0">
-              <div class="flex items-center gap-3">
-                <img
-                  src="/pwa-192x192.png"
-                  alt="SnapCtrl Logo"
-                  class="w-8 h-8 object-contain"
-                />
-                <h1
-                  class="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 hidden sm:block"
-                >
-                  Snapcast Control
-                </h1>
-                <h1
-                  class="text-xl font-bold tracking-tight text-blue-600 dark:text-blue-400 sm:hidden"
-                >
-                  SnapCtrl
-                </h1>
-              </div>
+      <StudioShell
+        v-if="settings.interfaceMode === 'studio'"
+        :showing-permissions-setup="showingPermissionsSetup"
+        @settings="openAppSettings"
+        @server-info="showServerInfo = true"
+        @group-settings="openGroupSettings"
+        @create-group="openCreateGroup"
+        @client-details="openClientDetails"
+        @client-settings="openClientSettings"
+        @player-target="studioPlayerHost = $event"
+      />
 
-              <div
-                class="flex items-center gap-2 px-3 py-1 max-[420px]:gap-0 max-[420px]:px-2 max-[420px]:py-2 rounded-full text-xs font-medium border transition-colors duration-300"
-                :class="{
-                  'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/30':
-                    snapcast.isConnected,
-                  'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-900/30':
-                    snapcast.isConnecting,
-                  'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-900/30':
-                    connectionStatus === 'setup',
-                  'bg-[var(--surface-2)] text-[var(--text-tertiary)] border-[var(--border)]':
-                    connectionStatus === 'disconnected',
-                }"
-              >
-                <span class="relative flex h-2 w-2">
-                  <span
-                    v-if="snapcast.isConnecting"
-                    class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-current"
-                  ></span>
-                  <span
-                    class="relative inline-flex rounded-full h-2 w-2 bg-current"
-                  ></span>
-                </span>
-                <span class="max-[420px]:sr-only">
-                  <template v-if="connectionStatus === 'connecting'">Connecting...</template>
-                  <template v-else-if="connectionStatus === 'connected'">Connected</template>
-                  <template v-else-if="connectionStatus === 'setup'">Setup needed</template>
-                  <template v-else>Disconnected</template>
-                </span>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-2">
-              <Tooltip v-if="snapcast.isConnected" text="Server Info" position="bottom">
-                <button
-                  @click="showServerInfo = true"
-                  class="w-11 h-11 flex items-center justify-center rounded-full hover:bg-[var(--surface-2)] text-[var(--text-secondary)] transition-colors cursor-pointer"
-                >
-                  <span class="mdi mdi-information-outline text-xl"></span>
-                </button>
-              </Tooltip>
-
-              <Tooltip text="Settings" position="bottom">
-                <button
-                  @click="openAppSettings"
-                  class="w-11 h-11 flex items-center justify-center rounded-full hover:bg-[var(--surface-2)] text-[var(--text-secondary)] transition-colors cursor-pointer"
-                >
-                  <span class="mdi mdi-cog text-xl"></span>
-                </button>
-              </Tooltip>
-            </div>
-          </div>
-
-          <!-- Browser Player in Header when connected -->
-          <div
-            v-if="
-              snapcast.isConnected &&
-              !isMobile &&
-              auth.permissions.showBrowserPlayer
-            "
-            class="py-3 border-t border-[var(--border)]"
-          >
-            <BrowserPlayer />
-          </div>
-        </div>
-      </header>
-
-      <main class="max-w-7xl mx-auto page-gutter py-8 lg:py-12">
-        <ConnectionPanel
-          v-if="!snapcast.isConnected && !snapcast.isConnecting"
-          :showing-permissions-setup="showingPermissionsSetup"
-        />
-
-        <div
-          v-else-if="snapcast.isConnecting"
-          class="flex flex-col items-center justify-center min-h-[60vh]"
+      <template v-else>
+        <header
+          style="padding-top: env(safe-area-inset-top)"
+          class="sticky [@media(max-height:500px)]:static top-0 z-50 w-full backdrop-blur-xl bg-[var(--surface-1)]/80 border-b border-[var(--border)] transition-all duration-300 shadow-sm"
         >
-          <LoadingSpinner
-            size="60px"
-            label="Connecting to Snapcast server..."
+          <div class="max-w-7xl mx-auto page-gutter">
+            <div class="flex items-center justify-between h-16 gap-4">
+              <div class="flex items-center gap-2 sm:gap-4 min-w-0">
+                <div class="flex items-center gap-3">
+                  <img
+                    :src="'./pwa-192x192.png'"
+                    :alt="t('SnapCtrl Logo')"
+                    class="w-8 h-8 object-contain"
+                  />
+                  <h1
+                    class="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 hidden sm:block"
+                  >
+                    {{ t("Snapcast Control") }}
+                  </h1>
+                  <h1
+                    class="text-xl font-bold tracking-tight text-blue-600 dark:text-blue-400 sm:hidden"
+                  >
+                    SnapCtrl
+                  </h1>
+                </div>
+
+                <div
+                  class="flex items-center gap-2 px-3 py-1 max-[420px]:gap-0 max-[420px]:px-2 max-[420px]:py-2 rounded-full text-xs font-medium border transition-colors duration-300"
+                  :class="{
+                    'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/30':
+                      snapcast.isConnected,
+                    'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-900/30':
+                      snapcast.isConnecting,
+                    'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-900/30':
+                      connectionStatus === 'setup',
+                    'bg-[var(--surface-2)] text-[var(--text-tertiary)] border-[var(--border)]':
+                      connectionStatus === 'disconnected',
+                  }"
+                >
+                  <span class="relative flex h-2 w-2">
+                    <span
+                      v-if="snapcast.isConnecting"
+                      class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-current"
+                    ></span>
+                    <span
+                      class="relative inline-flex rounded-full h-2 w-2 bg-current"
+                    ></span>
+                  </span>
+                  <span class="max-[420px]:sr-only">
+                    <template v-if="connectionStatus === 'connecting'">{{
+                      t("Connecting...")
+                    }}</template>
+                    <template v-else-if="connectionStatus === 'connected'">{{
+                      t("Connected")
+                    }}</template>
+                    <template v-else-if="connectionStatus === 'setup'">{{
+                      t("Setup needed")
+                    }}</template>
+                    <template v-else>{{ t("Disconnected") }}</template>
+                  </span>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  @click="settings.setInterfaceMode('studio')"
+                  class="h-11 px-3 inline-flex items-center gap-2 rounded-full border border-blue-500/25 bg-blue-500/10 text-blue-600 dark:text-blue-300 text-sm font-semibold transition-colors hover:bg-blue-500/20"
+                  :aria-label="t('Switch to Studio interface')"
+                >
+                  <span
+                    class="mdi mdi-waveform text-xl"
+                    aria-hidden="true"
+                  ></span>
+                  <span class="hidden sm:inline">{{ t("Studio") }}</span>
+                </button>
+                <Tooltip
+                  v-if="snapcast.isConnected"
+                  :text="t('Server Info')"
+                  position="bottom"
+                >
+                  <button
+                    @click="showServerInfo = true"
+                    class="w-11 h-11 flex items-center justify-center rounded-full hover:bg-[var(--surface-2)] text-[var(--text-secondary)] transition-colors cursor-pointer"
+                  >
+                    <span class="mdi mdi-information-outline text-xl"></span>
+                  </button>
+                </Tooltip>
+
+                <Tooltip :text="t('Settings')" position="bottom">
+                  <button
+                    @click="openAppSettings"
+                    class="w-11 h-11 flex items-center justify-center rounded-full hover:bg-[var(--surface-2)] text-[var(--text-secondary)] transition-colors cursor-pointer"
+                  >
+                    <span class="mdi mdi-cog text-xl"></span>
+                  </button>
+                </Tooltip>
+              </div>
+            </div>
+
+            <!-- Browser Player in Header when connected -->
+            <div
+              ref="classicPlayerHost"
+              v-show="
+                snapcast.isConnected &&
+                !isMobile &&
+                auth.permissions.showBrowserPlayer
+              "
+              class="py-3 border-t border-[var(--border)]"
+            ></div>
+          </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto page-gutter py-8 lg:py-12">
+          <ConnectionPanel
+            v-if="!snapcast.isConnected && !snapcast.isConnecting"
+            :showing-permissions-setup="showingPermissionsSetup"
           />
-        </div>
 
-        <SimpleZoneView
-          v-else
-          @group-settings="openGroupSettings"
-          @create-group="openCreateGroup"
-          @client-details="openClientDetails"
-          @client-settings="openClientSettings"
-        />
-      </main>
+          <div
+            v-else-if="snapcast.isConnecting"
+            class="flex flex-col items-center justify-center min-h-[60vh]"
+          >
+            <LoadingSpinner
+              size="60px"
+              :label="t('Connecting to Snapcast server...')"
+            />
+          </div>
 
-      <!-- Footer -->
-      <footer
-        v-if="snapcast.isConnected"
-        style="padding-bottom: calc(1.5rem + env(safe-area-inset-bottom))"
-        class="mt-8 py-6 text-center text-sm text-[var(--text-tertiary)] border-t border-[var(--border)]"
-      >
-        <div class="max-w-7xl mx-auto page-gutter">
-          <p>
-            Made with <span class="text-red-500">♥</span> by
-            <a
-              href="https://github.com/jdavidoa91"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex min-h-11 items-center hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >Josue O.A</a
-            >
-            /
-            <a
-              href="https://github.com/NaturalDevCR"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex min-h-11 items-center hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >NaturalDevCR</a
-            >
-            <span class="opacity-50 ml-2">v{{ appVersion }}</span>
-          </p>
+          <SimpleZoneView
+            v-else
+            @group-settings="openGroupSettings"
+            @create-group="openCreateGroup"
+            @client-details="openClientDetails"
+            @client-settings="openClientSettings"
+          />
+        </main>
+
+        <!-- Footer -->
+        <footer
+          v-if="snapcast.isConnected"
+          style="padding-bottom: calc(1.5rem + env(safe-area-inset-bottom))"
+          class="mt-8 py-6 text-center text-sm text-[var(--text-tertiary)] border-t border-[var(--border)]"
+        >
+          <div class="max-w-7xl mx-auto page-gutter">
+            <p>
+              {{ t("Made with") }} <span class="text-red-500">♥</span>
+              {{ t("by") }}
+              <a
+                href="https://github.com/jdavidoa91"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex min-h-11 items-center hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                >Josue O.A</a
+              >
+              /
+              <a
+                href="https://github.com/NaturalDevCR"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex min-h-11 items-center hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                >NaturalDevCR</a
+              >
+              <span class="opacity-50 ml-2">v{{ appVersion }}</span>
+            </p>
+          </div>
+        </footer>
+      </template>
+
+      <!-- One player instance survives layout changes and viewport resizing.
+           Unmounting it runs disconnect() and deletes its temporary client. -->
+      <Teleport :to="playerTarget || 'body'" :disabled="!playerTarget">
+        <div
+          v-if="snapcast.isConnected && auth.permissions.showBrowserPlayer"
+          v-show="
+            !!playerTarget && (settings.interfaceMode === 'studio' || !isMobile)
+          "
+          class="browser-player"
+        >
+          <BrowserPlayer />
         </div>
-      </footer>
+      </Teleport>
 
       <!-- Group Settings Modal -->
       <GroupSettingsModal
@@ -233,23 +286,29 @@
     </template>
 
     <!-- Server Info Modal -->
-    <ServerInfo
-      :is-open="showServerInfo"
-      @close="showServerInfo = false"
-    />
+    <ServerInfo :is-open="showServerInfo" @close="showServerInfo = false" />
 
     <!-- End Main App UI -->
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from "vue";
+import { t } from "@/i18n";
+import {
+  ref,
+  onMounted,
+  onUnmounted,
+  computed,
+  watch,
+  defineAsyncComponent,
+} from "vue";
 import { useSnapcastStore } from "./stores/snapcast";
 import { useSettingsStore } from "./stores/settings";
 import { useAuthStore } from "./stores/auth";
 import type { Client, Group } from "./stores/snapcast";
 import type { AuthPermissions } from "./stores/auth";
 import BrowserPlayer from "@/components/BrowserPlayer.vue";
+import ActionConfirmation from "@/components/ActionConfirmation.vue";
 import Toast from "@/components/Toast.vue";
 import LoadingSpinner from "@/components/LoadingSpinner.vue";
 import Tooltip from "@/components/Tooltip.vue";
@@ -265,10 +324,72 @@ import PermissionsConfig from "@/components/PermissionsConfig.vue";
 import UnlockPrompt from "@/components/UnlockPrompt.vue";
 import ServerInfo from "@/components/ServerInfo.vue";
 import pkg from "../package.json";
+import "@/components/studio/studio.css";
+
+const StudioShell = defineAsyncComponent(
+  () => import("@/components/studio/StudioShell.vue"),
+);
 
 const snapcast = useSnapcastStore();
 const settings = useSettingsStore();
 const auth = useAuthStore();
+const classicPlayerHost = ref<HTMLElement | null>(null);
+const studioPlayerHost = ref<HTMLElement | null>(null);
+watch(
+  () => settings.locale,
+  (locale) => {
+    document.documentElement.lang = locale;
+  },
+  { immediate: true },
+);
+watch(
+  () => settings.studioPalette,
+  (palette) => {
+    document.documentElement.dataset.studioPalette = palette;
+  },
+  { immediate: true },
+);
+const playerTarget = computed(() =>
+  settings.interfaceMode === "studio"
+    ? studioPlayerHost.value
+    : classicPlayerHost.value,
+);
+
+// Also theme teleported dialogs, which live outside the Studio shell.
+watch(
+  () => settings.interfaceMode,
+  (mode) => {
+    document.documentElement.dataset.interface = mode;
+  },
+  { immediate: true },
+);
+
+watch(
+  [
+    () => settings.interfaceMode,
+    () => settings.studioPalette,
+    () => settings.theme,
+  ],
+  () => {
+    const colors = {
+      midnight: ["#f2f6fc", "#0b1322"],
+      ocean: ["#f0f8fa", "#081a24"],
+      aurora: ["#f6f4fc", "#151022"],
+      ember: ["#fbf6f1", "#1b1513"],
+    };
+    const palette = colors[settings.studioPalette] ?? colors.midnight;
+    const color =
+      settings.interfaceMode === "studio"
+        ? palette[settings.theme === "dark" ? 1 : 0]
+        : settings.theme === "dark"
+          ? "#020617"
+          : "#f8fafc";
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", color!);
+  },
+  { immediate: true },
+);
 
 // UI State
 const showServerInfo = ref(false);

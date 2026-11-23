@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp, h, nextTick, type App } from "vue";
 import { createPinia, setActivePinia, type Pinia } from "pinia";
+import ActionConfirmation from "@/components/ActionConfirmation.vue";
 import SimpleSourceButton from "@/components/simple/SimpleSourceButton.vue";
 import { useSnapcastStore } from "@/stores/snapcast";
 import type { Group } from "@/stores/snapcast";
@@ -23,7 +24,10 @@ function baseGroup(overrides: Partial<Group> = {}): Group {
 function mount(group: Group) {
   host = document.createElement("div");
   document.body.appendChild(host);
-  app = createApp({ render: () => h(SimpleSourceButton, { group }) });
+  useSnapcastStore().groups = [group];
+  app = createApp({
+    render: () => [h(ActionConfirmation), h(SimpleSourceButton, { group })],
+  });
   app.use(pinia);
   app.mount(host);
 }
@@ -37,7 +41,9 @@ function sourceButton() {
 }
 
 function confirmDialog() {
-  return document.querySelector<HTMLElement>('[role="dialog"][aria-label*="Change"]');
+  return document.querySelector<HTMLElement>(
+    '[role="dialog"][aria-label*="Change"]',
+  );
 }
 
 beforeEach(() => {
@@ -79,7 +85,7 @@ describe("SimpleSourceButton change confirmation", () => {
 
   it("opens a confirm dialog instead of switching immediately", async () => {
     const snapcast = useSnapcastStore();
-    const spy = vi.spyOn(snapcast, "setGroupStream");
+    const spy = vi.spyOn(snapcast, "setGroupStream").mockResolvedValue(undefined);
     mount(baseGroup());
 
     sourceButton().click();
@@ -88,35 +94,39 @@ describe("SimpleSourceButton change confirmation", () => {
     await nextTick();
 
     expect(spy).not.toHaveBeenCalled();
-    expect(confirmDialog()).not.toBeNull();
+    await vi.waitFor(() => expect(confirmDialog()).not.toBeNull());
   });
 
   it("switches the source once the user confirms", async () => {
     const snapcast = useSnapcastStore();
-    const spy = vi.spyOn(snapcast, "setGroupStream");
+    const spy = vi.spyOn(snapcast, "setGroupStream").mockResolvedValue(undefined);
     mount(baseGroup());
 
     sourceButton().click();
     await nextTick();
     document.querySelectorAll<HTMLButtonElement>('[role="option"]')[1].click();
     await nextTick();
+    await vi.waitFor(() => expect(confirmDialog()).not.toBeNull());
     const buttons = confirmDialog()!.querySelectorAll("button");
     (buttons[buttons.length - 1] as HTMLButtonElement).click();
     await nextTick();
 
-    expect(spy).toHaveBeenCalledWith("g1", "s2");
+    await vi.waitFor(() => expect(spy).toHaveBeenCalledWith("g1", "s2"));
   });
 
   it("does not switch if the user cancels", async () => {
     const snapcast = useSnapcastStore();
-    const spy = vi.spyOn(snapcast, "setGroupStream");
+    const spy = vi.spyOn(snapcast, "setGroupStream").mockResolvedValue(undefined);
     mount(baseGroup());
 
     sourceButton().click();
     await nextTick();
     document.querySelectorAll<HTMLButtonElement>('[role="option"]')[1].click();
     await nextTick();
-    confirmDialog()!.querySelector<HTMLElement>("[aria-label='Close']")!.click();
+    await vi.waitFor(() => expect(confirmDialog()).not.toBeNull());
+    confirmDialog()!
+      .querySelector<HTMLElement>("[aria-label='Close']")!
+      .click();
     await nextTick();
 
     expect(spy).not.toHaveBeenCalled();

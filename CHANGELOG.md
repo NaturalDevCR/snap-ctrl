@@ -6,6 +6,19 @@ carries auto-generated notes with the full commit list.
 
 > **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
 
+### v0.9.0
+
+- **Added**: Optional **Studio** interface, enabled from the header or Settings → Interface. The existing interface remains the default and is labeled Classic. Each browser remembers its choice.
+- **Added**: A compact, unified zone dashboard with source selection, direct volume and mute controls, expandable speaker controls, search by zone/source/speaker, playback filters, zone management and the existing advanced settings. On phones, collapsed Studio cards are about 160px tall; there is no hero banner or separate source/speaker navigation.
+- **Added**: Four Studio palettes — **Midnight** (default), **Ocean**, **Aurora** and **Ember** — each with light and dark variants. Playing zones have a highlighted edge, tinted surface and animated equalizer; muted and unavailable zones have distinct icons and borders. Animations respect reduced-motion preferences.
+- **Added**: **English / Español** language choices in Settings, with immediate, persistent translations in both interfaces, including dialogs, confirmations and accessibility labels. User-configured names are preserved. Source selectors display an explicit **Source / Origen** label.
+- **Changed**: Every explicit mute action (zone, speaker, all zones and browser playback) requires confirmation in a styled, accessible app dialog. Cancel, Escape or a backdrop tap leaves audio unchanged. Unmuting remains immediate.
+- **Changed**: Explicit source changes require the same designed confirmation flow, including the browser player and source changes saved from zone settings. Pending actions re-check the current server, target and permissions before applying a confirmed change.
+- **Fixed**: Switching interfaces or resizing the window preserves one browser-player instance and its playback, avoiding unintended temporary-speaker deletion and the associated "Delete speaker: Internal error" notification.
+- **Changed**: New Midnight audio-wave app icon, with dedicated favicon, Apple touch, standard PWA and maskable Android exports.
+- **Fixed**: The Home Assistant Docker build's default release version matches the add-on version instead of downloading the old v0.3.3 package when no build override is supplied.
+- **Validation**: 192 tests, TypeScript checks, standard and Home Assistant builds, plus browser verification with 17 zones at 320–1440px, both languages, all palettes, confirmation cancellation and repeated interface changes.
+
 ### v0.8.3
 
 - **Fixed**: The volume −/+ buttons actually step by 1% now on installs that updated from before v0.8.2. The default changed in v0.8.2, but a value saved by an earlier version stayed in local storage and kept overriding it; that stored value is now migrated once on load.

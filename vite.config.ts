@@ -20,16 +20,17 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.png", "apple-touch-icon.png"],
       manifest: {
-        name: "Snapcast Control",
-        short_name: "Snapcast",
+        id: "./",
+        name: "SnapCtrl",
+        short_name: "SnapCtrl",
         description:
           "Modern web interface for Snapcast multiroom audio control",
-        theme_color: "#0f172a",
+        theme_color: "#0b1322",
         // The app defaults to dark mode (settings.ts: theme ref default is
         // "dark") — a white splash background here would flash white
         // before the actual dark UI paints on launch. Matches the dark
         // theme's --surface-0 in assets/main.css.
-        background_color: "#020617",
+        background_color: "#0b1322",
         display: "standalone",
         // No orientation lock: the layout is already responsive (grid
         // breakpoints for wider viewports), and a tablet mounted in
@@ -37,6 +38,12 @@ export default defineConfig({
         // control panel — would otherwise get locked to portrait by the
         // OS once installed as a PWA.
         icons: [
+          {
+            src: "pwa-maskable-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
+          },
           {
             src: "pwa-192x192.png",
             sizes: "192x192",

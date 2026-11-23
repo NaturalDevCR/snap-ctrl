@@ -16,12 +16,12 @@
           class="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2"
         >
           <span class="mdi mdi-lock-outline"></span>
-          Enter Passcode
+          {{ t("Enter Passcode") }}
         </h3>
         <button
           v-if="canCancel"
           @click="handleCancel"
-          aria-label="Cancel"
+          :aria-label="t('Cancel')"
           class="w-11 h-11 -mr-2 -my-2 inline-flex items-center justify-center rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
         >
           <span class="mdi mdi-close text-xl"></span>
@@ -30,7 +30,7 @@
 
       <div class="p-6 space-y-4">
         <p class="text-sm text-[var(--text-tertiary)]">
-          Enter your passcode to continue
+          {{ t("Enter your passcode to continue") }}
         </p>
 
         <div>
@@ -44,7 +44,7 @@
                 ? 'border-red-500 focus:ring-2 focus:ring-red-500'
                 : 'border-[var(--border)] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400',
             ]"
-            placeholder="Enter passcode"
+            :placeholder="t('Enter passcode')"
             @keyup.enter="handleUnlock"
             @input="error = ''"
           />
@@ -67,13 +67,13 @@
           class="px-4 py-2 min-h-11 text-[var(--text-secondary)] font-medium hover:bg-[var(--surface-2)] rounded-lg transition-colors"
           @click="handleCancel"
         >
-          Cancel
+          {{ t("Cancel") }}
         </button>
         <button
           class="px-4 py-2 min-h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
           @click="handleUnlock"
         >
-          Unlock
+          {{ t("Unlock") }}
         </button>
       </div>
     </div>
@@ -81,6 +81,7 @@
 </template>
 
 <script setup lang="ts">
+import { t } from "@/i18n";
 import { ref, onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { useEscapeToClose } from "@/composables/useEscapeToClose";
@@ -92,7 +93,7 @@ const props = withDefaults(
   }>(),
   {
     canCancel: true,
-  }
+  },
 );
 
 const emit = defineEmits<{
@@ -118,7 +119,7 @@ async function handleUnlock() {
   error.value = "";
 
   if (!passcode.value) {
-    error.value = "Please enter your passcode";
+    error.value = t("Please enter your passcode");
     return;
   }
 
@@ -128,7 +129,7 @@ async function handleUnlock() {
     emit("unlock");
     passcode.value = "";
   } else {
-    error.value = "Incorrect passcode";
+    error.value = t("Incorrect passcode");
     passcode.value = "";
     passcodeInput.value?.focus();
   }
