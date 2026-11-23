@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { ref, computed, nextTick } from "vue";
 import { setActivePinia, createPinia } from "pinia";
 import { useZoneOrder } from "@/composables/useZoneOrder";
+import { useSnapcastStore } from "@/stores/snapcast";
 import { useSettingsStore } from "@/stores/settings";
 
 interface TestZone {
@@ -228,5 +229,84 @@ describe("useZoneOrder", () => {
 
     moveInCustomOrder("g1", "g3");
     expect(sortedZones.value.map((z) => z.id)).toEqual(["g2", "g1", "g3"]);
+  });
+});
+
+describe("useZoneOrder activity priority", () => {
+  function setup() {
+    const settings = useSettingsStore();
+    const snapcast = useSnapcastStore();
+    snapcast.streams = [
+      { id: "music", uri: "pipe:///music", status: "playing" },
+      { id: "radio", uri: "pipe:///radio", status: "idle" },
+      { id: "offline", uri: "pipe:///offline", status: "disabled" },
+    ];
+    const zones = ref([
+      { ...makeZone("idle", "Alpha idle"), stream_id: "radio", muted: false },
+      { ...makeZone("muted-b", "Bravo muted"), stream_id: "music", muted: true },
+      { ...makeZone("playing-b", "Charlie playing"), stream_id: "music", muted: false },
+      { ...makeZone("unavailable", "Delta unavailable"), stream_id: "offline", muted: false },
+      { ...makeZone("playing-a", "Echo playing"), stream_id: "music", muted: false },
+      { ...makeZone("muted-a", "Foxtrot muted"), stream_id: "offline", muted: true },
+      { ...makeZone("missing", "Golf missing"), stream_id: "missing", muted: false },
+    ]);
+    const order = useZoneOrder(zones, {
+      hiddenZoneIds: computed(() => settings.hiddenGroups),
+      showEmptyZones: computed(() => settings.showEmptyGroups),
+      browserPlayerId: computed(() => null),
+    });
+    return { settings, snapcast, zones, ...order };
+  }
+
+  it("groups playing, muted, then inactive zones, preserving manual order within each block", () => {
+    const { settings, sortedZones, orderedZonesForFilter } = setup();
+    const saved = ["unavailable", "muted-a", "playing-a", "idle", "muted-b", "playing-b", "missing"];
+    settings.setCustomGroupOrder([...saved]);
+    expect(sortedZones.value.map(z => z.id)).toEqual([
+      "playing-a", "playing-b", "muted-a", "muted-b", "unavailable", "idle", "missing",
+    ]);
+    expect(settings.customGroupOrder).toEqual(saved);
+    expect(orderedZonesForFilter.value.map(z => z.id)).toEqual(saved);
+  });
+
+  it("keeps alphabetical fallback inside each activity block", () => {
+    const { sortedZones } = setup();
+    expect(sortedZones.value.map(z => z.id)).toEqual([
+      "playing-b", "playing-a", "muted-b", "muted-a", "idle", "unavailable", "missing",
+    ]);
+  });
+
+  it("reacts to mute and server stream changes without rewriting the saved order", () => {
+    const { settings, snapcast, zones, sortedZones } = setup();
+    const saved = zones.value.map(z => z.id);
+    settings.setCustomGroupOrder([...saved]);
+    zones.value.find(z => z.id === "playing-b")!.muted = true;
+    expect(sortedZones.value.map(z => z.id).slice(0, 4)).toEqual(["playing-a", "muted-b", "playing-b", "muted-a"]);
+    snapcast.streams.find(s => s.id === "radio")!.status = "kPlaying";
+    expect(sortedZones.value[0]!.id).toBe("idle");
+    snapcast.streams.find(s => s.id === "music")!.status = "kIdle";
+    expect(sortedZones.value.map(z => z.id)).toEqual(["idle", "muted-b", "playing-b", "muted-a", "unavailable", "playing-a", "missing"]);
+    expect(settings.customGroupOrder).toEqual(saved);
+  });
+
+  it("still excludes hidden and empty zones before prioritizing", () => {
+    const { settings, zones, sortedZones } = setup();
+    zones.value.forEach(z => { z.clients = [makeClient(`${z.id}-speaker`)]; });
+    zones.value.find(z => z.id === "playing-b")!.clients = [];
+    settings.setShowEmptyGroups(false);
+    settings.setHiddenGroups(["playing-a"]);
+    expect(sortedZones.value.map(z => z.id)).toEqual(["muted-b", "muted-a", "idle", "unavailable", "missing"]);
+  });
+
+  it("keeps temporary browser groups last even when their source is playing", () => {
+    const { zones, sortedZones } = setup();
+    zones.value.push({ ...makeZone("browser", "Browser", [makeClient("browser-id", "SnapCtrl")]), stream_id: "music", muted: false });
+    expect(sortedZones.value.at(-1)!.id).toBe("browser");
+  });
+
+  it("seeds manual reordering from the stable management list, not the current activity blocks", () => {
+    const { settings, moveInCustomOrder } = setup();
+    moveInCustomOrder("playing-a", "muted-b");
+    expect(settings.customGroupOrder).toEqual(["idle", "playing-a", "muted-b", "playing-b", "unavailable", "muted-a", "missing"]);
   });
 });
