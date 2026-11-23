@@ -1,9 +1,13 @@
 import { ref, computed, type Ref, type ComputedRef } from "vue";
 import { useSettingsStore } from "@/stores/settings";
+import { useSnapcastStore } from "@/stores/snapcast";
+import { getStreamStatus, parsePlayState } from "@/utils/stream-status";
 
 export interface ZoneLike {
   id: string;
   name?: string | null;
+  stream_id?: string;
+  muted?: boolean;
   clients?: Array<{ id: string; config?: { name?: string | null } }>;
 }
 
@@ -24,6 +28,14 @@ export function useZoneOrder<T extends ZoneLike>(
   }
 ) {
   const settings = useSettingsStore();
+  const snapcast = useSnapcastStore();
+
+  function activityPriority(zone: T): number {
+    if (zone.muted) return 1;
+    return parsePlayState(getStreamStatus(snapcast.streams, zone.stream_id ?? "")) === "playing"
+      ? 0
+      : 2;
+  }
 
   const draggedIndex = ref<number | null>(null);
   const dragOverIndex = ref<number | null>(null);
@@ -47,6 +59,10 @@ export function useZoneOrder<T extends ZoneLike>(
       const isBrowserB = isBrowserZone(b);
       if (isBrowserA && !isBrowserB) return 1;
       if (!isBrowserA && isBrowserB) return -1;
+
+      // Live activity groups the cards without rewriting the saved manual order.
+      const activityDifference = activityPriority(a) - activityPriority(b);
+      if (activityDifference !== 0) return activityDifference;
 
       const indexA = settings.customGroupOrder.indexOf(a.id);
       const indexB = settings.customGroupOrder.indexOf(b.id);
@@ -86,7 +102,7 @@ export function useZoneOrder<T extends ZoneLike>(
 
     let order = [...settings.customGroupOrder];
     if (order.length === 0) {
-      order = sortedZones.value
+      order = orderedZonesForFilter.value
         .filter((z) => !isBrowserZone(z))
         .map((z) => z.id);
     }

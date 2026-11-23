@@ -1,6 +1,6 @@
 FROM nginx:alpine
 
-ARG BUILD_VERSION=0.9.0
+ARG BUILD_VERSION=0.10.0
 
 RUN apk add --no-cache jq curl unzip \
     && mkdir -p /var/www/html \

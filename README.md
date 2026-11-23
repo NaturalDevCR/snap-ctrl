@@ -52,6 +52,11 @@ Studio puts everything in one compact zone view, without a banner or separate
 source and speaker pages. Search by zone, source or speaker; filter playing or
 muted zones; and change the source, volume and mute state directly on each card.
 Studio has a Midnight blue dark theme and a matching cool blue light theme.
+
+Both interfaces put playing, unmuted zones first, muted zones next, and inactive
+or unavailable zones last. Each block keeps your custom zone order (or alphabetical
+order if no position is saved). Playback changes never rewrite that preference;
+**Manage zones** continues to show the stable manual order while you edit it.
 The speaker button beside the source expands individual volumes, linking, details
 and settings. Cards stay compact on phones, with additional controls shown only
 when expanded.

@@ -6,6 +6,12 @@ carries auto-generated notes with the full commit list.
 
 > **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
 
+### v0.10.0
+
+- **Added**: Activity-prioritized zones in both Classic and Studio: playing, unmuted zones first; muted zones next; idle, unavailable and unknown-source zones last.
+- **Changed**: Each activity block preserves the saved custom zone order, with the existing alphabetical fallback for zones without a saved position. The list updates as stream status or mute state changes, without modifying the saved order.
+- **Preserved**: Manage zones keeps the stable manual order for editing. Hidden/empty-zone filtering and temporary browser-zone handling continue to work as before.
+
 ### v0.9.0
 
 - **Added**: Optional **Studio** interface, enabled from the header or Settings → Interface. The existing interface remains the default and is labeled Classic. Each browser remembers its choice.
