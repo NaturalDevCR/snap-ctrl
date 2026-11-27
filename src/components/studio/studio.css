@@ -574,9 +574,6 @@ html.dark[data-interface="studio"] {
   font-size: 15px;
   transition: transform 0.25s;
 }
-.st-rotated {
-  transform: rotate(180deg);
-}
 .st-zone-volume {
   display: flex;
   align-items: center;
@@ -639,26 +636,6 @@ html.dark[data-interface="studio"] {
 }
 .st-volume-hint .mdi {
   font-size: 18px;
-}
-.st-expand-wrap {
-  display: grid;
-  grid-template-rows: 0fr;
-  visibility: hidden;
-  transition:
-    grid-template-rows 0.3s ease,
-    visibility 0.3s;
-}
-.st-expand-wrap--open {
-  grid-template-rows: 1fr;
-  visibility: visible;
-}
-.st-expand-inner {
-  min-height: 0;
-  overflow: hidden;
-}
-.st-zone-speakers {
-  margin-top: 8px;
-  border-top: 1px solid var(--border);
 }
 .st-speaker {
   padding: 10px 0 0;
@@ -1282,7 +1259,6 @@ html[data-interface="studio"] .app-range {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .st-expand-wrap,
   .st-card-enter-active,
   .st-card-leave-active,
   .st-card-move {
@@ -1578,3 +1554,13 @@ html.dark[data-interface="studio"][data-studio-palette="ember"] {
   box-shadow: 0 2px 10px #00000018;
 }
 @media (max-width: 360px) { .st-palette-preview { width: 28px; }.st-palette-option { gap: 6px; padding: 8px; font-size: 11px; } }
+
+/* Speaker controls live in a scrollable dialog instead of growing the cards. */
+.st-speakers-dialog-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; color: var(--text-tertiary); font-size: 12px; }
+.st-speakers-dialog .st-speaker { padding-top: 14px; padding-bottom: 8px; }
+.st-speakers-dialog .st-speaker-info strong { font-size: 13px; }
+.st-speakers-dialog .st-speaker-info small { font-size: 11px; }
+.st-speakers-dialog .st-speaker-avatar { width: 36px; height: 40px; font-size: 22px; }
+.st-speakers-dialog .st-speaker-actions .st-icon-button { width: 44px; }
+.st-speakers-done { margin-left: auto; min-width: 96px; }
+@media (max-width: 360px) { .st-speakers-dialog .st-speaker-actions .st-icon-button { width: 36px; }.st-speakers-dialog .st-speaker-info { gap: 6px; } }

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { t } from "@/i18n";
-import { computed, ref, useId } from "vue";
+import { computed, ref, nextTick } from "vue";
 import { useZoneControls } from "@/composables/useZoneControls";
 import SimpleVolumeSlider from "@/components/simple/SimpleVolumeSlider.vue";
 import StudioSourcePicker from "./StudioSourcePicker.vue";
-import StudioSpeakerRow from "./StudioSpeakerRow.vue";
+import StudioSpeakersDialog from "./StudioSpeakersDialog.vue";
 import type { Client, Group } from "@/stores/snapcast";
 
 const props = defineProps<{ group: Group }>();
@@ -14,9 +14,28 @@ const emit = defineEmits<{
   "client-settings": [client: Client];
 }>();
 const zone = useZoneControls(() => props.group);
-const expanded = ref(false);
+const speakersOpen = ref(false);
+const speakerButton = ref<HTMLButtonElement | null>(null);
+let speakersOpener: HTMLElement | null = null;
+
+function openSpeakers(event: Event) {
+  speakersOpener = event.currentTarget as HTMLElement;
+  speakersOpen.value = true;
+}
+
+async function closeSpeakers() {
+  const opener = speakersOpener;
+  speakersOpen.value = false;
+  speakersOpener = null;
+  await nextTick();
+  // Linking speakers replaces "Individual volumes" with a master slider.
+  // The shared dialog restores focus normally; use the stable speaker button
+  // only when the original opener was removed while the dialog was open.
+  if (!speakersOpen.value && opener && !opener.isConnected) {
+    speakerButton.value?.focus();
+  }
+}
 const sourceOpen = ref(false);
-const speakersId = useId();
 const singleSpeaker = computed(() =>
   zone.speakers.value.length === 1 ? zone.speakers.value[0] : undefined,
 );
@@ -145,24 +164,17 @@ function setVolume(value: number) {
       <button
         v-if="zone.speakers.value.length"
         type="button"
+        ref="speakerButton"
         class="st-zone-expand"
-        :class="{ 'st-selected': expanded }"
-        :aria-label="
-          t(
-            expanded
-              ? 'Hide speakers for {name}'
-              : 'Manage speakers for {name}',
-            { name: zone.zoneName.value },
-          )
-        "
-        :aria-expanded="expanded"
-        :aria-controls="speakersId"
-        @click="expanded = !expanded"
+        :class="{ 'st-selected': speakersOpen }"
+        :aria-label="t('Manage speakers for {name}', { name: zone.zoneName.value })"
+        aria-haspopup="dialog"
+        :aria-expanded="speakersOpen"
+        @click="openSpeakers"
       >
         <span class="mdi mdi-speaker-multiple" aria-hidden="true"></span
         ><span
-          class="mdi mdi-chevron-down"
-          :class="{ 'st-rotated': expanded }"
+          class="mdi mdi-chevron-right"
           aria-hidden="true"
         ></span>
       </button>
@@ -202,35 +214,22 @@ function setVolume(value: number) {
         v-else-if="zone.speakers.value.length"
         type="button"
         class="st-volume-hint"
-        @click="expanded = !expanded"
-        :aria-expanded="expanded"
-        :aria-controls="speakersId"
+        @click="openSpeakers"
+        aria-haspopup="dialog"
+        :aria-expanded="speakersOpen"
       >
         {{ t("Individual volumes")
         }}<span class="mdi mdi-tune-vertical" aria-hidden="true"></span>
       </button>
       <p v-else class="st-volume-hint">{{ zone.noSpeakersMessage.value }}</p>
     </div>
-    <div
-      :id="speakersId"
-      class="st-expand-wrap"
-      :class="{ 'st-expand-wrap--open': expanded }"
-      :inert="!expanded || undefined"
-      :aria-hidden="!expanded"
-    >
-      <div class="st-expand-inner">
-        <div class="st-zone-speakers">
-          <StudioSpeakerRow
-            v-for="client in zone.speakers.value"
-            :key="client.id"
-            :client="client"
-            :group="group"
-            @client-details="emit('client-details', $event)"
-            @client-settings="emit('client-settings', $event)"
-          />
-        </div>
-      </div>
-    </div>
+    <StudioSpeakersDialog
+      :open="speakersOpen"
+      :group="group"
+      @close="closeSpeakers"
+      @client-details="emit('client-details', $event)"
+      @client-settings="emit('client-settings', $event)"
+    />
     <StudioSourcePicker
       :open="sourceOpen"
       :group="group"

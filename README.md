@@ -57,9 +57,10 @@ Both interfaces put playing, unmuted zones first, muted zones next, and inactive
 or unavailable zones last. Each block keeps your custom zone order (or alphabetical
 order if no position is saved). Playback changes never rewrite that preference;
 **Manage zones** continues to show the stable manual order while you edit it.
-The speaker button beside the source expands individual volumes, linking, details
-and settings. Cards stay compact on phones, with additional controls shown only
-when expanded.
+The speaker button beside the source and **Individual volumes** open a dedicated
+speaker dialog with volume, mute, linking, details and settings. Cards stay compact
+while the dialog is open. It appears as a bottom sheet on phones and a centered
+dialog on larger screens.
 
 A zone with one speaker exposes that speaker's volume. Zones with linked speakers
 use the existing proportional master volume and control curve. Playback itself is

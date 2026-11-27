@@ -6,6 +6,13 @@ carries auto-generated notes with the full commit list.
 
 > **Convention**: version bumps and changelog entries go in the same PR. When you tag, you also document.
 
+### v0.11.0
+
+- **Changed**: Studio speaker controls now open in a dedicated dialog instead of expanding inside each zone card. The dialog appears as a bottom sheet on phones and a centered dialog on larger screens, with its own scrolling to keep zone cards compact.
+- **Preserved**: Individual speaker volume, mute confirmation, volume linking, information and settings remain available, respecting device permissions and the selected language and palette.
+- **Accessibility**: Keyboard focus stays inside the dialog and returns to its opener when closed, with a fallback to the speaker button if linking changes the card controls. Nested settings and confirmations appear above the speaker dialog and close independently.
+- **Validation**: 202 tests, TypeScript checks, standard and Home Assistant builds, plus browser verification at 320, 390 and 1440px in English and Spanish.
+
 ### v0.10.0
 
 - **Added**: Activity-prioritized zones in both Classic and Studio: playing, unmuted zones first; muted zones next; idle, unavailable and unknown-source zones last.
