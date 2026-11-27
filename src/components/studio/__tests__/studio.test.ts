@@ -138,14 +138,14 @@ describe("Studio zones and permissions", () => {
         ?.disabled,
     ).toBe(true);
     expect(host.textContent).not.toContain("Add zone");
-    expect(host.textContent).toContain("visible-speaker");
-    expect(host.textContent).not.toContain("secret-speaker");
-    expect(
-      host.querySelector('[aria-label="visible-speaker settings"]'),
-    ).toBeNull();
-    expect(
-      host.querySelector('[aria-label="Link visible-speaker to zone volume"]'),
-    ).toBeNull();
+    host.querySelector<HTMLButtonElement>('[aria-label="Manage speakers for allowed"]')!.click();
+    await nextTick();
+    const dialog = document.querySelector('[role="dialog"]')!;
+    expect(dialog.textContent).toContain("visible-speaker");
+    expect(dialog.textContent).not.toContain("secret-speaker");
+    expect(dialog.querySelector('[aria-label="visible-speaker settings"]')).toBeNull();
+    expect(dialog.querySelector('[aria-label="Link visible-speaker to zone volume"]')).toBeNull();
+    expect(dialog.querySelector<HTMLInputElement>('[aria-label="visible-speaker volume"]')?.disabled).toBe(true);
   });
 
   it("selects a source inside its zone and respects allowed sources", async () => {
@@ -256,25 +256,83 @@ describe("Studio volume controls", () => {
     );
   });
 
-  it("offers individual volumes when multiple speakers are not linked", async () => {
+  it.each(["speaker button", "individual volumes"])("opens speakers in a dialog from the %s without expanding the card", async (trigger) => {
     mount(StudioZoneCard, {
       group: group("Living", { clients: [client("left"), client("right")] }),
     });
     expect(host.querySelector('[aria-label="Living volume"]')).toBeNull();
-    const expand = host.querySelector<HTMLButtonElement>(
-      '[aria-label="Manage speakers for Living"]',
-    )!;
-    expect(expand.getAttribute("aria-expanded")).toBe("false");
-    expect(host.querySelector(".st-expand-wrap")?.hasAttribute("inert")).toBe(
-      true,
-    );
-    expand.click();
+    expect(host.querySelector(".st-speaker")).toBeNull();
+    expect(host.querySelector(".st-expand-wrap")).toBeNull();
+    const open = trigger === "speaker button"
+      ? host.querySelector<HTMLButtonElement>('[aria-label="Manage speakers for Living"]')!
+      : button("Individual volumes");
+    expect(open.getAttribute("aria-haspopup")).toBe("dialog");
+    open.focus();
+    open.click();
     await nextTick();
-    expect(expand.getAttribute("aria-expanded")).toBe("true");
-    expect(host.querySelector(".st-expand-wrap")?.hasAttribute("inert")).toBe(
-      false,
-    );
-    expect(host.querySelector('[aria-label="left volume"]')).not.toBeNull();
-    expect(host.querySelector('[aria-label="right volume"]')).not.toBeNull();
+    await nextTick();
+    const dialog = document.querySelector<HTMLElement>('[role="dialog"][aria-label="Speakers for Living"]')!;
+    expect(dialog).not.toBeNull();
+    expect(host.contains(dialog)).toBe(false);
+    expect(dialog.querySelector('[aria-label="left volume"]')).not.toBeNull();
+    expect(dialog.querySelector('[aria-label="right volume"]')).not.toBeNull();
+    expect(host.querySelector(".st-speaker")).toBeNull();
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    await nextTick();
+    expect(document.activeElement).toBe(open);
+    await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
+  });
+
+  it("keeps speaker volume, linking and settings available in the dialog", async () => {
+    const snapcast = useSnapcastStore();
+    snapcast.groups = [group("Living", { clients: [client("left"), client("right")] })];
+    const volume = vi.spyOn(snapcast, "setClientVolume").mockResolvedValue(undefined);
+    const details = vi.fn();
+    const configure = vi.fn();
+    mount(StudioZoneCard, { group: snapcast.groups[0], onClientDetails: details, onClientSettings: configure });
+    host.querySelector<HTMLButtonElement>('[aria-label="Manage speakers for Living"]')!.click();
+    await nextTick();
+    const dialog = document.querySelector('[role="dialog"]')!;
+    const slider = dialog.querySelector<HTMLInputElement>('[aria-label="left volume"]')!;
+    slider.value = "27";
+    slider.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(volume).toHaveBeenCalledExactlyOnceWith("left", 27, false);
+    dialog.querySelector<HTMLButtonElement>('[aria-label="Link left to zone volume"]')!.click();
+    expect(useSettingsStore().groupVolumeLinks.Living?.linkedClientIds).toEqual(["left"]);
+    dialog.querySelector<HTMLButtonElement>('[aria-label="left: speaker info"]')!.click();
+    expect(details).toHaveBeenCalledWith(snapcast.groups[0]!.clients[0]);
+    dialog.querySelector<HTMLButtonElement>('[aria-label="left settings"]')!.click();
+    expect(configure).toHaveBeenCalledWith(snapcast.groups[0]!.clients[0]);
+  });
+
+  it("returns focus to the speaker button if linking removed the individual-volumes opener", async () => {
+    const snapcast = useSnapcastStore();
+    snapcast.groups = [group("Living", { clients: [client("left"), client("right")] })];
+    mount(StudioZoneCard, { group: snapcast.groups[0] });
+    const open = button("Individual volumes");
+    open.focus(); open.click();
+    await nextTick(); await nextTick();
+    const dialog = document.querySelector('[role="dialog"]')!;
+    dialog.querySelector<HTMLButtonElement>('[aria-label="Link left to zone volume"]')!.click();
+    await nextTick();
+    expect(open.isConnected).toBe(false);
+    button("Done", dialog).click();
+    await nextTick(); await nextTick();
+    expect(document.activeElement).toBe(host.querySelector('[aria-label="Manage speakers for Living"]'));
+  });
+
+  it("localizes the speaker dialog and closes it from its close button", async () => {
+    useSettingsStore().locale = "es";
+    mount(StudioZoneCard, { group: group("Living") });
+    const open = host.querySelector<HTMLButtonElement>('[aria-label="Gestionar altavoces de Living"]')!;
+    open.focus();
+    open.click();
+    await nextTick();
+    const dialog = document.querySelector('[role="dialog"][aria-label="Altavoces de Living"]')!;
+    expect(dialog).not.toBeNull();
+    dialog.querySelector<HTMLButtonElement>('[aria-label="Cerrar"]')!.click();
+    await nextTick();
+    expect(document.activeElement).toBe(open);
+    await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
   });
 });

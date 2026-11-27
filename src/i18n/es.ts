@@ -1,4 +1,5 @@
 export default {
+  "Speakers for {name}": "Altavoces de {name}",
   "Access Restrictions": "Restricciones de acceso",
   "Add zone": "Añadir zona",
   All: "Todos",
